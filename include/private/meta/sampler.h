@@ -76,12 +76,12 @@ namespace lsp
         // Different samplers
         extern const plugin_t sampler_mono;
         extern const plugin_t sampler_stereo;
-        extern const plugin_t sampler_x12;
-        extern const plugin_t sampler_x24;
-        extern const plugin_t sampler_x48;
-        extern const plugin_t sampler_x12_do;
-        extern const plugin_t sampler_x24_do;
-        extern const plugin_t sampler_x48_do;
+        extern const plugin_t multisampler_x12;
+        extern const plugin_t multisampler_x24;
+        extern const plugin_t multisampler_x48;
+        extern const plugin_t multisampler_x12_do;
+        extern const plugin_t multisampler_x24_do;
+        extern const plugin_t multisampler_x48_do;
     }
 }
 
