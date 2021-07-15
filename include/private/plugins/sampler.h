@@ -131,6 +131,9 @@ namespace lsp
             protected:
                 void            process_trigger_events();
 
+                void            dump_sampler(dspu::IStateDumper *v, const sampler_t *s) const;
+                void            dump_channel(dspu::IStateDumper *v, const channel_t *s) const;
+
             public:
                 explicit        sampler(const meta::plugin_t *metadata, size_t samplers, size_t channels, bool dry_ports);
                 virtual        ~sampler();
@@ -144,6 +147,8 @@ namespace lsp
                 virtual void    ui_activated();
 
                 virtual void    process(size_t samples);
+
+                virtual void    dump(dspu::IStateDumper *v) const;
         };
 
     } /* namespace plugins */
