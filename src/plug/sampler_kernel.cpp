@@ -632,7 +632,7 @@ namespace lsp
 
                 // Determine the maximum amplitude
                 float a_max             = dsp::abs_max(snew->pSource->channel(i), samples);
-                lsp_trace("dsp::abs_max(%p, %d): a_max=%f", snew->pFile->channel(i), int(samples), a_max);
+                lsp_trace("dsp::abs_max(%p, %d): a_max=%f", snew->pSource->channel(i), int(samples), a_max);
                 max                     = lsp_max(max, a_max);
             }
 
