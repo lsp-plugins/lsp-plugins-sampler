@@ -32,10 +32,14 @@ namespace lsp
     {
         //---------------------------------------------------------------------
         // Plugin UI factory
-        static const meta::plugin_t *uis[] =
+        static const meta::plugin_t *sampler_uis[] =
         {
             &meta::sampler_mono,
-            &meta::sampler_stereo,
+            &meta::sampler_stereo
+        };
+
+        static const meta::plugin_t *multisampler_uis[] =
+        {
             &meta::multisampler_x12,
             &meta::multisampler_x24,
             &meta::multisampler_x48,
@@ -44,12 +48,14 @@ namespace lsp
             &meta::multisampler_x48_do
         };
 
-        static ui::Module *sampler_factory(const meta::plugin_t *meta)
+        static ui::Module *multisampler_factory_func(const meta::plugin_t *meta)
         {
             return new sampler_ui(meta);
         }
 
-        static ui::Factory factory(sampler_factory, uis, 1);
+        // Use different factories for Mono/Stereo sampler and multisampler plugins
+        static ui::Factory sampler_factory(sampler_uis, 2);
+        static ui::Factory multisampler_factory(multisampler_factory_func, multisampler_uis, 6);
 
         //---------------------------------------------------------------------
         static const char * h2_system_paths[] =
