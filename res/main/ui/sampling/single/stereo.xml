@@ -30,10 +30,10 @@
 				<led id="mute" color="red" />
 			</grid>
 		</group>
-		<cgroup id="ssel" expand="true">
+		<cgroup id="ssel" expand="true" active="0">
 			<vbox>
 				<!-- File editor -->
-				<file expand="true"
+				<asample expand="true"
 					id="sf[ssel]" head_id="hc[ssel]" tail_id="tc[ssel]"
 					fadein_id="fi[ssel]" fadeout_id="fo[ssel]" length_id="fl[ssel]"
 					status_id="fs[ssel]" mesh_id="fd[ssel]"
