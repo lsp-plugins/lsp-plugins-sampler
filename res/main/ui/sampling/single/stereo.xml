@@ -34,11 +34,16 @@
 			<vbox>
 				<!-- File editor -->
 				<asample expand="true"
-					id="sf[ssel]" head_id="hc[ssel]" tail_id="tc[ssel]"
-					fadein_id="fi[ssel]" fadeout_id="fo[ssel]" length_id="fl[ssel]"
-					status_id="fs[ssel]" mesh_id="fd[ssel]"
-					width="320" height="160"
-					path_id="ui:dlg_sample_path"
+					id="sf[ssel]"
+					mesh_id="fd[ssel]"
+					path_id="_ui_dlg_sample_path"
+					hcut=":hc[ssel]"
+					tcut=":tc[ssel]"
+					fadein=":fi[ssel]"
+					fadeout=":fo[ssel]"
+					length=":fl[ssel]"
+					status=":fs[ssel]"
+					width.min="320" height.min="160"
 					bind="makeup=mk[ssel],predelay=pd[ssel]"
 				/>
 					
