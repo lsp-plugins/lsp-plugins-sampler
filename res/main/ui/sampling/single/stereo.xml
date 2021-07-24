@@ -44,7 +44,12 @@
 					length=":fl[ssel]"
 					status=":fs[ssel]"
 					width.min="320" height.min="160"
-					bind="makeup=mk[ssel],predelay=pd[ssel]"
+					clipboard.head_cut="hc[ssel]"
+					clipboard.tail_cut="tc[ssel]"
+					clipboard.fade_in="fi[ssel]"
+					clipboard.fade_out="fo[ssel]"
+					clipboard.makeup="mk[ssel]"
+					clipboard.predelay="pd[ssel]"
 				/>
 					
 				<grid rows="3" cols="8" spacing="2">
