@@ -18,6 +18,11 @@
 # along with lsp-plugins-sampler.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+# Command-line flag to silence nested $(MAKE).
+ifneq ($(VERBOSE),1)
+.SILENT:
+endif
+
 BASEDIR                 = $(CURDIR)
 CONFIG                 := $(BASEDIR)/../.config.mk
 PROJECT                := $(BASEDIR)/../project.mk
@@ -83,8 +88,8 @@ CXX_DEPTARGET           = $(patsubst $(ARTIFACT_BIN)/%.d,%.o,$(@))
 dep_clean:
 
 $(CXX_DEPS): dep_clean
-	@echo "  dep  [$(ARTIFACT_NAME)] $(CXX_DEPFILE)"
-	@mkdir -p $(dir $(@))
+	echo "  dep  [$(ARTIFACT_NAME)] $(CXX_DEPFILE)"
+	mkdir -p $(dir $(@))
 	$(CXX) -MM -MT "\$$($(ARTIFACT_ID)_BIN)/$(CXX_DEPTARGET)" -MF $(@) $(CXX_DEPFILE) $(CXXFLAGS) $(INCLUDE) $(CFLAGS_DEPS)
 
 depend: $(CXX_DEPS)
@@ -96,51 +101,45 @@ depend: $(CXX_DEPS)
 	    $(eval SED_RULES += s/$(shell echo "$($(dep)_BIN)" | sed "s/\\//\\\\\//g")/\\$$$$\\($(dep)_BIN\\)/g;)\
 	  )\
 	)
-	@cat $(CXX_DEPS) | sed -E "$(SED_RULES)" >Makefile.d
+	cat $(CXX_DEPS) | sed -E "$(SED_RULES)" >Makefile.d
 
 # Compilation targets
 compile: $(ARTIFACT_OBJ)
 
 $(CXX_SRC_STUB):
-	@echo "  gen  [$(ARTIFACT_NAME)] $(notdir $(CXX_FILE))"
-	@echo "#include <stdio.h>" > $(CXX_SRC_STUB)
+	echo "  gen  [$(ARTIFACT_NAME)] $(notdir $(CXX_FILE))"
+	echo "#include <stdio.h>" > $(CXX_SRC_STUB)
 
 $(OBJ_STUB): $(CXX_SRC_STUB)
-	@echo "  $(CXX)  [$(ARTIFACT_NAME)] $(CXX_FILE)"
-	@mkdir -p $(dir $@)
-	@$(CXX) -o $(@) -c $(CXX_SRC_STUB) -fPIC $(CXXFLAGS) $(ARTIFACT_MFLAGS) $(EXT_FLAGS) $(INCLUDE) $(CFLAGS_DEPS)
+	echo "  $(CXX)  [$(ARTIFACT_NAME)] $(CXX_FILE)"
+	mkdir -p $(dir $@)
+	$(CXX) -o $(@) -c $(CXX_SRC_STUB) -fPIC $(CXXFLAGS) $(ARTIFACT_MFLAGS) $(EXT_FLAGS) $(INCLUDE) $(CFLAGS_DEPS)
 
 $(OBJ):
-	@echo "  $(CXX)  [$(ARTIFACT_NAME)] $(CXX_FILE)"
-	@mkdir -p $(dir $@)
-	@$(CXX) -o $(@) -c $(CXX_FILE) -fPIC $(CXXFLAGS) $(ARTIFACT_MFLAGS) $(EXT_FLAGS) $(INCLUDE) $(CFLAGS_DEPS)
+	echo "  $(CXX)  [$(ARTIFACT_NAME)] $(CXX_FILE)"
+	mkdir -p $(dir $@)
+	$(CXX) -o $(@) -c $(CXX_FILE) -fPIC $(CXXFLAGS) $(ARTIFACT_MFLAGS) $(EXT_FLAGS) $(INCLUDE) $(CFLAGS_DEPS)
 
 # Linking targets
 $(ARTIFACT_OBJ_META): $(XOBJ_MAIN_META)
-	@echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_META))"
-	@$(LD) -o $(ARTIFACT_OBJ_META) -r $(XOBJ_MAIN_META)
+	echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_META))"
+	$(LD) -o $(ARTIFACT_OBJ_META) -r $(XOBJ_MAIN_META)
 	
 $(ARTIFACT_OBJ_DSP): $(XOBJ_MAIN_DSP)
-	@echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_DSP))"
-	@$(LD) -o $(ARTIFACT_OBJ_DSP) -r $(XOBJ_MAIN_DSP)
+	echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_DSP))"
+	$(LD) -o $(ARTIFACT_OBJ_DSP) -r $(XOBJ_MAIN_DSP)
 	
 $(ARTIFACT_OBJ_UI): $(XOBJ_MAIN_UI)
-	@echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_UI))"
-	@$(LD) -o $(ARTIFACT_OBJ_UI) -r $(XOBJ_MAIN_UI)
+	echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_UI))"
+	$(LD) -o $(ARTIFACT_OBJ_UI) -r $(XOBJ_MAIN_UI)
 	
 $(ARTIFACT_OBJ_TEST): $(XOBJ_TEST)
-	@echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_TEST))"
-	@$(LD) -o $(ARTIFACT_OBJ_TEST) -r $(XOBJ_TEST)
+	echo "  $(LD)   [$(ARTIFACT_NAME)] $(notdir $(ARTIFACT_OBJ_TEST))"
+	$(LD) -o $(ARTIFACT_OBJ_TEST) -r $(XOBJ_TEST)
 
 # Deletaged targets
-all:
-	@$(MAKE) -s -C "$(LSP_PLUGIN_FW_PATH)" all CONFIG="$(CONFIG)"
-
-install:
-	@$(MAKE) -s -C "$(LSP_PLUGIN_FW_PATH)" install CONFIG="$(CONFIG)"
-
-uninstall:
-	@$(MAKE) -s -C "$(LSP_PLUGIN_FW_PATH)" uninstall CONFIG="$(CONFIG)"
+all install uninstall:
+	$(MAKE) -C "$(LSP_PLUGIN_FW_PATH)" $(@) VERBOSE="$(VERBOSE)" CONFIG="$(CONFIG)"
 
 # Dependencies
 -include $(CURDIR)/Makefile.d
