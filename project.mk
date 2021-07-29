@@ -19,9 +19,9 @@
 #
 
 # Package version
-ARTIFACT_ID                 = lsp-plugins-sampler
+ARTIFACT_ID                 = LSP_PLUGINS_SAMPLER
+ARTIFACT_NAME               = lsp-plugins-sampler
 ARTIFACT_DESC               = Sampler plugin series
-ARTIFACT_VARS               = LSP_PLUGINS_SAMPLER
 ARTIFACT_HEADERS            = lsp-plug.in
 ARTIFACT_EXPORT_ALL         = 1
 ARTIFACT_VERSION            = 1.0.0-devel
