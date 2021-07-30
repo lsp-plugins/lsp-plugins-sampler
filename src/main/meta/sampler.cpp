@@ -796,7 +796,7 @@ namespace lsp
             sampler_classes,
             E_DUMP_STATE,
             sampler_x12_do_ports,
-            "sampling/multiple/x12_do.xml",
+            "sampling/multiple/x12.xml",
             NULL,
             sampler_x12_port_groups
         };
@@ -817,7 +817,7 @@ namespace lsp
             sampler_classes,
             E_DUMP_STATE,
             sampler_x24_do_ports,
-            "sampling/multiple/x24_do.xml",
+            "sampling/multiple/x24.xml",
             NULL,
             sampler_x24_port_groups
         };
@@ -838,7 +838,7 @@ namespace lsp
             sampler_classes,
             E_DUMP_STATE,
             sampler_x48_do_ports,
-            "sampling/multiple/x48_do.xml",
+            "sampling/multiple/x48.xml",
             NULL,
             sampler_x48_port_groups
         };

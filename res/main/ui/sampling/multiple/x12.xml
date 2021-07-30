@@ -7,6 +7,11 @@
 			<hbox spacing="8">
 				<label text="labels.working_area" />
 				<combo id="msel" halign="1" />
+				<label text="labels.direct_output_" />
+				<button id="do_gain" led="true" color="left_channel" />
+				<label text="labels.gain" />
+				<button id="do_pan" led="true" color="right_channel" />
+				<label text="labels.panning" />
 			</hbox>
 		</align>
 		
@@ -159,11 +164,12 @@
 		
 		<!-- Instrument mixer -->
 		<group text="groups.instrument_mixer" visibility=":msel ieq 1" expand="true">
-			<grid rows="13" cols="13" transpose="true" hspacing="2" vspacing="2">
+			<grid rows="14" cols="13" transpose="true" hspacing="2" vspacing="2">
 				<label text="labels.instrument_num" fill="true" halign="0" />
 				<label text="labels.sedit.enabled" fill="true" halign="0" />
 				<label text="labels.mix_gain" fill="true" halign="0" />
 				<label text="labels.units.:db" fill="true" halign="0" />
+				<label text="labels.direct_out" fill="true" halign="0" />
 				<label text="labels.signal.pan_left" fill="true" halign="0" />
 				<label text="labels.units.:pc" fill="true" halign="0" />
 				<label text="labels.signal.pan_right" fill="true" halign="0" />
@@ -179,6 +185,7 @@
 					<button id="ion_${i}" size="16" color="yellow" led="true" />
 					<knob id="imix_${i}" size="20"/>
 					<value id="imix_${i}" detailed="false" />
+					<button id="don_${i}" size="16" color="cyan" led="true" />
 					<knob id="panl_${i}" size="20" balance="0.5" scale_color="red" />
 					<value id="panl_${i}" detailed="false" />
 					<knob id="panr_${i}" size="20" balance="0.5" scale_color="cyan" />
