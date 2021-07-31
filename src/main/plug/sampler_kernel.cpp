@@ -94,7 +94,7 @@ namespace lsp
         bool sampler_kernel::init(ipc::IExecutor *executor, size_t files, size_t channels)
         {
             // Validate parameters
-            channels        = lsp_max(channels, meta::sampler_metadata::TRACKS_MAX);
+            channels        = lsp_min(channels, meta::sampler_metadata::TRACKS_MAX);
 
             // Now we may store values
             nFiles          = files;
