@@ -33,8 +33,8 @@ namespace lsp
         typedef struct sampler_settings_t
         {
             const meta::plugin_t   *metadata;
-            size_t                  samplers;
-            size_t                  channels;
+            uint8_t                 samplers;
+            uint8_t                 channels;
             bool                    dry_ports;
         } sampler_settings_t;
 
@@ -66,7 +66,7 @@ namespace lsp
         static plug::Module *spectrum_analyzer_factory(const meta::plugin_t *meta)
         {
             for (const sampler_settings_t *s = sampler_settings; s->metadata != NULL; ++s)
-                if (!strcmp(s->metadata->uid, meta->uid))
+                if (s->metadata == meta)
                     return new sampler(s->metadata, s->samplers, s->channels, s->dry_ports);
             return NULL;
         }

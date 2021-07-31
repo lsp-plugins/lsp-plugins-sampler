@@ -25,10 +25,6 @@
 #include <lsp-plug.in/plug-fw/plug.h>
 #include <lsp-plug.in/dsp-units/ctl/Toggle.h>
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
-#include <lsp-plug.in/dsp-units/ctl/Blink.h>
-#include <lsp-plug.in/dsp-units/sampling/Sample.h>
-#include <lsp-plug.in/dsp-units/sampling/SamplePlayer.h>
-#include <lsp-plug.in/dsp-units/util/Randomizer.h>
 #include <lsp-plug.in/lltl/parray.h>
 #include <lsp-plug.in/ipc/ITask.h>
 
