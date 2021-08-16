@@ -24,7 +24,7 @@ ARTIFACT_NAME               = lsp-plugins-sampler
 ARTIFACT_DESC               = Sampler plugin series
 ARTIFACT_HEADERS            = lsp-plug.in
 ARTIFACT_EXPORT_ALL         = 1
-ARTIFACT_VERSION            = 1.0.0-devel
+ARTIFACT_VERSION            = 1.0.4-devel
 
 #------------------------------------------------------------------------------
 # List of all dependencies
