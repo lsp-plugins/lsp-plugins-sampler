@@ -121,8 +121,8 @@
 					</cell>
 					<knob id="hc[ssel]" size="20" bg.color="bg_schema" padding.bottom="6"/>
 					<knob id="tc[ssel]" size="20" bg.color="bg_schema" padding.bottom="6"/>
-					<knob id="fi[ssel]" size="20" scale.color="yellow" bg.color="bg_schema" padding.bottom="6"/>
-					<knob id="fo[ssel]" size="20" scale.color="yellow" bg.color="bg_schema" padding.bottom="6"/>
+					<knob id="fi[ssel]" size="20" scale.color="fade_in" bg.color="bg_schema" padding.bottom="6"/>
+					<knob id="fo[ssel]" size="20" scale.color="fade_out" bg.color="bg_schema" padding.bottom="6"/>
 					<knob id="mk[ssel]" size="20" bg.color="bg_schema" padding.bottom="6"/>
 					<knob id="pd[ssel]" size="20" bg.color="bg_schema" padding.bottom="6"/>
 					<cell rows="2">
@@ -193,7 +193,7 @@
 				<ui:for id="i" first="0" last="7">
 					<label text="${i}" bg.color="bg_schema"/>
 					<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" bg.color="bg_schema" padding="6"/>
-					<knob id="vl_${i}" size="20" scale.color="magenta" bg.color="bg_schema"/>
+					<knob id="vl_${i}" size="20" scale.color="velocity" bg.color="bg_schema"/>
 					<value id="vl_${i}" detailed="false" bg.color="bg_schema" padding.bottom="6"/>
 					<knob id="pl_${i}" size="20" balance="0.5" scale.color="left_channel" bg.color="bg_schema"/>
 					<value id="pl_${i}" detailed="false" bg.color="bg_schema" padding.bottom="6"/>
