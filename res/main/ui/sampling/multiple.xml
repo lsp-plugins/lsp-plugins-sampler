@@ -179,7 +179,7 @@
 		</grid>
 
 		<!-- Mixer -->
-		<ui:for id="m" first="0" last=":num_blocks - 1">
+		<ui:for id="m" first="0" count=":num_blocks">
 			<group text="groups.instrument_mixer" visibility=":msel ieq ${:m+1}" expand="true">
 				<grid rows="14" cols="13" transpose="true" hspacing="2" vspacing="2">
 					<label text="labels.instrument_num" fill="true" halign="0" />
@@ -197,7 +197,7 @@
 					<label text="labels.listen" fill="true" halign="0" />
 					<void />
 					
-					<ui:for id="i" first=":m*12" last=":m*12+11" >
+					<ui:for id="i" first=":m*12" count="12" >
 						<label text="${i}" />
 						<button id="ion_${i}" size="16" color="yellow" led="true" />
 						<knob id="imix_${i}" size="20"/>
