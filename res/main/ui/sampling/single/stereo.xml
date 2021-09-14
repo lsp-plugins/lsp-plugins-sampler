@@ -197,14 +197,14 @@
 						<label text="${i}"/>
 						<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="vl_${i}" size="20" scolor="velocity"/>
-						<value id="vl_${i}" detailed="false"/>
+						<value id="vl_${i}" detailed="false" pad.b="6"/>
 						<knob id="pl_${i}" size="20" balance="0.5" scolor="balance_l"/>
 						<value id="pl_${i}" detailed="false" pad.b="6"/>
 						<knob id="pr_${i}" size="20" balance="0.5" scolor="balance_r"/>
 						<value id="pr_${i}" detailed="false" pad.b="6"/>
 						<vbox expand="false">
 							<button id="ls_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
-							<led id="ls_${i}" pad.b="6"/>
+							<led id="no_${i}" pad.b="6"/>
 						</vbox>
 					</ui:with>
 					<cell rows="9">
