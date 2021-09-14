@@ -188,12 +188,12 @@
 					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 					<label text="labels.sedit.listen" fill="true" halign="0"/>9
 				</ui:with>
-				<cell rows="9">
-					<vsep/>
-				</cell>
 
 				<ui:for id="i" first="0" last="7">
-					<ui:with bg.color="bg_schema" expand="true">
+					<cell rows="9">
+						<vsep/>
+					</cell>
+					<ui:with bg.color="bg_schema">
 						<label text="${i}"/>
 						<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="vl_${i}" size="20" scolor="velocity"/>
@@ -207,9 +207,6 @@
 							<led id="no_${i}" pad.b="6"/>
 						</vbox>
 					</ui:with>
-					<cell rows="9">
-						<vsep/>
-					</cell>
 				</ui:for>
 			</grid>
 		</group>

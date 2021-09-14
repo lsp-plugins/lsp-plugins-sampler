@@ -4,21 +4,19 @@
 
 		<vbox spacing="4">
 			<!-- Area selector -->
-			<align halign="-1" fill="true">
-				<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="false" bg.color="bg_schema">
-					<label text="labels.working_area"/>
-					<combo id="msel" halign="1"/>
-					<ui:if test="ex :don_0">
-						<label text="labels.direct_output_" pad.l="12"/>
-						<button text="labels.gain" id="do_gain" ui:inject="Button_magenta"/>
-						<button text="labels.panning" id="do_pan" ui:inject="Button_yellow"/>
-					</ui:if>
-					<void hexpand="true"/>
-				</hbox>
-			</align>
+			<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
+				<label text="labels.working_area"/>
+				<combo id="msel" halign="1"/>
+				<ui:if test="ex :don_0">
+					<label text="labels.direct_output_" pad.l="12"/>
+					<button text="labels.gain" id="do_gain" ui:inject="Button_magenta"/>
+					<button text="labels.panning" id="do_pan" ui:inject="Button_yellow"/>
+				</ui:if>
+				<void hexpand="true"/>
+			</hbox>
 
 			<!-- Instrument editor -->
-			<grid rows="2" cols="2" visibility=":msel ieq 0" spacing="4" transpose="true">
+			<grid rows="2" cols="2" visibility=":msel ieq 0" spacing="4" transpose="true" expand="true">
 				<!-- Midi settings -->
 				<cgroup id="inst" active="0" bg.color="bg" spacing="4" ipadding="0">
 					<grid rows="1" cols="3" hspacing="2">
@@ -227,14 +225,14 @@
 							<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 							<label text="labels.signal.pan_right" fill="true" halign="0"/>
 							<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
-							<label text="labels.sedit.listen" fill="true" halign="0"/>9
+							<label text="labels.sedit.listen" fill="true" halign="0"/>
 						</ui:with>
-						<cell rows="9">
-							<vsep/>
-						</cell>
 
 						<ui:for id="i" first="0" last="7">
-							<ui:with bg.color="bg_schema" expand="true">
+							<cell rows="9">
+								<vsep/>
+							</cell>
+							<ui:with bg.color="bg_schema">
 								<label text="${i}"/>
 								<ui:set id="idx" value="[inst]_${i}"/>
 
@@ -250,9 +248,6 @@
 									<led id="no${idx}" pad.b="6"/>
 								</vbox>
 							</ui:with>
-							<cell rows="9">
-								<vsep/>
-							</cell>
 						</ui:for>
 					</grid>
 				</group>
@@ -275,11 +270,11 @@
 						<label text="labels.midi.midi_num" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.midi.note_on" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.listen" fill="true" halign="0"/>
-						<cell rows="14">
-							<vsep pad.l="4"/>
-						</cell>
 
 						<ui:for id="i" first=":m*12" count="12">
+							<cell rows="13">
+								<vsep pad.l="4"/>
+							</cell>
 							<label text="${i}" padding="6"/>
 							<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 							<knob id="imix_${i}" size="20"/>
@@ -292,13 +287,7 @@
 							<combo id="mgrp_${i}" pad.b="6" pad.l="3" pad.r="3"/>
 							<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
 							<led id="iact_${i}" pad.b="6"/>
-							<vbox expand="false">
-								<button id="trg_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
-								<led id="trg_${i}" pad.b="6"/>
-							</vbox>
-							<cell rows="14">
-								<vsep pad.l="4"/>
-							</cell>
+							<button id="trg_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 						</ui:for>
 					</grid>
 				</group>
