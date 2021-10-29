@@ -200,7 +200,7 @@
 						<value id="mx_${i}" detailed="false" pad.b="6"/>
 						<vbox expand="false">
 							<button id="ls_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
-							<led id="no_${i}" pad.b="6"/>
+							<led id="no_${i}" pad.b="6" width="32" height="6"/>
 						</vbox>
 					</ui:with>
 				</ui:for>
