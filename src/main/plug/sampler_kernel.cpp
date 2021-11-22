@@ -242,7 +242,7 @@ namespace lsp
             return true;
         }
 
-        size_t sampler_kernel::bind(lltl::parray<plug::IPort> &ports, size_t port_id, bool dynamics)
+        size_t sampler_kernel::bind(plug::IPort **ports, size_t port_id, bool dynamics)
         {
             lsp_trace("Binding listen toggle...");
             TRACE_PORT(ports[port_id]);

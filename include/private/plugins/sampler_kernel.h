@@ -179,7 +179,7 @@ namespace lsp
 
             public:
                 bool        init(ipc::IExecutor *executor, size_t files, size_t channels);
-                size_t      bind(lltl::parray<plug::IPort> &ports, size_t port_id, bool dynamics);
+                size_t      bind(plug::IPort **ports, size_t port_id, bool dynamics);
                 void        bind_activity(plug::IPort *activity);
                 void        destroy();
 
