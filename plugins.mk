@@ -18,13 +18,6 @@
 # along with lsp-plugins-sampler.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-# Package version
-ARTIFACT_ID                 = LSP_PLUGINS_SAMPLER
-ARTIFACT_NAME               = lsp-plugins-sampler
-ARTIFACT_TYPE               = plug
-ARTIFACT_DESC               = LSP Sampler Plugin Series
-ARTIFACT_HEADERS            = lsp-plug.in
-ARTIFACT_VERSION            = 1.0.4-devel
-
-
-
+# Variables that describe dependencies
+PLUGIN_DEPENDENCIES     = LSP_PLUGINS_SAMPLER
+PLUGIN_PACKAGE_NAME     = lsp-plugins
