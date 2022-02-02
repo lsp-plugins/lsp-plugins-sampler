@@ -574,7 +574,7 @@ namespace lsp
                 return STATUS_UNKNOWN_ERR;
 
             // Get file name
-            const char *fname   = path->get_path();
+            const char *fname   = path->path();
             if (strlen(fname) <= 0)
                 return STATUS_UNSPECIFIED;
 
