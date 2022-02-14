@@ -1,0 +1,11 @@
+{
+	"multisampler": {
+		"name": "Multisampler",
+		"description": "This plugin implements multi-instrument MIDI sample player with stereo input\nand stereo output. For each instrument there are up to eight samples available\nto play for different note velocities. Also each instrument has it's own stereo\noutput that makes possible to record instrument outputs into individual tracks."
+	},
+	"sampler": {
+		"name": "Sampler",
+		"description": "This plugin implements single-note MIDI sample player with input and output.\nThere are up to eight samples available to play for different note velocities."
+	}
+}
+

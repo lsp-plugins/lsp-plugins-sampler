@@ -673,6 +673,24 @@ namespace lsp
             PORTS_END
         };
 
+        const meta::bundle_t sampler_bundle =
+        {
+            "sampler",
+            "Sampler",
+            B_SAMPLERS,
+            "GsNfZ0TF-bk",
+            "This plugin implements single-note MIDI sample player with input and output.\nThere are up to eight samples available to play for different note velocities."
+        };
+
+        const meta::bundle_t multisampler_bundle =
+        {
+            "multisampler",
+            "Multisampler",
+            B_SAMPLERS,
+            "GsNfZ0TF-bk",
+            "This plugin implements multi-instrument MIDI sample player with stereo input\nand stereo output. For each instrument there are up to eight samples available\nto play for different note velocities. Also each instrument has it's own stereo\noutput that makes possible to record instrument outputs into individual tracks."
+        };
+
         //-------------------------------------------------------------------------
         // Define plugin metadata
         const plugin_t sampler_mono =
@@ -693,7 +711,8 @@ namespace lsp
             sampler_mono_ports,
             "sampling/single/mono.xml",
             NULL,
-            mono_plugin_port_groups
+            mono_plugin_port_groups,
+            &sampler_bundle
         };
 
         const plugin_t sampler_stereo =
@@ -714,7 +733,8 @@ namespace lsp
             sampler_stereo_ports,
             "sampling/single/stereo.xml",
             NULL,
-            stereo_plugin_port_groups
+            stereo_plugin_port_groups,
+            &sampler_bundle
         };
 
         const plugin_t multisampler_x12 =
@@ -735,7 +755,8 @@ namespace lsp
             sampler_x12_ports,
             "sampling/multiple.xml",
             NULL,
-            stereo_plugin_port_groups
+            stereo_plugin_port_groups,
+            &multisampler_bundle
         };
 
         const plugin_t multisampler_x24 =
@@ -756,7 +777,8 @@ namespace lsp
             sampler_x24_ports,
             "sampling/multiple.xml",
             NULL,
-            stereo_plugin_port_groups
+            stereo_plugin_port_groups,
+            &multisampler_bundle
         };
 
         const plugin_t multisampler_x48 =
@@ -777,7 +799,8 @@ namespace lsp
             sampler_x48_ports,
             "sampling/multiple.xml",
             NULL,
-            stereo_plugin_port_groups
+            stereo_plugin_port_groups,
+            &multisampler_bundle
         };
 
         const plugin_t multisampler_x12_do =
@@ -798,7 +821,8 @@ namespace lsp
             sampler_x12_do_ports,
             "sampling/multiple.xml",
             NULL,
-            sampler_x12_port_groups
+            sampler_x12_port_groups,
+            &multisampler_bundle
         };
 
         const plugin_t multisampler_x24_do =
@@ -819,7 +843,8 @@ namespace lsp
             sampler_x24_do_ports,
             "sampling/multiple.xml",
             NULL,
-            sampler_x24_port_groups
+            sampler_x24_port_groups,
+            &multisampler_bundle
         };
 
         const plugin_t multisampler_x48_do =
@@ -840,7 +865,8 @@ namespace lsp
             sampler_x48_do_ports,
             "sampling/multiple.xml",
             NULL,
-            sampler_x48_port_groups
+            sampler_x48_port_groups,
+            &multisampler_bundle
         };
 
     }
