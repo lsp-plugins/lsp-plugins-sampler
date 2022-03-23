@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   4
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   5
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
