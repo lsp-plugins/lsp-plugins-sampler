@@ -1,0 +1,214 @@
+<plugin resizable="true">
+	<grid rows="2" cols="2" spacing="4" transpose="true">
+		<!-- Midi settings -->
+		<group text="groups.midi_setup" bg.color="bg" spacing="4" ipadding="0">
+			<grid rows="1" cols="3" hspacing="2">
+				<!-- first block -->
+				<grid rows="3" cols="1" vspacing="2">
+					<!-- channel note octave -->
+					<grid rows="2" cols="3" spacing="0">
+						<ui:attributes pad.l="6" pad.r="6" bg.color="bg_schema">
+							<label text="labels.channel"/>
+							<label text="labels.mus.note"/>
+							<label text="labels.mus.octave"/>
+							<combo id="chan" fill="true"/>
+							<combo id="note" fill="true"/>
+							<combo id="oct" fill="true"/>
+						</ui:attributes>
+					</grid>
+					<!-- separator -->
+					<cell>
+						<hsep/>
+					</cell>
+					<!-- midi number -->
+					<hbox bg.color="bg_schema">
+						<label text="labels.midi.midi_number" pad.l="6" pad.r="6"/>
+						<midinote id="mn" note_id="note" octave_id="oct" pointer="hand"/>
+						<label expand="true"/>
+					</hbox>
+				</grid>
+				<!-- separator -->
+				<cell rows="2">
+					<vsep/>
+				</cell>
+				<!-- second block -->
+				<grid rows="1" cols="3" hspacing="2">
+					<!-- note off block -->
+					<grid rows="3" cols="1" spacing="4" fill="false" bg.color="bg_schema" pad.l="6" pad.r="6">
+						<hbox >
+							<button id="noff" led="true" ui:inject="Button_green" size="12" pad.r="6"/>
+							<label text="labels.midi.note_off"/>
+						</hbox>
+						<knob id="fout" size="20"/>
+						<value id="fout" sline="true"/>
+					</grid>
+					<!-- separator -->
+					<cell>
+						<vsep/>
+					</cell>
+					<!-- mutting and mute buttons -->
+					<grid rows="3" cols="1" vspacing="2">
+						<button text="labels.muting" id="muting" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<cell>
+							<hsep/>
+						</cell>
+						<button text="labels.mute" id="mute" ui:inject="Button_red" height="18" width="50" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+					</grid>
+				</grid>
+			</grid>
+		</group>
+
+		<cgroup id="ssel" expand="true" active="0">
+			<vbox>
+				<!-- File editor -->
+				<asample
+					expand="true"
+					id="sf[ssel]"
+					mesh_id="fd[ssel]"
+					path_id="_ui_dlg_sample_path"
+					hcut=":hc[ssel]"
+					tcut=":tc[ssel]"
+					fadein=":fi[ssel]"
+					fadeout=":fo[ssel]"
+					length=":fl[ssel]"
+					status=":fs[ssel]"
+					width.min="320"
+					height.min="160"
+					clipboard.head_cut="hc[ssel]"
+					clipboard.tail_cut="tc[ssel]"
+					clipboard.fade_in="fi[ssel]"
+					clipboard.fade_out="fo[ssel]"
+					clipboard.makeup="mk[ssel]"
+					clipboard.predelay="pd[ssel]"/>
+
+				<grid rows="3" cols="15" bg.color="bg" hspacing="2">
+					<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.head_cut" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.tail_cut" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.fade_in" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.fade_out" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.makeup" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.predelay" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.listen" bg.color="bg_schema" padding="6"/>
+
+					<cell rows="2">
+						<vbox bg.color="bg_schema">
+							<button id="rs[ssel]" size="32"/>
+							<label pad.b="6"/>
+							<label pad.b="6"/>
+						</vbox>
+					</cell>
+					<knob id="hc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
+					<knob id="tc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
+					<knob id="fi[ssel]" size="20" scolor="fade_in" bg.color="bg_schema" pad.b="6"/>
+					<knob id="fo[ssel]" size="20" scolor="fade_out" bg.color="bg_schema" pad.b="6"/>
+					<knob id="mk[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
+					<knob id="pd[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
+					<cell rows="2">
+						<vbox bg.color="bg_schema">
+							<button id="ls[ssel]" size="32" ui:inject="Button_cyan" toggle="false"/>
+							<label pad.b="6"/>
+							<label pad.b="6"/>
+						</vbox>
+					</cell>
+					<value id="hc[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="tc[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="fi[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="fo[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="mk[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="pd[ssel]" bg.color="bg_schema" pad.b="6"/>
+
+				</grid>
+			</vbox>
+		</cgroup>
+		<group text="groups.audio_channels" spacing="4" ipadding="0">
+			<grid rows="1" cols="3" hspacing="2" bg.color="bg">
+				<grid rows="3" cols="2" bg.color="bg_schema" padding="6">
+					<label text="labels.dynamics" width.min="68" pad.b="6"/>
+					<label text="labels.time_drifting" pad.b="6"/>
+
+					<knob id="dyna" scolor="green" pad.b="6"/>
+					<knob id="drft" scolor="green" pad.b="6"/>
+
+					<value id="dyna" sline="true"/>
+					<value id="drft" sline="true"/>
+
+				</grid>
+				<cell rows="3">
+					<vsep/>
+				</cell>
+				<grid rows="3" cols="3" bg.color="bg_schema" padding="6">
+
+					<label text="labels.signal.dry" pad.b="6"/>
+					<label text="labels.signal.wet" pad.b="6"/>
+					<label text="labels.output" pad.b="6"/>
+
+					<knob id="dry" pad.b="6" scolor="dry"/>
+					<knob id="wet" pad.b="6" scolor="wet"/>
+					<knob id="g_out" pad.b="6"/>
+
+					<value id="dry" width.min="54" sline="true"/>
+					<value id="wet" width.min="54" sline="true"/>
+					<value id="g_out" width.min="54" sline="true"/>
+				</grid>
+			</grid>
+		</group>
+		<group text="groups.sample_matrix" expand="true" ipadding="0">
+			<!-- Sample matrix -->
+			<grid rows="9" cols="17" transpose="true" hspacing="2" bg.color="bg">
+				<ui:with bg.color="bg_schema">
+					<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
+					<label text="labels.sedit.enabled" fill="true" halign="0"/>
+					<label text="labels.midi.velocity" fill="true" halign="0"/>
+					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
+					<label text="labels.signal.pan_left" fill="true" halign="0"/>
+					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
+					<label text="labels.signal.pan_right" fill="true" halign="0"/>
+					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
+					<label text="labels.sedit.listen" fill="true" halign="0"/>9
+				</ui:with>
+
+				<ui:for id="i" first="0" last="7">
+					<cell rows="9">
+						<vsep/>
+					</cell>
+					<ui:with bg.color="bg_schema">
+						<label text="${i}"/>
+						<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
+						<knob id="vl_${i}" size="20" scolor="velocity"/>
+						<value id="vl_${i}" detailed="false" pad.b="6"/>
+						<knob id="pl_${i}" size="20" balance="0.5" scolor="balance_l"/>
+						<value id="pl_${i}" detailed="false" pad.b="6"/>
+						<knob id="pr_${i}" size="20" balance="0.5" scolor="balance_r"/>
+						<value id="pr_${i}" detailed="false" pad.b="6"/>
+						<vbox expand="false">
+							<button id="ls_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+							<led id="no_${i}" pad.b="6" width="32" height="6"/>
+						</vbox>
+					</ui:with>
+				</ui:for>
+			</grid>
+		</group>
+	</grid>
+</plugin>
