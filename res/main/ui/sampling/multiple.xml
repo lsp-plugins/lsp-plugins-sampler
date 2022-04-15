@@ -23,12 +23,14 @@
 						<!-- first block -->
 						<grid rows="3" cols="1" vspacing="2">
 							<!-- channel note octave -->
-							<grid rows="2" cols="4" spacing="0">
+							<grid rows="2" cols="5" spacing="0">
 								<ui:with pad.l="6" pad.r="6" bg.color="bg_schema">
+									<label text="labels.name"/>
 									<label text="labels.channel"/>
 									<label text="labels.mus.note"/>
 									<label text="labels.mus.octave"/>
 									<label text="labels.group"/>
+									<edit ui:id="iname" width.min="64"/>
 									<combo id="chan[inst]" fill="true"/>
 									<combo id="note[inst]" fill="true"/>
 									<combo id="oct[inst]" fill="true"/>
@@ -256,8 +258,9 @@
 			<!-- Mixer -->
 			<ui:for id="m" first="0" count=":num_blocks">
 				<group text="groups.instrument_mixer" ipadding="0" visibility=":msel ieq ${:m+1}" expand="true">
-					<grid rows="13" cols="25" transpose="true" hspacing="2" vspacing="2">
+					<grid rows="14" cols="25" transpose="true" hspacing="2" vspacing="2">
 						<label text="labels.instrument_num" fill="true" halign="0" padding="6"/>
+						<label text="labels.name" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0" padding="6"/>
 						<label text="labels.mix_gain" fill="true" halign="0"/>
 						<label text="labels.units.:db" fill="true" halign="0" pad.b="6"/>
@@ -272,10 +275,11 @@
 						<label text="labels.listen" fill="true" halign="0"/>
 
 						<ui:for id="i" first=":m*12" count="12">
-							<cell rows="13">
+							<cell rows="14">
 								<vsep pad.l="4"/>
 							</cell>
 							<label text="${i}" padding="6"/>
+							<edit ui:id="iname_${i}" bg.inherit="true" />
 							<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 							<knob id="imix_${i}" size="20"/>
 							<value id="imix_${i}" detailed="false" pad.b="6"/>

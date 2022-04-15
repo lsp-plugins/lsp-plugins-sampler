@@ -40,10 +40,18 @@ namespace lsp
                     tk::MenuItem       *pMenu;      // Corresponding menu item
                 } h2drumkit_t;
 
+                typedef struct inst_name_t
+                {
+                    tk::Edit           *pWidget;    // Pointer to the widget
+                    size_t              nIndex;     // Instrument number
+                    bool                bChanged;   // Change flag
+                } inst_name_t;
+
             protected:
                 ui::IPort                  *pHydrogenPath;
                 tk::FileDialog             *pHydrogenImport;
                 lltl::parray<h2drumkit_t>   vDrumkits;
+                lltl::darray<inst_name_t>   vInstNames; // Names of instruments
 
             protected:
                 static status_t     slot_start_import_hydrogen_file(tk::Widget *sender, void *ptr, void *data);
@@ -51,6 +59,7 @@ namespace lsp
                 static status_t     slot_call_import_hydrogen_file(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_fetch_hydrogen_path(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_commit_hydrogen_path(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data);
 
                 static ssize_t      cmp_drumkit_files(const h2drumkit_t *a, const h2drumkit_t *b);
 
@@ -71,6 +80,10 @@ namespace lsp
                 virtual ~sampler_ui();
 
                 virtual status_t    post_init();
+
+                virtual void        idle();
+
+                virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value);
         };
     } // namespace ui
 } // namespace lsp

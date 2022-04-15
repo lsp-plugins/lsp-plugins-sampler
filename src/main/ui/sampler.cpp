@@ -76,6 +76,7 @@ namespace lsp
             NULL
         };
 
+        //---------------------------------------------------------------------
         sampler_ui::sampler_ui(const meta::plugin_t *meta):
             ui::Module(meta)
         {
@@ -97,6 +98,9 @@ namespace lsp
                 delete dk;
             }
             vDrumkits.flush();
+
+            // Destroy instrument descriptors
+            vInstNames.flush();
         }
 
         status_t sampler_ui::post_init()
@@ -142,7 +146,108 @@ namespace lsp
                 }
             }
 
+            // Find port names
+            char name[0x40];
+            for (size_t i=0; i < meta::sampler_metadata::INSTRUMENTS_MAX; ++i)
+            {
+                // Verify that the corresponding instrument exists
+                snprintf(name, sizeof(name), "chan_%d", int(i));
+                ui::IPort *port = wrapper()->port(name);
+                if (port == NULL)
+                    continue;
+
+                // Obtain the widget and bind slot
+                snprintf(name, sizeof(name), "iname_%d", int(i));
+                tk::Widget *w = wrapper()->controller()->widgets()->find(name);
+                if (w == NULL)
+                    continue;
+                tk::Edit *ed = tk::widget_cast<tk::Edit>(w);
+                if (ed == NULL)
+                    continue;
+                ed->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
+
+                // Append widget binding
+                inst_name_t *inst = vInstNames.add();
+                if (inst == NULL)
+                    return STATUS_NO_MEM;
+
+                inst->pWidget   = ed;
+                inst->nIndex    = i;
+                inst->bChanged  = false;
+            }
+
             return STATUS_OK;
+        }
+
+        void sampler_ui::idle()
+        {
+            // Scan the list of instrument names for changes
+            size_t changes = 0;
+            for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+            {
+                inst_name_t *name = vInstNames.uget(i);
+                if ((name->pWidget) && (name->bChanged))
+                    ++changes;
+            }
+
+            // Apply instrument names to KVT
+            if (changes > 0)
+            {
+                core::KVTStorage *kvt = wrapper()->kvt_lock();
+                if (kvt != NULL)
+                {
+                    char kvt_name[0x80];
+                    core::kvt_param_t kparam;
+                    LSPString value;
+
+                    for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+                    {
+                        inst_name_t *name = vInstNames.uget(i);
+                        if ((!name->pWidget) || (!name->bChanged))
+                            continue;
+
+                        // Obtain the new instrument name
+                        if (name->pWidget->text()->format(&value) != STATUS_OK)
+                            continue;
+
+                        // Submit new value to KVT
+                        snprintf(kvt_name, sizeof(kvt_name), "/instrument/%d/name", int(name->nIndex));
+                        kparam.type     = core::KVT_STRING;
+                        kparam.str      = value.get_utf8();
+                        lsp_trace("%s = %s", kvt_name, kparam.str);
+                        kvt->put(kvt_name, &kparam, core::KVT_RX);
+                        wrapper()->kvt_notify_write(kvt, kvt_name, &kparam);
+                    }
+
+                    wrapper()->kvt_release();
+                }
+            }
+        }
+
+        void sampler_ui::kvt_changed(core::KVTStorage *kvt, const char *id, const core::kvt_param_t *value)
+        {
+            if ((value->type == core::KVT_STRING) && (::strstr(id, "/instrument/") == id))
+            {
+                id += ::strlen("/instrument/");
+
+                char *endptr = NULL;
+                errno = 0;
+                long index = ::strtol(id, &endptr, 10);
+
+                // Valid object number?
+                if ((errno == 0) && (!::strcmp(endptr, "/name")) && (index >= 0))
+                {
+                    for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+                    {
+                        inst_name_t *name = vInstNames.uget(i);
+                        if ((!name->pWidget) || (name->nIndex != size_t(index)))
+                            continue;
+
+                        name->pWidget->text()->set_raw(value->str);
+                        name->bChanged = false;
+                    }
+                }
+            }
         }
 
         ssize_t sampler_ui::cmp_drumkit_files(const h2drumkit_t *a, const h2drumkit_t *b)
@@ -392,6 +497,21 @@ namespace lsp
                 const char *upath = path.get_utf8();
                 _this->pHydrogenPath->write(upath, ::strlen(upath));
                 _this->pHydrogenPath->notify_all();
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+
+            // Mark the corresponding instrument name being changed
+            for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+            {
+                inst_name_t *name = _this->vInstNames.uget(i);
+                if (name->pWidget == sender)
+                    name->bChanged  = true;
             }
 
             return STATUS_OK;
