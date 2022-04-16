@@ -29,7 +29,7 @@ namespace lsp
 {
     namespace plugins
     {
-        class sampler_ui: public ui::Module
+        class sampler_ui: public ui::Module, public ui::IPortListener
         {
             protected:
                 typedef struct h2drumkit_t
@@ -49,7 +49,9 @@ namespace lsp
 
             protected:
                 ui::IPort                  *pHydrogenPath;
-                tk::FileDialog             *pHydrogenImport;
+                ui::IPort                  *pCurrentInstrument;     // Name that holds number of current instrument
+                tk::FileDialog             *wHydrogenImport;
+                tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
                 lltl::parray<h2drumkit_t>   vDrumkits;
                 lltl::darray<inst_name_t>   vInstNames; // Names of instruments
 
@@ -69,6 +71,7 @@ namespace lsp
                 status_t            add_instrument(int id, const hydrogen::instrument_t *inst);
                 void                set_float_value(float value, const char *fmt...);
                 void                set_path_value(const char *path, const char *fmt...);
+                void                set_instrument_name(core::KVTStorage *kvt, int id, const char *name);
 
                 void                lookup_hydrogen_files();
                 void                add_hydrogen_files_to_menu(tk::Menu *menu);
@@ -84,6 +87,10 @@ namespace lsp
                 virtual void        idle();
 
                 virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value);
+
+                virtual void        notify(ui::IPort *port);
+
+                virtual status_t    reset_settings();
         };
     } // namespace ui
 } // namespace lsp

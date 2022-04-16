@@ -80,13 +80,17 @@ namespace lsp
         sampler_ui::sampler_ui(const meta::plugin_t *meta):
             ui::Module(meta)
         {
-            pHydrogenImport = NULL;
-            pHydrogenPath   = NULL;
+            pHydrogenPath       = NULL;
+            pCurrentInstrument  = NULL;
+            wHydrogenImport     = NULL;
+            wCurrentInstrument  = NULL;
         }
 
         sampler_ui::~sampler_ui()
         {
-            pHydrogenImport = NULL;      // Will be automatically destroyed from list of widgets
+            // Will be automatically destroyed from list of widgets
+            wHydrogenImport     = NULL;
+            wCurrentInstrument  = NULL;
 
             // Destroy all information about drumkits
             for (size_t i=0, n=vDrumkits.size(); i<n; ++i)
@@ -158,10 +162,7 @@ namespace lsp
 
                 // Obtain the widget and bind slot
                 snprintf(name, sizeof(name), "iname_%d", int(i));
-                tk::Widget *w = wrapper()->controller()->widgets()->find(name);
-                if (w == NULL)
-                    continue;
-                tk::Edit *ed = tk::widget_cast<tk::Edit>(w);
+                tk::Edit *ed = wrapper()->controller()->widgets()->get<tk::Edit>(name);
                 if (ed == NULL)
                     continue;
                 ed->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
@@ -175,6 +176,14 @@ namespace lsp
                 inst->nIndex    = i;
                 inst->bChanged  = false;
             }
+
+            // Find widget and port associated with the current selected instrument
+            pCurrentInstrument  = wrapper()->port("inst");
+            wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
+            if (pCurrentInstrument != NULL)
+                pCurrentInstrument->bind(this);
+            if (wCurrentInstrument != NULL)
+                wCurrentInstrument->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
 
             return STATUS_OK;
         }
@@ -196,8 +205,6 @@ namespace lsp
                 core::KVTStorage *kvt = wrapper()->kvt_lock();
                 if (kvt != NULL)
                 {
-                    char kvt_name[0x80];
-                    core::kvt_param_t kparam;
                     LSPString value;
 
                     for (size_t i=0, n=vInstNames.size(); i<n; ++i)
@@ -211,17 +218,33 @@ namespace lsp
                             continue;
 
                         // Submit new value to KVT
-                        snprintf(kvt_name, sizeof(kvt_name), "/instrument/%d/name", int(name->nIndex));
-                        kparam.type     = core::KVT_STRING;
-                        kparam.str      = value.get_utf8();
-                        lsp_trace("%s = %s", kvt_name, kparam.str);
-                        kvt->put(kvt_name, &kparam, core::KVT_RX);
-                        wrapper()->kvt_notify_write(kvt, kvt_name, &kparam);
+                        set_instrument_name(kvt, name->nIndex, value.get_utf8());
                     }
 
                     wrapper()->kvt_release();
                 }
             }
+        }
+
+        status_t sampler_ui::reset_settings()
+        {
+            core::KVTStorage *kvt = wrapper()->kvt_lock();
+            if (kvt != NULL)
+            {
+                // Reset all names for all instruments
+                for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+                {
+                    inst_name_t *name = vInstNames.uget(i);
+                    if (!name->pWidget)
+                        continue;
+                    set_instrument_name(kvt, name->nIndex, "");
+                    name->bChanged  = false;
+                }
+
+                wrapper()->kvt_release();
+            }
+
+            return STATUS_OK;
         }
 
         void sampler_ui::kvt_changed(core::KVTStorage *kvt, const char *id, const core::kvt_param_t *value)
@@ -245,6 +268,14 @@ namespace lsp
 
                         name->pWidget->text()->set_raw(value->str);
                         name->bChanged = false;
+                    }
+
+                    // Deploy the value to the current selected instrument
+                    if ((wCurrentInstrument != NULL) && (pCurrentInstrument != NULL))
+                    {
+                        ssize_t selected = ssize_t(pCurrentInstrument->value());
+                        if (selected == index)
+                            wCurrentInstrument->text()->set_raw(value->str);
                     }
                 }
             }
@@ -417,12 +448,12 @@ namespace lsp
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
 
-            tk::FileDialog *dlg = _this->pHydrogenImport;
+            tk::FileDialog *dlg = _this->wHydrogenImport;
             if (dlg == NULL)
             {
                 dlg = new tk::FileDialog(_this->pDisplay);
                 _this->pWrapper->controller()->widgets()->add(dlg);
-                _this->pHydrogenImport  = dlg;
+                _this->wHydrogenImport  = dlg;
 
                 dlg->init();
                 dlg->mode()->set(tk::FDM_OPEN_FILE);
@@ -461,7 +492,7 @@ namespace lsp
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
             LSPString path;
-            status_t res = _this->pHydrogenImport->selected_file()->format(&path);
+            status_t res = _this->wHydrogenImport->selected_file()->format(&path);
             if (res == STATUS_OK)
                 res = _this->import_hydrogen_file(&path);
             return STATUS_OK;
@@ -506,12 +537,38 @@ namespace lsp
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
 
-            // Mark the corresponding instrument name being changed
-            for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+            // Pass the changed value to the corresponding widget
+            ssize_t selected =
+                ((_this->pCurrentInstrument != NULL) && (_this->pCurrentInstrument != NULL)) ?
+                    ssize_t(_this->pCurrentInstrument->value()) : -1;
+
+            if ((sender != NULL) && (sender == _this->wCurrentInstrument))
             {
-                inst_name_t *name = _this->vInstNames.uget(i);
-                if (name->pWidget == sender)
+                // Mark the corresponding instrument name being changed
+                for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+                {
+                    inst_name_t *name = _this->vInstNames.uget(i);
+                    if ((ssize_t(name->nIndex) == selected) && (name->pWidget != NULL))
+                    {
+                        name->pWidget->text()->set(_this->wCurrentInstrument->text());
+                        name->bChanged  = true;
+                    }
+                }
+            }
+            else
+            {
+                // Mark the corresponding instrument name being changed
+                for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+                {
+                    inst_name_t *name = _this->vInstNames.uget(i);
+                    if (name->pWidget != sender)
+                        continue;
+
+                    // Update the name of selected instrument
+                    if (ssize_t(name->nIndex) == selected)
+                        _this->wCurrentInstrument->text()->set(name->pWidget->text());
                     name->bChanged  = true;
+                }
             }
 
             return STATUS_OK;
@@ -549,6 +606,20 @@ namespace lsp
             }
 
             va_end(v);
+        }
+
+        void sampler_ui::set_instrument_name(core::KVTStorage *kvt, int id, const char *name)
+        {
+            char kvt_name[0x80];
+            core::kvt_param_t kparam;
+
+            // Submit new value to KVT
+            snprintf(kvt_name, sizeof(kvt_name), "/instrument/%d/name", id);
+            kparam.type     = core::KVT_STRING;
+            kparam.str      = name;
+            lsp_trace("%s = %s", kvt_name, kparam.str);
+            kvt->put(kvt_name, &kparam, core::KVT_RX);
+            wrapper()->kvt_notify_write(kvt, kvt_name, &kparam);
         }
 
         status_t sampler_ui::import_hydrogen_file(const LSPString *path)
@@ -700,9 +771,35 @@ namespace lsp
                 set_float_value(+100.0f, "panr_%d", id);                                // instrument pan right
             }
 
+            // Set instrument name
+            core::KVTStorage *kvt = wrapper()->kvt_lock();
+            if (kvt != NULL)
+            {
+                set_instrument_name(kvt, id, (inst != NULL) ? inst->name.get_utf8() : "");
+                wrapper()->kvt_release();
+            }
+
             return STATUS_OK;
         }
 
+        void sampler_ui::notify(ui::IPort *port)
+        {
+            if ((port != NULL) && (port == pCurrentInstrument) && (wCurrentInstrument != NULL))
+            {
+                core::KVTStorage *kvt = wrapper()->kvt_lock();
+                if (kvt != NULL)
+                {
+                    const char *param = "";
+                    char buf[0x40];
+                    snprintf(buf, sizeof(buf), "/instrument/%d/name", int(pCurrentInstrument->value()));
+                    if (kvt->get(buf, &param) != STATUS_OK)
+                        param = "";
+                    wCurrentInstrument->text()->set_raw(param);
+
+                    wrapper()->kvt_release();
+                }
+            }
+        }
     }
 }
 
