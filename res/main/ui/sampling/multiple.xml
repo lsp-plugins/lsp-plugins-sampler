@@ -19,18 +19,21 @@
 			<grid rows="2" cols="2" visibility=":msel ieq 0" spacing="4" transpose="true" expand="true">
 				<!-- Midi settings -->
 				<cgroup id="inst" active="0" bg.color="bg" spacing="4" ipadding="0">
-					<grid rows="1" cols="3" hspacing="2">
+					<grid rows="1" cols="5" hspacing="2">
 						<!-- first block -->
-						<grid rows="3" cols="1" vspacing="2">
+						<vbox spacing="2">
+							<hbox bg.color="bg_schema" pad.v="2">
+								<label text="labels.name" pad.h="6" />
+								<edit ui:id="iname" hfill="true" hexpand="true" pad.r="6" />
+							</hbox>
+							<hsep/>
 							<!-- channel note octave -->
-							<grid rows="2" cols="5" spacing="0">
-								<ui:with pad.l="6" pad.r="6" bg.color="bg_schema">
-									<label text="labels.name"/>
+							<grid rows="2" cols="4" spacing="0" pad.v="2" bg.color="bg_schema">
+								<ui:with pad.h="6">
 									<label text="labels.channel"/>
 									<label text="labels.mus.note"/>
 									<label text="labels.mus.octave"/>
 									<label text="labels.group"/>
-									<edit ui:id="iname" width.min="64"/>
 									<combo id="chan[inst]" fill="true"/>
 									<combo id="note[inst]" fill="true"/>
 									<combo id="oct[inst]" fill="true"/>
@@ -38,49 +41,41 @@
 								</ui:with>
 							</grid>
 							<!-- separator -->
-							<cell>
-								<hsep/>
-							</cell>
+							<hsep/>
 							<!-- midi number -->
 							<hbox bg.color="bg_schema">
-								<label text="labels.midi.midi_number" pad.l="6" pad.r="6"/>
-								<midinote id="mn[inst]" note_id="note[inst]" octave_id="oct[inst]" pointer="hand"/>
-								<label expand="true"/>
-								<label bg.color="bg" pad.r="4"/>
-								<button text="labels.midi.note_off" id="nto[inst]" height="18" width="50" ui:inject="Button" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+								<ui:with pad.v="2">
+									<label text="labels.midi.midi_number" pad.h="6" />
+									<midinote id="mn[inst]" note_id="note[inst]" octave_id="oct[inst]" pointer="hand" />
+									<label expand="true"/>
+									<label bg.color="bg" pad.r="4" />
+									<button text="labels.midi.note_off" id="nto[inst]" height="18" width="50" ui:inject="Button" led="true" bg.color="bg_schema" pad.h="6" />
+								</ui:with>
 							</hbox>
-						</grid>
+						</vbox>
 						<!-- separator -->
 						<cell rows="2">
 							<vsep/>
 						</cell>
-						<!-- second block -->
-						<grid rows="1" cols="3" hspacing="2">
-							<!-- note off block -->
-							<grid rows="3" cols="2" bg.color="bg_schema" padding="6">
-								<label text="labels.dynamics" width.min="68" pad.b="6"/>
-								<label text="labels.time_drifting" pad.b="6"/>
+						<!-- note off block -->
+						<grid rows="3" cols="2" bg.color="bg_schema" padding="6">
+							<label text="labels.dynamics" width.min="68" pad.b="6"/>
+							<label text="labels.time_drifting" pad.b="6"/>
 
-								<knob id="dyna[inst]" scolor="green" pad.b="6"/>
-								<knob id="drft[inst]" scolor="green" pad.b="6"/>
+							<knob id="dyna[inst]" scolor="green" pad.b="6"/>
+							<knob id="drft[inst]" scolor="green" pad.b="6"/>
 
-								<value id="dyna[inst]" sline="true"/>
-								<value id="drft[inst]" sline="true"/>
-
-							</grid>
-							<!-- separator -->
-							<cell>
-								<vsep/>
-							</cell>
-							<!-- mutting and mute buttons -->
-							<grid rows="3" cols="1" vspacing="2">
-								<button text="labels.chan.ON" id="ion[inst]" height="18" width="50" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
-								<cell>
-									<hsep/>
-								</cell>
-								<button text="labels.muting" id="mtg[inst]" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
-							</grid>
+							<value id="dyna[inst]" sline="true"/>
+							<value id="drft[inst]" sline="true"/>
 						</grid>
+						<!-- separator -->
+						<vsep/>
+						<!-- mutting and mute buttons -->
+						<vbox spacing="2">
+							<button text="labels.chan.ON" id="ion[inst]" height="18" width="50" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+							<hsep vreduce="true" />
+							<button text="labels.muting" id="mtg[inst]" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						</vbox>
 					</grid>
 				</cgroup>
 
