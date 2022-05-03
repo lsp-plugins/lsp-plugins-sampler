@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   4
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   5
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -751,7 +751,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x12_ports,
             "sampling/multiple.xml",
             NULL,
@@ -773,7 +773,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x24_ports,
             "sampling/multiple.xml",
             NULL,
@@ -795,7 +795,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x48_ports,
             "sampling/multiple.xml",
             NULL,
@@ -817,7 +817,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x12_do_ports,
             "sampling/multiple.xml",
             NULL,
@@ -839,7 +839,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x24_do_ports,
             "sampling/multiple.xml",
             NULL,
@@ -861,7 +861,7 @@ namespace lsp
             NULL,
             LSP_PLUGINS_SAMPLER_VERSION,
             sampler_classes,
-            E_DUMP_STATE,
+            E_DUMP_STATE | E_KVT_SYNC,
             sampler_x48_do_ports,
             "sampling/multiple.xml",
             NULL,
