@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.6 ===
+
+
 === 1.0.5 ===
 * Added support of entering instrument names in the UI.
 * Updated dependencies and build scripts.
