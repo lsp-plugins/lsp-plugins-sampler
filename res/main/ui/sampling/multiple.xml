@@ -96,6 +96,7 @@
 							status=":fs${idx}"
 							width.min="320"
 							height.min="160"
+							clipboard.pitch="pi${idx}"
 							clipboard.head_cut="hc${idx}"
 							clipboard.tail_cut="tc${idx}"
 							clipboard.fade_in="fi${idx}"
@@ -103,8 +104,12 @@
 							clipboard.makeup="mk${idx}"
 							clipboard.predelay="pd${idx}"/>
 
-						<grid rows="3" cols="15" bg.color="bg" hspacing="2">
+						<grid rows="3" cols="17" bg.color="bg" hspacing="2">
 							<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
+							<cell rows="3">
+								<vsep bg.color="bg"/>
+							</cell>
+							<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
 							<cell rows="3">
 								<vsep bg.color="bg"/>
 							</cell>
@@ -141,6 +146,7 @@
 									<label pad.b="6"/>
 								</vbox>
 							</cell>
+							<knob id="pi${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
 							<knob id="hc${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
 							<knob id="tc${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
 							<knob id="fi${idx}" size="20" scolor="fade_in" bg.color="bg_schema" pad.b="6"/>
@@ -154,6 +160,7 @@
 									<label pad.b="6"/>
 								</vbox>
 							</cell>
+							<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="hc${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="tc${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="fi${idx}" bg.color="bg_schema" pad.b="6"/>

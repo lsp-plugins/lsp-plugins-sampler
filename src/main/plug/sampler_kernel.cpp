@@ -142,6 +142,7 @@ namespace lsp
                 af->bDirty                  = false;
                 af->bSync                   = false;
                 af->fVelocity               = 1.0f;
+                af->fPitch                  = 0.0f;
                 af->fHeadCut                = 0.0f;
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
@@ -155,6 +156,7 @@ namespace lsp
                 af->nStatus                 = STATUS_UNSPECIFIED;
 
                 af->pFile                   = NULL;
+                af->pPitch                  = NULL;
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
@@ -270,6 +272,8 @@ namespace lsp
                 // Allocate files
                 TRACE_PORT(ports[port_id]);
                 af->pFile               = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pPitch              = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pHeadCut            = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
@@ -456,6 +460,14 @@ namespace lsp
                 {
                     af->fVelocity   = value;
                     bReorder        = true;
+                }
+
+                // Update sample rate
+                value               = af->pPitch->value();
+                if (value != af->fPitch)
+                {
+                    af->fPitch      = value;
+                    af->bDirty      = true;
                 }
 
                 // Update sample timings
@@ -670,21 +682,29 @@ namespace lsp
             afsample_t *afs     = af->vData[AFI_CURR];
             if (afs->pSource != NULL)
             {
-                ssize_t head        = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
-                ssize_t tail        = dspu::millis_to_samples(nSampleRate, af->fTailCut);
-                ssize_t tot_samples = dspu::millis_to_samples(nSampleRate, af->fLength);
+                
+                size_t sample_rate_dst = nSampleRate * pow(2.0f, af->fPitch * -1 * 100 / 1200);
+                ssize_t head        = dspu::millis_to_samples(sample_rate_dst, af->fHeadCut);
+                ssize_t tail        = dspu::millis_to_samples(sample_rate_dst, af->fTailCut);
+                ssize_t tot_samples = dspu::millis_to_samples(sample_rate_dst, af->fLength);
                 ssize_t max_samples = tot_samples - head - tail;
-                dspu::Sample *s     = afs->pSample;
+
+                dspu::Sample *ors = new dspu::Sample(); // Original sample
+                ors->copy(afs->pSource);
+                ors->resample(sample_rate_dst);
+
+                dspu::Sample *des = new dspu::Sample(); // Destination sample
+                des->copy(ors);
 
                 if (max_samples > 0)
                 {
                     lsp_trace("re-render sample max_samples=%d", int(max_samples));
 
                     // Re-render sample
-                    for (size_t j=0; j<s->channels(); ++j)
+                    for (size_t j=0; j<des->channels(); ++j)
                     {
-                        float *dst          = s->getBuffer(j);
-                        const float *src    = afs->pSource->channel(j);
+                        float *dst          = des->getBuffer(j);
+                        const float *src    = ors->channel(j);
 
                         if (af->bReverse)
                             dsp::reverse2(dst, &src[tail], max_samples);
@@ -692,8 +712,8 @@ namespace lsp
                             dsp::copy(dst, &src[head], max_samples);
 
                         // Apply fade-in and fade-out to the buffer
-                        dspu::fade_in(dst, dst, dspu::millis_to_samples(nSampleRate, af->fFadeIn), max_samples);
-                        dspu::fade_out(dst, dst, dspu::millis_to_samples(nSampleRate, af->fFadeOut), max_samples);
+                        dspu::fade_in(dst, dst, dspu::millis_to_samples(sample_rate_dst, af->fFadeIn), max_samples);
+                        dspu::fade_out(dst, dst, dspu::millis_to_samples(sample_rate_dst, af->fFadeOut), max_samples);
 
                         // Now render thumbnail
                         src                 = dst;
@@ -714,16 +734,16 @@ namespace lsp
                     }
 
                     // Update length of the sample
-                    s->set_length(max_samples);
+                    des->set_length(max_samples);
 
                     // (Re)bind sample
                     for (size_t j=0; j<nChannels; ++j)
-                        vChannels[j].bind(af->nID, s, false);
+                        vChannels[j].bind(af->nID, des, false);
                 }
                 else
                 {
                     // Cleanup sample data
-                    for (size_t j=0; j<s->channels(); ++j)
+                    for (size_t j=0; j<des->channels(); ++j)
                         dsp::fill_zero(afs->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
 
                     // Unbind empty sample
@@ -1068,6 +1088,7 @@ namespace lsp
             v->write("bDirty", f->bDirty);
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
+            v->write("fPitch", f->fPitch);
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1081,6 +1102,7 @@ namespace lsp
             v->write("bOn", f->bOn);
 
             v->write("pFile", f->pFile);
+            v->write("pPitch", f->pPitch);
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);
