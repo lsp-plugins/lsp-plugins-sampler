@@ -712,6 +712,7 @@ namespace lsp
             }
 
             set_float_value(1.0f, "on_%d_%d", id, jd);                      // enabled
+            set_float_value(meta::sampler_metadata::SAMPLE_PITCH_MIN, "pi_%d_%d", id, jd);    // sample rate
             set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_MIN, "hc_%d_%d", id, jd);    // head cut
             set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_MIN, "tc_%d_%d", id, jd);    // tail cut
             set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_MIN, "fi_%d_%d", id, jd);    // fade in
