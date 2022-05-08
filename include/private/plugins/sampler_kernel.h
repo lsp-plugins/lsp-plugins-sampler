@@ -87,6 +87,7 @@ namespace lsp
                     bool                bDirty;                                         // Dirty flag
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
+                    float               fSampleRate;                                    // Sample rate (KHz)
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
@@ -100,6 +101,7 @@ namespace lsp
                     bool                bOn;                                            // On flag
 
                     plug::IPort        *pFile;                                          // Audio file port
+                    plug::IPort        *pSampleRate;                                    // Sample rate
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length

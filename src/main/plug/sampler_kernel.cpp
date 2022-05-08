@@ -26,6 +26,9 @@
 #include <lsp-plug.in/dsp-units/misc/fade.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
+#include <iostream>
+using namespace std;
+
 #define TRACE_PORT(p) lsp_trace("  port id=%s", (p)->metadata()->id);
 
 namespace lsp
@@ -142,6 +145,7 @@ namespace lsp
                 af->bDirty                  = false;
                 af->bSync                   = false;
                 af->fVelocity               = 1.0f;
+                af->fSampleRate             = 192.0f;
                 af->fHeadCut                = 0.0f;
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
@@ -155,6 +159,7 @@ namespace lsp
                 af->nStatus                 = STATUS_UNSPECIFIED;
 
                 af->pFile                   = NULL;
+                af->pSampleRate             = NULL;
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
@@ -270,6 +275,8 @@ namespace lsp
                 // Allocate files
                 TRACE_PORT(ports[port_id]);
                 af->pFile               = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pSampleRate         = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pHeadCut            = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
@@ -456,6 +463,14 @@ namespace lsp
                 {
                     af->fVelocity   = value;
                     bReorder        = true;
+                }
+
+                // Update sample rate
+                value           = af->pSampleRate->value();
+                if (value != af->fSampleRate)
+                {
+                    af->fSampleRate = value;
+                    af->bDirty      = true;
                 }
 
                 // Update sample timings
@@ -670,6 +685,11 @@ namespace lsp
             afsample_t *afs     = af->vData[AFI_CURR];
             if (afs->pSource != NULL)
             {
+                afs->pSample->copy(afs->pSource);
+                nSampleRate = af->fSampleRate * 1000;
+                afs->pSource->resample(af->fSampleRate * 1000);
+                afs->pSample->resample(af->fSampleRate * 1000);
+
                 ssize_t head        = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
                 ssize_t tail        = dspu::millis_to_samples(nSampleRate, af->fTailCut);
                 ssize_t tot_samples = dspu::millis_to_samples(nSampleRate, af->fLength);
@@ -1068,6 +1088,7 @@ namespace lsp
             v->write("bDirty", f->bDirty);
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
+            v->write("fSampleRate", f->fSampleRate);
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1081,6 +1102,7 @@ namespace lsp
             v->write("bOn", f->bOn);
 
             v->write("pFile", f->pFile);
+            v->write("pSampleRate", f->pSampleRate);
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);

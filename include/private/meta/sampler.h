@@ -33,6 +33,11 @@ namespace lsp
         // Sampler metadata
         struct sampler_metadata
         {
+            static const float SAMPLE_RATE_MIN        = 44.1f;     // Minimum rate (ms)
+            static const float SAMPLE_RATE_MAX        = 800.0f; // Maximum sample rate (ms)
+            static const float SAMPLE_RATE_DFL        = 192.0f;     // Sample rate (ms)
+            static const float SAMPLE_RATE_STEP       = 0.1f;     // Sample rate step (ms)
+                                                                    //
             static const float SAMPLE_LENGTH_MIN        = 0.0f;     // Minimum length (ms)
             static const float SAMPLE_LENGTH_MAX        = 64000.0f; // Maximum sample length (ms)
             static const float SAMPLE_LENGTH_DFL        = 0.0f;     // Sample length (ms)

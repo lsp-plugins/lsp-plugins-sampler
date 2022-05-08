@@ -177,6 +177,7 @@ namespace lsp
 
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
+            CONTROL("sr", "Sample sample rate", U_KHZ, sampler_metadata::SAMPLE_RATE), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
