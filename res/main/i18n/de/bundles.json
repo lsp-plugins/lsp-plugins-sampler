@@ -1,0 +1,11 @@
+{
+	"multisampler": {
+		"name": "Multisampler",
+		"description": "Dieses Plugin ist ein Multi-Instrument-MIDI-Sampler mit Stereoinput und \n-output. Für jedes Instrument sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich. Jedes Instrument hat seinen eigenen \nStereooutput, dass es möglich macht, jedes Instrument in einzelnen Spuren \nauf zu nehmen."
+	},
+	"sampler": {
+		"name": "Sampler",
+		"description": "Dieses Plugin ist ein Single-Note-MIDI-Sample-Player mit Input und Output.\nEs sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich."
+	}
+}
+
