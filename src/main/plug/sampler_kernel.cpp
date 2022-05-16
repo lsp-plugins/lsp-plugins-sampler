@@ -26,9 +26,6 @@
 #include <lsp-plug.in/dsp-units/misc/fade.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
-#include <iostream>
-using namespace std;
-
 #define TRACE_PORT(p) lsp_trace("  port id=%s", (p)->metadata()->id);
 
 namespace lsp
