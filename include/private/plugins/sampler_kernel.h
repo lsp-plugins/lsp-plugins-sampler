@@ -65,7 +65,6 @@ namespace lsp
                 {
                     dspu::Sample       *pSource;                                        // Source sample (unchanged)
                     dspu::Sample       *pSample;                                        // Sample for playback (processed)
-                    float               fNorm;                                          // Normalizing factor
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
                 };
 
@@ -155,6 +154,7 @@ namespace lsp
                 int         load_file(afile_t *file);
                 void        copy_asample(afsample_t *dst, const afsample_t *src);
                 void        clear_asample(afsample_t *dst);
+                bool        do_render_sample(afile_t *af);
                 void        render_sample(afile_t *af);
                 void        reorder_samples();
                 void        process_listen_events();

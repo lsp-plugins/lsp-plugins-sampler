@@ -74,7 +74,7 @@
 					status=":fs[ssel]"
 					width.min="320"
 					height.min="160"
-					clipboard.pitch="pi${idx}"
+					clipboard.pitch="pi[ssel]"
 					clipboard.head_cut="hc[ssel]"
 					clipboard.tail_cut="tc[ssel]"
 					clipboard.fade_in="fi[ssel]"
@@ -124,7 +124,7 @@
 							<label pad.b="6"/>
 						</vbox>
 					</cell>
-					<knob id="pi${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
+					<knob id="pi[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
 					<knob id="hc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
 					<knob id="tc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
 					<knob id="fi[ssel]" size="20" scolor="fade_in" bg.color="bg_schema" pad.b="6"/>
@@ -138,7 +138,7 @@
 							<label pad.b="6"/>
 						</vbox>
 					</cell>
-					<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
+					<value id="pi[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="hc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="tc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="fi[ssel]" bg.color="bg_schema" pad.b="6"/>

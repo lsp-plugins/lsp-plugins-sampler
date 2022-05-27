@@ -33,8 +33,8 @@ namespace lsp
         // Sampler metadata
         struct sampler_metadata
         {
-            static const float SAMPLE_PITCH_MIN         = -21.0f;   // Minimum pitch (st)
-            static const float SAMPLE_PITCH_MAX         = 21.0f;    // Maximum pitch (st)
+            static const float SAMPLE_PITCH_MIN         = -24.0f;   // Minimum pitch (st)
+            static const float SAMPLE_PITCH_MAX         = 24.0f;    // Maximum pitch (st)
             static const float SAMPLE_PITCH_DFL         = 0.0f;     // Pitch (st)
             static const float SAMPLE_PITCH_STEP        = 0.01f;    // Pitch step (st)
                                                                     //
