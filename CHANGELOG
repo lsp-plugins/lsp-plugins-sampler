@@ -4,6 +4,7 @@
 
 === 1.0.6 ===
 * Added german translations (contributed by Johannes Guenther).
+* Updated build scripts and dependencies.
 
 === 1.0.5 ===
 * Added support of entering instrument names in the UI.
