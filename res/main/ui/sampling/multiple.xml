@@ -22,19 +22,19 @@
 					<grid rows="1" cols="5" hspacing="2">
 						<!-- first block -->
 						<vbox spacing="2">
-							<hbox bg.color="bg_schema" pad.v="2">
+							<hbox bg.color="bg_schema" pad.v="4">
 								<label text="labels.name" pad.h="6" />
 								<edit ui:id="iname" hfill="true" hexpand="true" pad.r="6" />
 							</hbox>
 							<hsep/>
 							<!-- channel note octave -->
-							<grid rows="2" cols="4" spacing="0" pad.v="2" bg.color="bg_schema">
-								<ui:with pad.h="6">
-									<label text="labels.channel"/>
+							<grid rows="2" cols="4" spacing="0" pad.t="4" bg.color="bg_schema">
+								<ui:with pad.r="6" pad.b="4">
+									<label text="labels.channel" pad.l="6"/>
 									<label text="labels.mus.note"/>
 									<label text="labels.mus.octave"/>
 									<label text="labels.group"/>
-									<combo id="chan[inst]" fill="true"/>
+									<combo id="chan[inst]" fill="true" pad.l="6"/>
 									<combo id="note[inst]" fill="true"/>
 									<combo id="oct[inst]" fill="true"/>
 									<combo id="mgrp[inst]" fill="true"/>
@@ -44,7 +44,7 @@
 							<hsep/>
 							<!-- midi number -->
 							<hbox bg.color="bg_schema">
-								<ui:with pad.v="2">
+								<ui:with pad.v="4">
 									<label text="labels.midi.midi_number" pad.h="6" />
 									<midinote id="mn[inst]" note_id="note[inst]" octave_id="oct[inst]" pointer="hand" />
 									<label expand="true"/>
@@ -96,6 +96,7 @@
 							status=":fs${idx}"
 							width.min="320"
 							height.min="160"
+							clipboard.pitch="pi${idx}"
 							clipboard.head_cut="hc${idx}"
 							clipboard.tail_cut="tc${idx}"
 							clipboard.fade_in="fi${idx}"
@@ -103,8 +104,13 @@
 							clipboard.makeup="mk${idx}"
 							clipboard.predelay="pd${idx}"/>
 
-						<grid rows="3" cols="15" bg.color="bg" hspacing="2">
+						<grid rows="3" cols="17" bg.color="bg" hspacing="2">
+							<ui:with width.min="50">
 							<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
+							<cell rows="3">
+								<vsep bg.color="bg"/>
+							</cell>
+							<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
 							<cell rows="3">
 								<vsep bg.color="bg"/>
 							</cell>
@@ -141,12 +147,17 @@
 									<label pad.b="6"/>
 								</vbox>
 							</cell>
-							<knob id="hc${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
-							<knob id="tc${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
-							<knob id="fi${idx}" size="20" scolor="fade_in" bg.color="bg_schema" pad.b="6"/>
-							<knob id="fo${idx}" size="20" scolor="fade_out" bg.color="bg_schema" pad.b="6"/>
-							<knob id="mk${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
-							<knob id="pd${idx}" size="20" bg.color="bg_schema" pad.b="6"/>
+							</ui:with>
+
+							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
+							<knob id="pi${idx}" />
+							<knob id="hc${idx}" />
+							<knob id="tc${idx}" />
+							<knob id="fi${idx}" scolor="fade_in" />
+							<knob id="fo${idx}" scolor="fade_out" />
+							<knob id="mk${idx}" />
+							<knob id="pd${idx}" />
+							</ui:with>
 							<cell rows="2">
 								<vbox bg.color="bg_schema">
 									<button id="ls${idx}" size="32" ui:inject="Button_cyan" toggle="false"/>
@@ -154,6 +165,7 @@
 									<label pad.b="6"/>
 								</vbox>
 							</cell>
+							<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="hc${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="tc${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="fi${idx}" bg.color="bg_schema" pad.b="6"/>
@@ -253,7 +265,7 @@
 			<!-- Mixer -->
 			<ui:for id="m" first="0" count=":num_blocks">
 				<group text="groups.instrument_mixer" ipadding="0" visibility=":msel ieq ${:m+1}" expand="true">
-					<grid rows="14" cols="25" transpose="true" hspacing="2" vspacing="2">
+					<grid rows="14" cols="25" transpose="true" hspacing="0" vspacing="2">
 						<label text="labels.instrument_num" fill="true" halign="0" padding="6"/>
 						<label text="labels.name" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0" padding="6"/>
@@ -274,7 +286,7 @@
 								<vsep pad.l="4"/>
 							</cell>
 							<label text="${i}" padding="6"/>
-							<edit ui:id="iname_${i}" bg.inherit="true" />
+							<edit ui:id="iname_${i}" bg.inherit="true" pad.h="6"/>
 							<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 							<knob id="imix_${i}" size="20"/>
 							<value id="imix_${i}" detailed="false" pad.b="6"/>
@@ -283,7 +295,7 @@
 							<value id="panl_${i}" detailed="false" pad.b="6"/>
 							<knob id="panr_${i}" size="20" balance="0.5" scolor="balance_r"/>
 							<value id="panr_${i}" detailed="false" pad.b="6"/>
-							<combo id="mgrp_${i}" pad.b="6" pad.l="3" pad.r="3"/>
+							<combo id="mgrp_${i}" pad.b="6" pad.h="6"/>
 							<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
 							<led id="iact_${i}" pad.b="6"/>
 							<button id="trg_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>

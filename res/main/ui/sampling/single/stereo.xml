@@ -7,7 +7,7 @@
 				<grid rows="3" cols="1" vspacing="2">
 					<!-- channel note octave -->
 					<grid rows="2" cols="3" spacing="0">
-						<ui:attributes pad.l="6" pad.r="6" bg.color="bg_schema">
+						<ui:attributes pad.h="6" bg.color="bg_schema">
 							<label text="labels.channel"/>
 							<label text="labels.mus.note"/>
 							<label text="labels.mus.octave"/>
@@ -74,6 +74,7 @@
 					status=":fs[ssel]"
 					width.min="320"
 					height.min="160"
+					clipboard.pitch="pi[ssel]"
 					clipboard.head_cut="hc[ssel]"
 					clipboard.tail_cut="tc[ssel]"
 					clipboard.fade_in="fi[ssel]"
@@ -81,8 +82,13 @@
 					clipboard.makeup="mk[ssel]"
 					clipboard.predelay="pd[ssel]"/>
 
-				<grid rows="3" cols="15" bg.color="bg" hspacing="2">
+				<grid rows="3" cols="17" bg.color="bg" hspacing="2">
+					<ui:with width.min="50">
 					<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
 					<cell rows="3">
 						<vsep bg.color="bg"/>
 					</cell>
@@ -119,12 +125,17 @@
 							<label pad.b="6"/>
 						</vbox>
 					</cell>
-					<knob id="hc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
-					<knob id="tc[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
-					<knob id="fi[ssel]" size="20" scolor="fade_in" bg.color="bg_schema" pad.b="6"/>
-					<knob id="fo[ssel]" size="20" scolor="fade_out" bg.color="bg_schema" pad.b="6"/>
-					<knob id="mk[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
-					<knob id="pd[ssel]" size="20" bg.color="bg_schema" pad.b="6"/>
+					</ui:with>
+
+					<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
+					<knob id="pi[ssel]" />
+					<knob id="hc[ssel]" />
+					<knob id="tc[ssel]" />
+					<knob id="fi[ssel]" scolor="fade_in" />
+					<knob id="fo[ssel]" scolor="fade_out" />
+					<knob id="mk[ssel]" />
+					<knob id="pd[ssel]" />
+					</ui:with>
 					<cell rows="2">
 						<vbox bg.color="bg_schema">
 							<button id="ls[ssel]" size="32" ui:inject="Button_cyan" toggle="false"/>
@@ -132,6 +143,7 @@
 							<label pad.b="6"/>
 						</vbox>
 					</cell>
+					<value id="pi[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="hc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="tc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="fi[ssel]" bg.color="bg_schema" pad.b="6"/>

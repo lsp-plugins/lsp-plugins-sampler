@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   5
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   6
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -177,6 +177,7 @@ namespace lsp
 
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
+            CONTROL("pi", "Sample pitch", U_SEMITONES, sampler_metadata::SAMPLE_PITCH), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
