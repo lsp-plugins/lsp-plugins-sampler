@@ -33,49 +33,59 @@ namespace lsp
         // Sampler metadata
         struct sampler_metadata
         {
-            static const float SAMPLE_PITCH_MIN         = -24.0f;   // Minimum pitch (st)
-            static const float SAMPLE_PITCH_MAX         = 24.0f;    // Maximum pitch (st)
-            static const float SAMPLE_PITCH_DFL         = 0.0f;     // Pitch (st)
-            static const float SAMPLE_PITCH_STEP        = 0.01f;    // Pitch step (st)
+            static const float SAMPLE_PITCH_MIN             = -24.0f;   // Minimum pitch (st)
+            static const float SAMPLE_PITCH_MAX             = 24.0f;    // Maximum pitch (st)
+            static const float SAMPLE_PITCH_DFL             = 0.0f;     // Pitch (st)
+            static const float SAMPLE_PITCH_STEP            = 0.01f;    // Pitch step (st)
                                                                     //
-            static const float SAMPLE_LENGTH_MIN        = 0.0f;     // Minimum length (ms)
-            static const float SAMPLE_LENGTH_MAX        = 64000.0f; // Maximum sample length (ms)
-            static const float SAMPLE_LENGTH_DFL        = 0.0f;     // Sample length (ms)
-            static const float SAMPLE_LENGTH_STEP       = 0.1f;     // Sample step (ms)
+            static const float SAMPLE_STRETCH_MIN           = -30.0f;   // Minimum stretch (sec)
+            static const float SAMPLE_STRETCH_MAX           = 30.0f;    // Maximum stretch (sec)
+            static const float SAMPLE_STRETCH_DFL           = 0.0f;     // Stretch (sec)
+            static const float SAMPLE_STRETCH_STEP          = 0.01f;    // Stretch step (sec)
+            
+            static const float SAMPLE_STRETCH_CHUNK_MIN     = 4.0f;     // Minimum stretch chunk (bar)
+            static const float SAMPLE_STRETCH_CHUNK_MAX     = 32.0f;    // Maximum stretch chunk (bar)
+            static const float SAMPLE_STRETCH_CHUNK_DFL     = 9.0f;     // Stretch chunk (bar)
+            static const float SAMPLE_STRETCH_CHUNK_STEP    = 0.1f;     // Stretch chunk step (bar)
 
-            static const float PREDELAY_MIN             = 0.0f;     // Pre-delay min (ms)
-            static const float PREDELAY_MAX             = 100.0f;   // Pre-delay max (ms)
-            static const float PREDELAY_DFL             = 0.0f;     // Pre-delay default (ms)
-            static const float PREDELAY_STEP            = 0.1f;     // Pre-delay step (ms)
+            static const float SAMPLE_LENGTH_MIN            = 0.0f;     // Minimum length (ms)
+            static const float SAMPLE_LENGTH_MAX            = 64000.0f; // Maximum sample length (ms)
+            static const float SAMPLE_LENGTH_DFL            = 0.0f;     // Sample length (ms)
+            static const float SAMPLE_LENGTH_STEP           = 0.1f;     // Sample step (ms)
 
-            static const float FADEOUT_MIN              = 0.0f;     // Fade-out min (ms)
-            static const float FADEOUT_MAX              = 50.0f;    // Fade-out max (ms)
-            static const float FADEOUT_DFL              = 10.0f;    // Fade-out default (ms)
-            static const float FADEOUT_STEP             = 0.025f;   // Fade-out step (ms)
+            static const float PREDELAY_MIN                 = 0.0f;     // Pre-delay min (ms)
+            static const float PREDELAY_MAX                 = 100.0f;   // Pre-delay max (ms)
+            static const float PREDELAY_DFL                 = 0.0f;     // Pre-delay default (ms)
+            static const float PREDELAY_STEP                = 0.1f;     // Pre-delay step (ms)
 
-            static const size_t MESH_SIZE               = 320;      // Maximum mesh size
-            static const size_t TRACKS_MAX              = 2;        // Maximum tracks per mesh/sample
-            static const float ACTIVITY_LIGHTING        = 0.1f;     // Activity lighting (seconds)
+            static const float FADEOUT_MIN                  = 0.0f;     // Fade-out min (ms)
+            static const float FADEOUT_MAX                  = 50.0f;    // Fade-out max (ms)
+            static const float FADEOUT_DFL                  = 10.0f;    // Fade-out default (ms)
+            static const float FADEOUT_STEP                 = 0.025f;   // Fade-out step (ms)
 
-            static const size_t CHANNEL_DFL             = 0;        // Default channel
-            static const size_t NOTE_DFL                = 9;        // A
-            static const size_t OCTAVE_DFL              = 4;        // 4th octave
+            static const size_t MESH_SIZE                   = 320;      // Maximum mesh size
+            static const size_t TRACKS_MAX                  = 2;        // Maximum tracks per mesh/sample
+            static const float ACTIVITY_LIGHTING            = 0.1f;     // Activity lighting (seconds)
 
-            static const float DRIFT_MIN                = 0.0f;     // Minimum delay
-            static const float DRIFT_DFL                = 0.0f;     // Default delay
-            static const float DRIFT_STEP               = 0.1f;     // Delay step
-            static const float DRIFT_MAX                = 100.0f;   // Maximum delay
+            static const size_t CHANNEL_DFL                 = 0;        // Default channel
+            static const size_t NOTE_DFL                    = 9;        // A
+            static const size_t OCTAVE_DFL                  = 4;        // 4th octave
 
-            static const float DYNA_MIN                 = 0.0f;     // Minimum dynamics
-            static const float DYNA_DFL                 = 0.0f;     // Default dynamics
-            static const float DYNA_STEP                = 0.1f;     // Dynamics step
-            static const float DYNA_MAX                 = 100.0f;   // Maximum dynamics
+            static const float DRIFT_MIN                    = 0.0f;     // Minimum delay
+            static const float DRIFT_DFL                    = 0.0f;     // Default delay
+            static const float DRIFT_STEP                   = 0.1f;     // Delay step
+            static const float DRIFT_MAX                    = 100.0f;   // Maximum delay
 
-            static const size_t PLAYBACKS_MAX           = 8192;     // Maximum number of simultaneously playing samples
-            static const size_t SAMPLE_FILES            = 8;        // Number of sample files
-            static const size_t BUFFER_SIZE             = 4096;     // Size of temporary buffer
+            static const float DYNA_MIN                     = 0.0f;     // Minimum dynamics
+            static const float DYNA_DFL                     = 0.0f;     // Default dynamics
+            static const float DYNA_STEP                    = 0.1f;     // Dynamics step
+            static const float DYNA_MAX                     = 100.0f;   // Maximum dynamics
 
-            static const size_t INSTRUMENTS_MAX         = 64;       // Maximum supported instruments
+            static const size_t PLAYBACKS_MAX               = 8192;     // Maximum number of simultaneously playing samples
+            static const size_t SAMPLE_FILES                = 8;        // Number of sample files
+            static const size_t BUFFER_SIZE                 = 4096;     // Size of temporary buffer
+
+            static const size_t INSTRUMENTS_MAX             = 64;       // Maximum supported instruments
         };
 
         // Different samplers

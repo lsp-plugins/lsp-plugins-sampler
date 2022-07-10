@@ -75,6 +75,8 @@
 					width.min="320"
 					height.min="160"
 					clipboard.pitch="pi[ssel]"
+					clipboard.stretch="st${idx}"
+					clipboard.stretch_chunk="sc${idx}"
 					clipboard.head_cut="hc[ssel]"
 					clipboard.tail_cut="tc[ssel]"
 					clipboard.fade_in="fi[ssel]"
@@ -82,13 +84,25 @@
 					clipboard.makeup="mk[ssel]"
 					clipboard.predelay="pd[ssel]"/>
 
-				<grid rows="3" cols="17" bg.color="bg" hspacing="2">
+				<grid rows="3" cols="23" bg.color="bg" hspacing="2">
 					<ui:with width.min="50">
 					<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
 					<cell rows="3">
 						<vsep bg.color="bg"/>
 					</cell>
 					<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.compensate" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.stretch" bg.color="bg_schema" padding="6"/>
+					<cell rows="3">
+						<vsep bg.color="bg"/>
+					</cell>
+					<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
 					<cell rows="3">
 						<vsep bg.color="bg"/>
 					</cell>
@@ -129,6 +143,15 @@
 
 					<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
 					<knob id="pi[ssel]" />
+					<cell rows="2">
+						<vbox bg.color="bg_schema">
+							<button id="pc${idx}" size="32"/>
+							<label pad.b="6"/>
+							<label pad.b="6"/>
+						</vbox>
+					</cell>
+					<knob id="st${idx}" />
+					<knob id="sc${idx}" />
 					<knob id="hc[ssel]" />
 					<knob id="tc[ssel]" />
 					<knob id="fi[ssel]" scolor="fade_in" />
@@ -144,6 +167,8 @@
 						</vbox>
 					</cell>
 					<value id="pi[ssel]" bg.color="bg_schema" pad.b="6"/>
+					<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
+					<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
 					<value id="hc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="tc[ssel]" bg.color="bg_schema" pad.b="6"/>
 					<value id="fi[ssel]" bg.color="bg_schema" pad.b="6"/>
