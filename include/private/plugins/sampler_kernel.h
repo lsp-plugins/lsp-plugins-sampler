@@ -87,11 +87,17 @@ namespace lsp
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
                     float               fPitch;                                         // Pitch (st)
+                    float               fStretch;                                       // Stretch (sec)
+                    float               fStretchStart;                                  // Stretch start (ms)
+                    float               fStretchEnd;                                    // Stretch end (ms)
+                    float               fStretchChunk;                                  // Stretch chunk (bar)
+                    float               fStretchFade;                                   // Stretch fade
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
                     float               fFadeOut;                                       // Fade Out (ms)
                     bool                bReverse;                                       // Reverse sample
+                    bool                bCompensate;                                    // Compensate time 
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
@@ -101,6 +107,11 @@ namespace lsp
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
+                    plug::IPort        *pStretch;                                       // Stretch
+                    plug::IPort        *pStretchStart;                                  // Stretch start
+                    plug::IPort        *pStretchEnd;                                    // Stretch end
+                    plug::IPort        *pStretchChunk;                                  // Stretch chunk
+                    plug::IPort        *pStretchFade;                                   // Stretch fade
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length
@@ -110,6 +121,7 @@ namespace lsp
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pListen;                                        // Listen trigger
                     plug::IPort        *pReverse;                                       // Reverse sample
+                    plug::IPort        *pCompensate;                                    // Compensate
                     plug::IPort        *pGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain ports
                     plug::IPort        *pLength;                                        // Length of the file
                     plug::IPort        *pStatus;                                        // Status of the file

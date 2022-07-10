@@ -37,7 +37,22 @@ namespace lsp
             static constexpr float SAMPLE_PITCH_MAX         = 24.0f;    // Maximum pitch (st)
             static constexpr float SAMPLE_PITCH_DFL         = 0.0f;     // Pitch (st)
             static constexpr float SAMPLE_PITCH_STEP        = 0.01f;    // Pitch step (st)
-                                                                    //
+                                                                        
+            static constexpr const float SAMPLE_STRETCH_MIN           = -30.0f;   // Maximum stretch (sec)
+            static constexpr const float SAMPLE_STRETCH_MAX           = 30.0f;    // Maximum stretch (sec)
+            static constexpr const float SAMPLE_STRETCH_DFL           = 0.0f;     // Stretch (sec)
+            static constexpr const float SAMPLE_STRETCH_STEP          = 0.01f;    // Stretch step (sec)
+            
+            static constexpr const float SAMPLE_STRETCH_CHUNK_MIN     = 4.0f;     // Minimum stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_CHUNK_MAX     = 32.0f;    // Maximum stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_CHUNK_DFL     = 9.0f;     // Stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_CHUNK_STEP    = 0.1f;     // Stretch chunk step (bar)
+
+            static constexpr const float SAMPLE_STRETCH_FADE_MIN     = 0.0f;      // Minimum stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_FADE_MAX     = 100.0f;    // Maximum stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_FADE_DFL     = 100.0f;    // Stretch chunk (bar)
+            static constexpr const float SAMPLE_STRETCH_FADE_STEP    = 0.1f;      // Stretch chunk step (bar)
+                                                                       
             static constexpr float SAMPLE_LENGTH_MIN        = 0.0f;     // Minimum length (ms)
             static constexpr float SAMPLE_LENGTH_MAX        = 64000.0f; // Maximum sample length (ms)
             static constexpr float SAMPLE_LENGTH_DFL        = 0.0f;     // Sample length (ms)
@@ -76,6 +91,7 @@ namespace lsp
             static constexpr size_t BUFFER_SIZE             = 4096;     // Size of temporary buffer
 
             static constexpr size_t INSTRUMENTS_MAX         = 64;       // Maximum supported instruments
+
         };
 
         // Different samplers

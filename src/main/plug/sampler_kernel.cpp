@@ -143,11 +143,17 @@ namespace lsp
                 af->bSync                   = false;
                 af->fVelocity               = 1.0f;
                 af->fPitch                  = 0.0f;
+                af->fStretch                = 0.0f;
+                af->fStretchStart           = 0.0f;
+                af->fStretchEnd             = 0.0f;
+                af->fStretchChunk           = 0.0f;
+                af->fStretchFade            = 0.0f;
                 af->fHeadCut                = 0.0f;
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
                 af->fFadeOut                = 0.0f;
                 af->bReverse                = false;
+                af->bCompensate             = false;
                 af->fPreDelay               = meta::sampler_metadata::PREDELAY_DFL;
                 af->sListen.init();
                 af->bOn                     = true;
@@ -157,6 +163,11 @@ namespace lsp
 
                 af->pFile                   = NULL;
                 af->pPitch                  = NULL;
+                af->pStretch                = NULL;
+                af->pStretchStart           = NULL;
+                af->pStretchEnd             = NULL;
+                af->pStretchChunk           = NULL;
+                af->pStretchFade            = NULL;
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
@@ -167,6 +178,7 @@ namespace lsp
                 af->pOn                     = NULL;
                 af->pListen                 = NULL;
                 af->pReverse                = NULL;
+                af->pCompensate             = NULL;
                 af->pLength                 = NULL;
                 af->pStatus                 = NULL;
                 af->pMesh                   = NULL;
@@ -274,6 +286,16 @@ namespace lsp
                 TRACE_PORT(ports[port_id]);
                 af->pPitch              = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
+                af->pStretch            = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchStart           = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchEnd           = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchChunk           = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchFade           = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
                 af->pHeadCut            = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pTailCut            = ports[port_id++];
@@ -293,6 +315,8 @@ namespace lsp
                 af->pListen             = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pReverse            = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pCompensate            = ports[port_id++];
 
                 for (size_t j=0; j<nChannels; ++j)
                 {
@@ -469,6 +493,46 @@ namespace lsp
                     af->bDirty      = true;
                 }
 
+                // Update sample stretch
+                value               = af->pStretch->value();
+                if (value != af->fStretch)
+                {
+                    af->fStretch    = value;
+                    af->bDirty      = true;
+                }
+
+                // Update sample stretch chunk
+                value               = af->pStretchStart->value();
+                if (value != af->fStretchStart)
+                {
+                    af->fStretchStart    = value;
+                    af->bDirty      = true;
+                }
+
+                // Update sample stretch chunk
+                value               = af->pStretchEnd->value();
+                if (value != af->fStretchEnd)
+                {
+                    af->fStretchEnd    = value;
+                    af->bDirty      = true;
+                }
+
+                // Update sample stretch chunk
+                value               = af->pStretchChunk->value();
+                if (value != af->fStretchChunk)
+                {
+                    af->fStretchChunk    = value;
+                    af->bDirty      = true;
+                }
+
+                // Update sample stretch chunk
+                value               = af->pStretchFade->value();
+                if (value != af->fStretchFade)
+                {
+                    af->fStretchFade    = value;
+                    af->bDirty      = true;
+                }
+
                 // Update sample timings
                 value           = af->pHeadCut->value();
                 if (value != af->fHeadCut)
@@ -502,6 +566,13 @@ namespace lsp
                 if (reverse != af->bReverse)
                 {
                     af->bReverse    = reverse;
+                    af->bDirty     = true;
+                }
+
+                bool compensate    = af->pCompensate->value() >= 0.5f;
+                if (compensate != af->bCompensate)
+                {
+                    af->bCompensate    = compensate;
                     af->bDirty      = true;
                 }
             }
@@ -675,6 +746,53 @@ namespace lsp
                 lsp_warn("Error resampling source sample");
                 return false;
             }
+
+            float stretch_secs = af->fStretch;
+            if (af->bCompensate) {
+                size_t olength = afs->pSource->samples()*nSampleRate/afs->pSource->sample_rate();
+                float time_compensation = ((float)olength-temp.length())/nSampleRate;
+                stretch_secs += time_compensation;
+            }
+
+            if (stretch_secs != 0) {
+                status_t stretch_status;
+                size_t new_length = size_t(temp.length()+stretch_secs*nSampleRate);
+                size_t chunk_size = size_t(nSampleRate/50*af->fStretchChunk);
+
+                if (af->fStretchStart > 0 || af->fStretchEnd > 0) {
+                    size_t start_sample = float(af->fStretchStart) / 1000 * nSampleRate;
+                    ssize_t end_sample = temp.length() - float(af->fStretchEnd) / 1000 * nSampleRate;
+                    if (end_sample < 0) end_sample = 0;
+                    
+                    stretch_status = temp.stretch(
+                        new_length,
+                        chunk_size,
+                        dspu::SAMPLE_CROSSFADE_LINEAR,
+                        af->fStretchFade/100,
+                        start_sample,
+                        end_sample
+                    );
+                } else {
+                    stretch_status = temp.stretch(
+                        new_length,
+                        chunk_size,
+                        dspu::SAMPLE_CROSSFADE_LINEAR,
+                        af->fStretchFade/100
+                    );
+                }
+
+                if (stretch_status != STATUS_OK)
+                {
+                    lsp_trace("load failed: status=%d (%s)", status, get_status(status));
+                    lsp_warn("Error stretching source sample");
+                    return false;
+                }
+            }
+
+
+
+
+
 
             // Determine the normalizing factor
             float abs_max = 0.0f;
@@ -1092,11 +1210,17 @@ namespace lsp
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
             v->write("fPitch", f->fPitch);
+            v->write("fStretch", f->fStretch);
+            v->write("fStretchStart", f->fStretchStart);
+            v->write("fStretchEnd", f->fStretchEnd);
+            v->write("fStretchChunk", f->fStretchChunk);
+            v->write("fStretchFade", f->fStretchFade);
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
             v->write("fFadeOut", f->fFadeOut);
             v->write("bReverse", f->bReverse);
+            v->write("bCompensate", f->bCompensate);
             v->write("fPreDelay", f->fPreDelay);
             v->write("fMakeup", f->fMakeup);
             v->writev("fGains", f->fGains, meta::sampler_metadata::TRACKS_MAX);
@@ -1106,6 +1230,11 @@ namespace lsp
 
             v->write("pFile", f->pFile);
             v->write("pPitch", f->pPitch);
+            v->write("pStretch", f->pStretch);
+            v->write("pStretchStart", f->pStretchStart);
+            v->write("pStretchEnd", f->pStretchEnd);
+            v->write("pStretchChunk", f->pStretchChunk);
+            v->write("pStretchFade", f->pStretchFade);
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);
@@ -1115,6 +1244,7 @@ namespace lsp
             v->write("pPreDelay", f->pPreDelay);
             v->write("pListen", f->pListen);
             v->write("pReverse", f->pReverse);
+            v->write("pCompensate", f->pCompensate);
             v->writev("pGains", f->pGains, meta::sampler_metadata::TRACKS_MAX);
             v->write("pLength", f->pLength);
             v->write("pStatus", f->pStatus);
