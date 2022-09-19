@@ -148,6 +148,7 @@ namespace lsp
                 af->fStretchEnd             = 0.0f;
                 af->fStretchChunk           = 0.0f;
                 af->fStretchFade            = 0.0f;
+                af->nStretchFadeType        = XFADE_DFL;
                 af->fHeadCut                = 0.0f;
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
@@ -168,6 +169,7 @@ namespace lsp
                 af->pStretchEnd             = NULL;
                 af->pStretchChunk           = NULL;
                 af->pStretchFade            = NULL;
+                af->pStretchFadeType        = NULL;
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
@@ -288,13 +290,15 @@ namespace lsp
                 TRACE_PORT(ports[port_id]);
                 af->pStretch            = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
-                af->pStretchStart           = ports[port_id++];
+                af->pStretchStart       = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
-                af->pStretchEnd           = ports[port_id++];
+                af->pStretchEnd         = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
-                af->pStretchChunk           = ports[port_id++];
+                af->pStretchChunk       = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
-                af->pStretchFade           = ports[port_id++];
+                af->pStretchFade        = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchFadeType    = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pHeadCut            = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
@@ -501,35 +505,37 @@ namespace lsp
                     af->bDirty      = true;
                 }
 
-                // Update sample stretch chunk
+                // Update sample stretch range
                 value               = af->pStretchStart->value();
                 if (value != af->fStretchStart)
                 {
                     af->fStretchStart    = value;
                     af->bDirty      = true;
                 }
-
-                // Update sample stretch chunk
                 value               = af->pStretchEnd->value();
                 if (value != af->fStretchEnd)
                 {
-                    af->fStretchEnd    = value;
+                    af->fStretchEnd = value;
                     af->bDirty      = true;
                 }
 
-                // Update sample stretch chunk
+                // Update sample stretch chunk settings
                 value               = af->pStretchChunk->value();
                 if (value != af->fStretchChunk)
                 {
                     af->fStretchChunk    = value;
                     af->bDirty      = true;
                 }
-
-                // Update sample stretch chunk
                 value               = af->pStretchFade->value();
                 if (value != af->fStretchFade)
                 {
-                    af->fStretchFade    = value;
+                    af->fStretchFade= value;
+                    af->bDirty      = true;
+                }
+                size_t xfade_type   = af->pStretchFadeType->value();
+                if (xfade_type != af->nStretchFadeType)
+                {
+                    af->nStretchFadeType    = value;
                     af->bDirty      = true;
                 }
 
@@ -566,13 +572,13 @@ namespace lsp
                 if (reverse != af->bReverse)
                 {
                     af->bReverse    = reverse;
-                    af->bDirty     = true;
+                    af->bDirty      = true;
                 }
 
                 bool compensate    = af->pCompensate->value() >= 0.5f;
                 if (compensate != af->bCompensate)
                 {
-                    af->bCompensate    = compensate;
+                    af->bCompensate = compensate;
                     af->bDirty      = true;
                 }
             }
@@ -735,6 +741,7 @@ namespace lsp
             // Copy data of original sample to temporary sample and perform resampling
             dspu::Sample temp;
             size_t channels         = lsp_min(nChannels, afs->pSource->channels());
+            ssize_t src_samples     = afs->pSource->length();
             size_t sample_rate_dst  = nSampleRate * dspu::semitones_to_frequency_shift(-af->fPitch);
             if (temp.copy(afs->pSource) != STATUS_OK)
             {
@@ -747,52 +754,34 @@ namespace lsp
                 return false;
             }
 
-            float stretch_secs = af->fStretch;
-            if (af->bCompensate) {
-                size_t olength = afs->pSource->samples()*nSampleRate/afs->pSource->sample_rate();
-                float time_compensation = ((float)olength-temp.length())/nSampleRate;
-                stretch_secs += time_compensation;
-            }
+            // Perform stretch of the sample
+            ssize_t stretch_delta = dspu::millis_to_samples(nSampleRate, af->fStretch);
+            if (af->bCompensate)
+                stretch_delta          += src_samples - ssize_t(temp.length());
 
-            if (stretch_secs != 0) {
-                status_t stretch_status;
-                size_t new_length = size_t(temp.length()+stretch_secs*nSampleRate);
-                size_t chunk_size = size_t(nSampleRate/50*af->fStretchChunk);
+            if (stretch_delta != 0)
+            {
+                ssize_t rgn_start       = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
+                ssize_t rgn_end         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
+                ssize_t rgn_length      = rgn_end - rgn_start;
+                size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
+                float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
 
-                if (af->fStretchStart > 0 || af->fStretchEnd > 0) {
-                    size_t start_sample = float(af->fStretchStart) / 1000 * nSampleRate;
-                    ssize_t end_sample = temp.length() - float(af->fStretchEnd) / 1000 * nSampleRate;
-                    if (end_sample < 0) end_sample = 0;
-                    
-                    stretch_status = temp.stretch(
-                        new_length,
-                        chunk_size,
-                        dspu::SAMPLE_CROSSFADE_LINEAR,
-                        af->fStretchFade/100,
-                        start_sample,
-                        end_sample
-                    );
-                } else {
-                    stretch_status = temp.stretch(
-                        new_length,
-                        chunk_size,
-                        dspu::SAMPLE_CROSSFADE_LINEAR,
-                        af->fStretchFade/100
-                    );
-                }
-
-                if (stretch_status != STATUS_OK)
+                if (rgn_length <= 0)
                 {
-                    lsp_trace("load failed: status=%d (%s)", status, get_status(status));
-                    lsp_warn("Error stretching source sample");
-                    return false;
+                    rgn_start               = 0;
+                    rgn_end                 = temp.length();
+                    rgn_length              = rgn_end - rgn_start;
                 }
+
+                // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
+                dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
+                    dspu::SAMPLE_CROSSFADE_LINEAR :
+                    dspu::SAMPLE_CROSSFADE_CONST_POWER;
+                ssize_t new_rgn_length  = rgn_length + stretch_delta;
+                if (new_rgn_length >= 0)
+                    temp.stretch(new_rgn_length, chunk_size, dspu::SAMPLE_CROSSFADE_LINEAR, crossfade, rgn_start, rgn_end);
             }
-
-
-
-
-
 
             // Determine the normalizing factor
             float abs_max = 0.0f;
@@ -1215,6 +1204,7 @@ namespace lsp
             v->write("fStretchEnd", f->fStretchEnd);
             v->write("fStretchChunk", f->fStretchChunk);
             v->write("fStretchFade", f->fStretchFade);
+            v->write("nStretchFadeType", f->nStretchFadeType);
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1235,6 +1225,7 @@ namespace lsp
             v->write("pStretchEnd", f->pStretchEnd);
             v->write("pStretchChunk", f->pStretchChunk);
             v->write("pStretchFade", f->pStretchFade);
+            v->write("pStretchFadeType", f->pStretchFadeType);
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);

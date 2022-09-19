@@ -76,6 +76,13 @@ namespace lsp
                     AFI_TOTAL
                 };
 
+                enum stretch_fade_t
+                {
+                    XFADE_LINEAR,
+                    XFADE_CONST_POWER,
+                    XFADE_DFL = XFADE_CONST_POWER
+                };
+
                 struct afile_t
                 {
                     size_t              nID;                                            // ID of sample
@@ -92,6 +99,7 @@ namespace lsp
                     float               fStretchEnd;                                    // Stretch end (ms)
                     float               fStretchChunk;                                  // Stretch chunk (bar)
                     float               fStretchFade;                                   // Stretch fade
+                    size_t              nStretchFadeType;                               // Stretch fade type
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
@@ -112,6 +120,7 @@ namespace lsp
                     plug::IPort        *pStretchEnd;                                    // Stretch end
                     plug::IPort        *pStretchChunk;                                  // Stretch chunk
                     plug::IPort        *pStretchFade;                                   // Stretch fade
+                    plug::IPort        *pStretchFadeType;                               // Stretch fade type
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length

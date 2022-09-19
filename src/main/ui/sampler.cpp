@@ -712,17 +712,17 @@ namespace lsp
             }
 
             set_float_value(1.0f, "on_%d_%d", id, jd);                      // enabled
-            set_float_value(meta::sampler_metadata::SAMPLE_PITCH_DFL, "pi_%d_%d", id, jd);      // sample pitch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_DFL, "st_%d_%d", id, jd);    // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "ss_%d_%d", id, jd);     // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "se_%d_%d", id, jd);     // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_CHUNK_DFL, "sc_%d_%d", id, jd);    // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_FADE_DFL, "sx_%d_%d", id, jd);          // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "hc_%d_%d", id, jd);     // head cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "tc_%d_%d", id, jd);     // tail cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fi_%d_%d", id, jd);     // fade in
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fo_%d_%d", id, jd);     // fade out
-            set_float_value(meta::sampler_metadata::PREDELAY_DFL, "pd_%d_%d", id, jd);          // pre-delay
+            set_float_value(meta::sampler_metadata::SAMPLE_PITCH_DFL, "pi_%d_%d", id, jd);          // sample pitch
+            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_DFL, "st_%d_%d", id, jd);        // stretch
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "ss_%d_%d", id, jd);         // stretch
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "se_%d_%d", id, jd);         // stretch
+            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_CHUNK_DFL, "sc_%d_%d", id, jd);  // stretch
+            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_FADE_DFL, "sx_%d_%d", id, jd);   // stretch
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "hc_%d_%d", id, jd);         // head cut
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "tc_%d_%d", id, jd);         // tail cut
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fi_%d_%d", id, jd);         // fade in
+            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fo_%d_%d", id, jd);         // fade out
+            set_float_value(meta::sampler_metadata::PREDELAY_DFL, "pd_%d_%d", id, jd);              // pre-delay
             set_float_value(-100.0f, "pl_%d_%d", id, jd);                   // pan left
             set_float_value(+100.0f, "pr_%d_%d", id, jd);                   // pan right
 

@@ -37,22 +37,22 @@ namespace lsp
             static constexpr float SAMPLE_PITCH_MAX         = 24.0f;    // Maximum pitch (st)
             static constexpr float SAMPLE_PITCH_DFL         = 0.0f;     // Pitch (st)
             static constexpr float SAMPLE_PITCH_STEP        = 0.01f;    // Pitch step (st)
-                                                                        
-            static constexpr const float SAMPLE_STRETCH_MIN           = -30.0f;   // Maximum stretch (sec)
-            static constexpr const float SAMPLE_STRETCH_MAX           = 30.0f;    // Maximum stretch (sec)
-            static constexpr const float SAMPLE_STRETCH_DFL           = 0.0f;     // Stretch (sec)
-            static constexpr const float SAMPLE_STRETCH_STEP          = 0.01f;    // Stretch step (sec)
-            
-            static constexpr const float SAMPLE_STRETCH_CHUNK_MIN     = 4.0f;     // Minimum stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_CHUNK_MAX     = 32.0f;    // Maximum stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_CHUNK_DFL     = 9.0f;     // Stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_CHUNK_STEP    = 0.1f;     // Stretch chunk step (bar)
 
-            static constexpr const float SAMPLE_STRETCH_FADE_MIN     = 0.0f;      // Minimum stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_FADE_MAX     = 100.0f;    // Maximum stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_FADE_DFL     = 100.0f;    // Stretch chunk (bar)
-            static constexpr const float SAMPLE_STRETCH_FADE_STEP    = 0.1f;      // Stretch chunk step (bar)
-                                                                       
+            static constexpr float SAMPLE_STRETCH_MIN       = -30000.0f;// Maximum stretch (ms)
+            static constexpr float SAMPLE_STRETCH_MAX       = 30000.0f; // Maximum stretch (ms)
+            static constexpr float SAMPLE_STRETCH_DFL       = 0.0f;     // Stretch (sec)
+            static constexpr float SAMPLE_STRETCH_STEP      = 0.01f;    // Stretch step (sec)
+            
+            static constexpr float SAMPLE_STRETCH_CHUNK_MIN = 5.0f;     // Minimum stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_CHUNK_MAX = 30000.0f; // Maximum stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_CHUNK_DFL = 100.0f;   // Stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_CHUNK_STEP= 0.1f;     // Stretch chunk step (ms)
+
+            static constexpr float SAMPLE_STRETCH_FADE_MIN  = 0.0f;      // Minimum stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_FADE_MAX  = 100.0f;    // Maximum stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_FADE_DFL  = 100.0f;    // Stretch chunk (bar)
+            static constexpr float SAMPLE_STRETCH_FADE_STEP = 0.1f;      // Stretch chunk step (bar)
+
             static constexpr float SAMPLE_LENGTH_MIN        = 0.0f;     // Minimum length (ms)
             static constexpr float SAMPLE_LENGTH_MAX        = 64000.0f; // Maximum sample length (ms)
             static constexpr float SAMPLE_LENGTH_DFL        = 0.0f;     // Sample length (ms)
@@ -103,9 +103,8 @@ namespace lsp
         extern const plugin_t multisampler_x12_do;
         extern const plugin_t multisampler_x24_do;
         extern const plugin_t multisampler_x48_do;
-    }
-}
 
-
+    } /* namespace meta */
+} /* namespace lsp */
 
 #endif /* PRIVATE_META_SAMPLER_H_ */
