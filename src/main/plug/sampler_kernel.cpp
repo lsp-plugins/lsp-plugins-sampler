@@ -406,6 +406,27 @@ namespace lsp
             destroy_state();
         }
 
+        template <class T>
+        void sampler_kernel::commit_afile_value(afile_t *af, T & field, plug::IPort *port)
+        {
+            const T temp = port->value();
+            if (temp != field)
+            {
+                field       = temp;
+                af->bDirty  = true;
+            }
+        }
+
+        void sampler_kernel::commit_afile_value(afile_t *af, bool & field, plug::IPort *port)
+        {
+            const bool temp = port->value() >= 0.5f;
+            if (temp != field)
+            {
+                field       = temp;
+                af->bDirty  = true;
+            }
+        }
+
         void sampler_kernel::update_settings()
         {
             // Process listen toggle
@@ -482,105 +503,20 @@ namespace lsp
     //            #endif
 
                 // Update velocity
-                float value     = af->pVelocity->value();
-                if (value != af->fVelocity)
-                {
-                    af->fVelocity   = value;
-                    bReorder        = true;
-                }
-
-                // Update sample rate
-                value               = af->pPitch->value();
-                if (value != af->fPitch)
-                {
-                    af->fPitch      = value;
-                    af->bDirty      = true;
-                }
-
-                // Update sample stretch
-                value               = af->pStretch->value();
-                if (value != af->fStretch)
-                {
-                    af->fStretch    = value;
-                    af->bDirty      = true;
-                }
-
-                // Update sample stretch range
-                value               = af->pStretchStart->value();
-                if (value != af->fStretchStart)
-                {
-                    af->fStretchStart    = value;
-                    af->bDirty      = true;
-                }
-                value               = af->pStretchEnd->value();
-                if (value != af->fStretchEnd)
-                {
-                    af->fStretchEnd = value;
-                    af->bDirty      = true;
-                }
-
-                // Update sample stretch chunk settings
-                value               = af->pStretchChunk->value();
-                if (value != af->fStretchChunk)
-                {
-                    af->fStretchChunk    = value;
-                    af->bDirty      = true;
-                }
-                value               = af->pStretchFade->value();
-                if (value != af->fStretchFade)
-                {
-                    af->fStretchFade= value;
-                    af->bDirty      = true;
-                }
-                size_t xfade_type   = af->pStretchFadeType->value();
-                if (xfade_type != af->nStretchFadeType)
-                {
-                    af->nStretchFadeType    = value;
-                    af->bDirty      = true;
-                }
-
-                // Update sample timings
-                value           = af->pHeadCut->value();
-                if (value != af->fHeadCut)
-                {
-                    af->fHeadCut    = value;
-                    af->bDirty      = true;
-                }
-
-                value           = af->pTailCut->value();
-                if (value != af->fTailCut)
-                {
-                    af->fTailCut    = value;
-                    af->bDirty      = true;
-                }
-
-                value           = af->pFadeIn->value();
-                if (value != af->fFadeIn)
-                {
-                    af->fFadeIn     = value;
-                    af->bDirty      = true;
-                }
-
-                value           = af->pFadeOut->value();
-                if (value != af->fFadeOut)
-                {
-                    af->fFadeOut    = value;
-                    af->bDirty      = true;
-                }
-
-                bool reverse    = af->pReverse->value() >= 0.5f;
-                if (reverse != af->bReverse)
-                {
-                    af->bReverse    = reverse;
-                    af->bDirty      = true;
-                }
-
-                bool compensate    = af->pCompensate->value() >= 0.5f;
-                if (compensate != af->bCompensate)
-                {
-                    af->bCompensate = compensate;
-                    af->bDirty      = true;
-                }
+                commit_afile_value(af, af->fVelocity, af->pVelocity);
+                commit_afile_value(af, af->fPitch, af->pPitch);
+                commit_afile_value(af, af->fStretch, af->pStretch);
+                commit_afile_value(af, af->fStretchStart, af->pStretchStart);
+                commit_afile_value(af, af->fStretchEnd, af->pStretchEnd);
+                commit_afile_value(af, af->fStretchChunk, af->pStretchChunk);
+                commit_afile_value(af, af->fStretchFade, af->pStretchFade);
+                commit_afile_value(af, af->nStretchFadeType, af->pStretchFadeType);
+                commit_afile_value(af, af->fHeadCut, af->pHeadCut);
+                commit_afile_value(af, af->fTailCut, af->pTailCut);
+                commit_afile_value(af, af->fFadeIn, af->pFadeIn);
+                commit_afile_value(af, af->fFadeOut, af->pFadeOut);
+                commit_afile_value(af, af->bReverse, af->pReverse);
+                commit_afile_value(af, af->bCompensate, af->pCompensate);
             }
 
             // Get humanisation parameters
@@ -780,7 +716,7 @@ namespace lsp
                     dspu::SAMPLE_CROSSFADE_CONST_POWER;
                 ssize_t new_rgn_length  = rgn_length + stretch_delta;
                 if (new_rgn_length >= 0)
-                    temp.stretch(new_rgn_length, chunk_size, dspu::SAMPLE_CROSSFADE_LINEAR, crossfade, rgn_start, rgn_end);
+                    temp.stretch(new_rgn_length, chunk_size, fade_type, crossfade, rgn_start, rgn_end);
             }
 
             // Determine the normalizing factor
@@ -846,6 +782,9 @@ namespace lsp
             // (Re)bind sample
             for (size_t j=0; j<nChannels; ++j)
                 vChannels[j].bind(af->nID, s, false);
+
+            // Update sample parameters
+            af->fLength     = dspu::samples_to_millis(nSampleRate, temp.length());
 
             return true;
         }

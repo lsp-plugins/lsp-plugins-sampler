@@ -637,6 +637,10 @@ namespace lsp
             if ((res = base.remove_last()) != STATUS_OK)
                 return res;
 
+            // Reset settings to default
+            if ((res = pWrapper->reset_settings()) != STATUS_OK)
+                return res;
+
             for (size_t i=0, id=0; i < meta::sampler_metadata::INSTRUMENTS_MAX; ++i)
             {
                 hydrogen::instrument_t *inst = dk.instruments.get(i);
@@ -711,37 +715,12 @@ namespace lsp
                 set_float_value((100.0f * (8 - jd)) / meta::sampler_metadata::SAMPLE_FILES, "vl_%d_%d", id, jd);    // velocity
             }
 
-            set_float_value(1.0f, "on_%d_%d", id, jd);                      // enabled
-            set_float_value(meta::sampler_metadata::SAMPLE_PITCH_DFL, "pi_%d_%d", id, jd);          // sample pitch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_DFL, "st_%d_%d", id, jd);        // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "ss_%d_%d", id, jd);         // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "se_%d_%d", id, jd);         // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_CHUNK_DFL, "sc_%d_%d", id, jd);  // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_STRETCH_FADE_DFL, "sx_%d_%d", id, jd);   // stretch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "hc_%d_%d", id, jd);         // head cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "tc_%d_%d", id, jd);         // tail cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fi_%d_%d", id, jd);         // fade in
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fo_%d_%d", id, jd);         // fade out
-            set_float_value(meta::sampler_metadata::PREDELAY_DFL, "pd_%d_%d", id, jd);              // pre-delay
-            set_float_value(-100.0f, "pl_%d_%d", id, jd);                   // pan left
-            set_float_value(+100.0f, "pr_%d_%d", id, jd);                   // pan right
-
             return STATUS_OK;
         }
 
         status_t sampler_ui::add_instrument(int id, const hydrogen::instrument_t *inst)
         {
             // Reset to defaults
-            set_float_value(meta::sampler_metadata::CHANNEL_DFL, "chan_%d", id);    // channel
-            set_float_value(meta::sampler_metadata::NOTE_DFL, "note_%d", id);       // note
-            set_float_value(meta::sampler_metadata::OCTAVE_DFL, "oct_%d", id);      // octave
-            set_float_value(0.0f, "mgrp_%d", id);                                   // mute group
-            set_float_value(0.0f, "mtg_%d", id);                                    // mute on stop
-            set_float_value(meta::sampler_metadata::DYNA_DFL, "dyna_%d", id);       // dynamics
-            set_float_value(meta::sampler_metadata::DRIFT_DFL, "drft_%d", id);      // time drifting
-            set_float_value(1.0f, "ion_%d", id);                                    // instrument on
-            set_float_value(0.0f, "ssel_%d", id);                                   // sample selector
-
             if (inst != NULL)
             {
                 set_float_value(inst->volume, "imix_%d", id);                           // instrument mix gain

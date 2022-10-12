@@ -151,8 +151,8 @@ namespace lsp
 
         static const port_item_t sampler_crossfade_type[] =
         {
-            { "Linear",         "sampler.crossfade.linear"      },
-            { "Const Power",    "sampler.crossfade.const_power" },
+            { "Linear",         "fade.linear"      },
+            { "Const Power",    "fade.const_power" },
             { NULL, NULL }
         };
 
@@ -190,7 +190,7 @@ namespace lsp
             CONTROL("se", "Sample stretch region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("sc", "Sample stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
             CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
-            COMBO("st", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
+            COMBO("xt", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \

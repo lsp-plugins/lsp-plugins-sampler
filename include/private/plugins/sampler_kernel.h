@@ -184,6 +184,10 @@ namespace lsp
                 void        play_sample(const afile_t *af, float gain, size_t delay);
                 void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
 
+                template <class T>
+                static void commit_afile_value(afile_t *af, T & field, plug::IPort *port);
+                static void commit_afile_value(afile_t *af, bool & field, plug::IPort *port);
+
             protected:
                 void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
                 void        dump_afsample(dspu::IStateDumper *v, const afsample_t *f) const;

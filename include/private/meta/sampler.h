@@ -45,7 +45,7 @@ namespace lsp
             
             static constexpr float SAMPLE_STRETCH_CHUNK_MIN = 5.0f;     // Minimum stretch chunk (ms)
             static constexpr float SAMPLE_STRETCH_CHUNK_MAX = 30000.0f; // Maximum stretch chunk (ms)
-            static constexpr float SAMPLE_STRETCH_CHUNK_DFL = 100.0f;   // Stretch chunk (ms)
+            static constexpr float SAMPLE_STRETCH_CHUNK_DFL = 1000.0f;  // Stretch chunk (ms)
             static constexpr float SAMPLE_STRETCH_CHUNK_STEP= 0.1f;     // Stretch chunk step (ms)
 
             static constexpr float SAMPLE_STRETCH_FADE_MIN  = 0.0f;      // Minimum stretch chunk (ms)

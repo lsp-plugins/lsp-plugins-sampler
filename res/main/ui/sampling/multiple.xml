@@ -102,6 +102,7 @@
 							clipboard.stretch_end="se${idx}"
 							clipboard.stretch_chunk="sc${idx}"
 							clipboard.stretch_fade="sx${idx}"
+							clipboard.crossfade_type="xt${idx}"
 							clipboard.head_cut="hc${idx}"
 							clipboard.tail_cut="tc${idx}"
 							clipboard.fade_in="fi${idx}"
@@ -191,7 +192,10 @@
 							<knob id="ss${idx}" />
 							<knob id="se${idx}" />
 							<knob id="sc${idx}" />
-              <knob id="sx${idx}" />
+							<vbox>
+								<combo id="xt${idx}" />
+								<knob id="sx${idx}" />
+							</vbox>
 							<knob id="hc${idx}" />
 							<knob id="tc${idx}" />
 							<knob id="fi${idx}" scolor="fade_in" />
