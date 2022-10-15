@@ -206,6 +206,10 @@ namespace lsp
             gain, \
             BLINK("ac", "Sample activity"), \
             BLINK("no", "Sample note on event"), \
+            { "as", "Actual stretch start", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+                    sampler_metadata::RANGE_MIN, sampler_metadata::RANGE_MAX, sampler_metadata::RANGE_DFL, sampler_metadata::RANGE_STEP, NULL }, \
+            { "ae", "Actual stretch end", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+                    sampler_metadata::RANGE_MIN, sampler_metadata::RANGE_MAX, sampler_metadata::RANGE_DFL, sampler_metadata::RANGE_STEP, NULL }, \
             { "fl", "Sample length", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \
             STATUS("fs", "Sample load status"), \

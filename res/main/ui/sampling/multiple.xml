@@ -92,6 +92,8 @@
 							tcut=":tc${idx}"
 							fadein=":fi${idx}"
 							fadeout=":fo${idx}"
+							stretch.begin=":as${idx}"
+							stretch.end=":ae${idx}"
 							length=":fl${idx}"
 							status=":fs${idx}"
 							width.min="320"

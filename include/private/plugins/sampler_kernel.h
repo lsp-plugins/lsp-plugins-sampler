@@ -109,7 +109,9 @@ namespace lsp
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
-                    float               fLength;                                        // Length in milliseconds
+                    float               fStretchStartOut;                               // Actual position of the stretch start position
+                    float               fStretchEndOut;                                 // Actual position of the stretch end position
+                    float               fLength;                                        // Length of processed sample in milliseconds
                     status_t            nStatus;                                        // Loading status
                     bool                bOn;                                            // On flag
 
@@ -132,6 +134,8 @@ namespace lsp
                     plug::IPort        *pReverse;                                       // Reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
                     plug::IPort        *pGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain ports
+                    plug::IPort        *pStretchStartOut;                               // Actual position of the stretch start position
+                    plug::IPort        *pStretchEndOut;                                 // Actual position of the stretch end position
                     plug::IPort        *pLength;                                        // Length of the file
                     plug::IPort        *pStatus;                                        // Status of the file
                     plug::IPort        *pMesh;                                          // Dump of the file data

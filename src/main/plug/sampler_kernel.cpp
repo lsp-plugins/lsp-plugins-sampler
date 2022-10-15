@@ -159,6 +159,8 @@ namespace lsp
                 af->sListen.init();
                 af->bOn                     = true;
                 af->fMakeup                 = 1.0f;
+                af->fStretchStartOut        = -1.0f;
+                af->fStretchEndOut          = -1.0f;
                 af->fLength                 = 0.0f;
                 af->nStatus                 = STATUS_UNSPECIFIED;
 
@@ -181,6 +183,8 @@ namespace lsp
                 af->pListen                 = NULL;
                 af->pReverse                = NULL;
                 af->pCompensate             = NULL;
+                af->pStretchStartOut        = NULL;
+                af->pStretchEndOut          = NULL;
                 af->pLength                 = NULL;
                 af->pStatus                 = NULL;
                 af->pMesh                   = NULL;
@@ -332,6 +336,10 @@ namespace lsp
                 af->pActive             = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pNoteOn             = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchStartOut    = ports[port_id++];
+                TRACE_PORT(ports[port_id]);
+                af->pStretchEndOut      = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
                 af->pLength             = ports[port_id++];
                 TRACE_PORT(ports[port_id]);
@@ -670,6 +678,7 @@ namespace lsp
         bool sampler_kernel::do_render_sample(afile_t *af)
         {
             // Get maximum sample count
+            status_t res;
             afsample_t *afs     = af->vData[AFI_CURR];
             if (afs->pSource == NULL)
                 return false;
@@ -678,6 +687,11 @@ namespace lsp
             dspu::Sample temp;
             size_t channels         = lsp_min(nChannels, afs->pSource->channels());
             ssize_t src_samples     = afs->pSource->length();
+            size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
+            dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
+                dspu::SAMPLE_CROSSFADE_LINEAR :
+                dspu::SAMPLE_CROSSFADE_CONST_POWER;
+            float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
             size_t sample_rate_dst  = nSampleRate * dspu::semitones_to_frequency_shift(-af->fPitch);
             if (temp.copy(afs->pSource) != STATUS_OK)
             {
@@ -689,20 +703,23 @@ namespace lsp
                 lsp_warn("Error resampling source sample");
                 return false;
             }
+            if (af->bCompensate)
+            {
+                if ((res = temp.stretch(src_samples, chunk_size, fade_type, crossfade)) != STATUS_OK)
+                    return false;
+            }
 
             // Perform stretch of the sample
-            ssize_t stretch_delta = dspu::millis_to_samples(nSampleRate, af->fStretch);
-            if (af->bCompensate)
-                stretch_delta          += src_samples - ssize_t(temp.length());
+            ssize_t stretch_delta   = dspu::millis_to_samples(nSampleRate, af->fStretch);
+            ssize_t rgn_start       = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
+            ssize_t rgn_end         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
+            ssize_t rgn_length      = rgn_end - rgn_start;
+            ssize_t new_rgn_length  = rgn_length + stretch_delta;
+            ssize_t act_rgn_start   = rgn_start;
+            ssize_t act_rgn_end     = rgn_end + stretch_delta;
 
             if (stretch_delta != 0)
             {
-                ssize_t rgn_start       = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
-                ssize_t rgn_end         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
-                ssize_t rgn_length      = rgn_end - rgn_start;
-                size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
-                float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
-
                 if (rgn_length <= 0)
                 {
                     rgn_start               = 0;
@@ -711,10 +728,6 @@ namespace lsp
                 }
 
                 // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
-                dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
-                    dspu::SAMPLE_CROSSFADE_LINEAR :
-                    dspu::SAMPLE_CROSSFADE_CONST_POWER;
-                ssize_t new_rgn_length  = rgn_length + stretch_delta;
                 if (new_rgn_length >= 0)
                     temp.stretch(new_rgn_length, chunk_size, fade_type, crossfade, rgn_start, rgn_end);
             }
@@ -730,11 +743,13 @@ namespace lsp
             float norming       = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
 
             // Compute the overall sample length
-            ssize_t head        = dspu::millis_to_samples(sample_rate_dst, af->fHeadCut);
-            ssize_t tail        = dspu::millis_to_samples(sample_rate_dst, af->fTailCut);
-            ssize_t max_samples = temp.length() - head - tail;
+            ssize_t head_cut    = dspu::millis_to_samples(sample_rate_dst, af->fHeadCut);
+            ssize_t tail_cut    = dspu::millis_to_samples(sample_rate_dst, af->fTailCut);
+            ssize_t max_samples = temp.length() - head_cut - tail_cut;
             if (max_samples <= 0)
                 return false;
+            act_rgn_start      -= head_cut;
+            act_rgn_end        -= head_cut;
 
             // Initialize target sample
             dspu::Sample *s     = afs->pSample;
@@ -753,9 +768,9 @@ namespace lsp
                 const float *src    = temp.channel(j);
 
                 if (af->bReverse)
-                    dsp::reverse2(dst, &src[tail], max_samples);
+                    dsp::reverse2(dst, &src[tail_cut], max_samples);
                 else
-                    dsp::copy(dst, &src[head], max_samples);
+                    dsp::copy(dst, &src[head_cut], max_samples);
 
                 // Apply fade-in and fade-out to the buffer
                 dspu::fade_in(dst, dst, dspu::millis_to_samples(sample_rate_dst, af->fFadeIn), max_samples);
@@ -778,13 +793,21 @@ namespace lsp
                 if (norming != 1.0f)
                     dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
             }
+            if (af->bReverse)
+            {
+                act_rgn_start       = temp.length() - act_rgn_start;
+                act_rgn_end         = temp.length() - act_rgn_end;
+                lsp::swap(act_rgn_start, act_rgn_end);
+            }
 
             // (Re)bind sample
             for (size_t j=0; j<nChannels; ++j)
                 vChannels[j].bind(af->nID, s, false);
 
             // Update sample parameters
-            af->fLength     = dspu::samples_to_millis(nSampleRate, temp.length());
+            af->fStretchStartOut    = dspu::samples_to_millis(nSampleRate, act_rgn_start);
+            af->fStretchEndOut      = dspu::samples_to_millis(nSampleRate, act_rgn_end);
+            af->fLength             = dspu::samples_to_millis(nSampleRate, temp.length());
 
             return true;
         }
@@ -1076,6 +1099,8 @@ namespace lsp
                 afile_t *af         = &vFiles[i];
 
                 // Output information about the file
+                af->pStretchStartOut->set_value(af->fStretchStartOut);
+                af->pStretchEndOut->set_value(af->fStretchEndOut);
                 af->pLength->set_value(af->fLength);
                 af->pStatus->set_value(af->nStatus);
 
@@ -1153,6 +1178,8 @@ namespace lsp
             v->write("fPreDelay", f->fPreDelay);
             v->write("fMakeup", f->fMakeup);
             v->writev("fGains", f->fGains, meta::sampler_metadata::TRACKS_MAX);
+            v->write("fStretchStartOut", f->fStretchStartOut);
+            v->write("fStretchEndOut", f->fStretchEndOut);
             v->write("fLength", f->fLength);
             v->write("nStatus", f->nStatus);
             v->write("bOn", f->bOn);
@@ -1176,6 +1203,8 @@ namespace lsp
             v->write("pReverse", f->pReverse);
             v->write("pCompensate", f->pCompensate);
             v->writev("pGains", f->pGains, meta::sampler_metadata::TRACKS_MAX);
+            v->write("pStretchStartOut", f->pStretchStartOut);
+            v->write("pStretchEndOut", f->pStretchEndOut);
             v->write("pLength", f->pLength);
             v->write("pStatus", f->pStatus);
             v->write("pMesh", f->pMesh);

@@ -58,6 +58,11 @@ namespace lsp
             static constexpr float SAMPLE_LENGTH_DFL        = 0.0f;     // Sample length (ms)
             static constexpr float SAMPLE_LENGTH_STEP       = 0.1f;     // Sample step (ms)
 
+            static constexpr float RANGE_MIN                = -1.0f;    // Minimum bound of range (ms)
+            static constexpr float RANGE_MAX                = 64000.0f; // Maximum bound of range (ms)
+            static constexpr float RANGE_DFL                = -1.0f;    // Default bound of range (ms)
+            static constexpr float RANGE_STEP               = 0.1f;     // Bound of range step (ms)
+
             static constexpr float PREDELAY_MIN             = 0.0f;     // Pre-delay min (ms)
             static constexpr float PREDELAY_MAX             = 100.0f;   // Pre-delay max (ms)
             static constexpr float PREDELAY_DFL             = 0.0f;     // Pre-delay default (ms)
