@@ -73,7 +73,7 @@ namespace lsp
             static constexpr float FADEOUT_DFL              = 10.0f;    // Fade-out default (ms)
             static constexpr float FADEOUT_STEP             = 0.025f;   // Fade-out step (ms)
 
-            static constexpr size_t MESH_SIZE               = 320;      // Maximum mesh size
+            static constexpr size_t MESH_SIZE               = 640;      // Maximum mesh size
             static constexpr size_t TRACKS_MAX              = 2;        // Maximum tracks per mesh/sample
             static constexpr float ACTIVITY_LIGHTING        = 0.1f;     // Activity lighting (seconds)
 

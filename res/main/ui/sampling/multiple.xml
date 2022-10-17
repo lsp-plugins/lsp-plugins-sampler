@@ -92,13 +92,17 @@
 							tcut=":tc${idx}"
 							fadein=":fi${idx}"
 							fadeout=":fo${idx}"
-							stretch.begin=":as${idx}"
-							stretch.end=":ae${idx}"
+							stretch.enable=":so${idx}"
+							stretch.begin=":ss${idx}"
+							stretch.end=":se${idx}"
 							length=":fl${idx}"
+							length.actual=":al${idx}"
 							status=":fs${idx}"
+							sample.full="true"
 							width.min="320"
 							height.min="160"
 							clipboard.pitch="pi${idx}"
+							clipboard.stretch_on="so${idx}"
 							clipboard.stretch="st${idx}"
 							clipboard.stretch_start="ss${idx}"
 							clipboard.stretch_end="se${idx}"
@@ -112,7 +116,7 @@
 							clipboard.makeup="mk${idx}"
 							clipboard.predelay="pd${idx}"/>
 
-						<grid rows="3" cols="29" bg.color="bg" hspacing="2">
+						<grid rows="3" cols="30" bg.color="bg" hspacing="2">
 							<ui:with width.min="50">
 							<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
 							<cell rows="3">
@@ -122,11 +126,13 @@
 							<cell rows="3">
 								<vsep bg.color="bg"/>
 							</cell>
-							<label text="labels.sedit.compensate" bg.color="bg_schema" padding="6"/>
+							<cell cols="2">
+								<button id="pc${idx}" text="labels.sedit.compensate" bg.color="bg_schema" />
+							</cell>
 							<cell rows="3">
 								<vsep bg.color="bg"/>
 							</cell>
-							<label text="labels.sedit.stretch" bg.color="bg_schema" padding="6"/>
+							<button id="so${idx}" text="labels.sedit.stretch" bg.color="bg_schema" />
 							<cell rows="3">
 								<vsep bg.color="bg"/>
 							</cell>
@@ -183,13 +189,11 @@
 
 							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
 							<knob id="pi${idx}" />
-							<cell rows="2">
-								<vbox bg.color="bg_schema">
-									<button id="pc${idx}" size="32"/>
-									<label pad.b="6"/>
-									<label pad.b="6"/>
-								</vbox>
-							</cell>
+							<vbox bg.color="bg_schema">
+								<combo id="xc${idx}" />
+								<knob id="xx${idx}" />
+							</vbox>
+							<knob id="cc${idx}" />
 							<knob id="st${idx}" />
 							<knob id="ss${idx}" />
 							<knob id="se${idx}" />
@@ -213,6 +217,8 @@
 								</vbox>
 							</cell>
 							<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
+							<value id="xx${idx}" bg.color="bg_schema" pad.b="6"/>
+							<value id="cc${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="ss${idx}" bg.color="bg_schema" pad.b="6"/>
 							<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>

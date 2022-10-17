@@ -94,6 +94,7 @@ namespace lsp
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
                     float               fPitch;                                         // Pitch (st)
+                    bool                bStretchOn;                                     // Stretch enabled
                     float               fStretch;                                       // Stretch (sec)
                     float               fStretchStart;                                  // Stretch start (ms)
                     float               fStretchEnd;                                    // Stretch end (ms)
@@ -105,19 +106,22 @@ namespace lsp
                     float               fFadeIn;                                        // Fade In (ms)
                     float               fFadeOut;                                       // Fade Out (ms)
                     bool                bReverse;                                       // Reverse sample
-                    bool                bCompensate;                                    // Compensate time 
+                    bool                bCompensate;                                    // Compensate time
+                    float               fCompensateFade;                                // Compensate fade
+                    float               fCompensateChunk;                               // Compensate chunk
+                    size_t              nCompensateFadeType;                            // Compensate fade type
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
-                    float               fStretchStartOut;                               // Actual position of the stretch start position
-                    float               fStretchEndOut;                                 // Actual position of the stretch end position
-                    float               fLength;                                        // Length of processed sample in milliseconds
+                    float               fLength;                                        // Length of source sample in milliseconds
+                    float               fActualLength;                                  // Length of processed sample in milliseconds
                     status_t            nStatus;                                        // Loading status
                     bool                bOn;                                            // On flag
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
-                    plug::IPort        *pStretch;                                       // Stretch
+                    plug::IPort        *pStretchOn;                                     // Stretch enabled
+                    plug::IPort        *pStretch;                                       // Stretch amount
                     plug::IPort        *pStretchStart;                                  // Stretch start
                     plug::IPort        *pStretchEnd;                                    // Stretch end
                     plug::IPort        *pStretchChunk;                                  // Stretch chunk
@@ -133,10 +137,12 @@ namespace lsp
                     plug::IPort        *pListen;                                        // Listen trigger
                     plug::IPort        *pReverse;                                       // Reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
+                    plug::IPort        *pCompensateFade;                                // Compensate fade
+                    plug::IPort        *pCompensateChunk;                               // Compensate chunk
+                    plug::IPort        *pCompensateFadeType;                            // Compensate fade type
                     plug::IPort        *pGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain ports
-                    plug::IPort        *pStretchStartOut;                               // Actual position of the stretch start position
-                    plug::IPort        *pStretchEndOut;                                 // Actual position of the stretch end position
                     plug::IPort        *pLength;                                        // Length of the file
+                    plug::IPort        *pActualLength;                                  // Actual length of the file
                     plug::IPort        *pStatus;                                        // Status of the file
                     plug::IPort        *pMesh;                                          // Dump of the file data
                     plug::IPort        *pNoteOn;                                        // Note on flag
