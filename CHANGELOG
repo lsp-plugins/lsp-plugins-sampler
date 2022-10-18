@@ -3,6 +3,9 @@
 *******************************************************************************
 
 === 1.0.8 ===
+- TODO: update documentation.
+* Added 'Stretch' and 'Compensate' functions to the sampler plugin (contributed by
+  Vitalius Kuchalskis).
 * Updated build scripts and dependencies.
 
 === 1.0.7 ===
