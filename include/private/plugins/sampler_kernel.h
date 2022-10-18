@@ -76,6 +76,13 @@ namespace lsp
                     AFI_TOTAL
                 };
 
+                enum stretch_fade_t
+                {
+                    XFADE_LINEAR,
+                    XFADE_CONST_POWER,
+                    XFADE_DFL = XFADE_CONST_POWER
+                };
+
                 struct afile_t
                 {
                     size_t              nID;                                            // ID of sample
@@ -87,20 +94,39 @@ namespace lsp
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
                     float               fPitch;                                         // Pitch (st)
+                    bool                bStretchOn;                                     // Stretch enabled
+                    float               fStretch;                                       // Stretch (sec)
+                    float               fStretchStart;                                  // Stretch start (ms)
+                    float               fStretchEnd;                                    // Stretch end (ms)
+                    float               fStretchChunk;                                  // Stretch chunk (bar)
+                    float               fStretchFade;                                   // Stretch fade
+                    size_t              nStretchFadeType;                               // Stretch fade type
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
                     float               fFadeOut;                                       // Fade Out (ms)
                     bool                bReverse;                                       // Reverse sample
+                    bool                bCompensate;                                    // Compensate time
+                    float               fCompensateFade;                                // Compensate fade
+                    float               fCompensateChunk;                               // Compensate chunk
+                    size_t              nCompensateFadeType;                            // Compensate fade type
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
-                    float               fLength;                                        // Length in milliseconds
+                    float               fLength;                                        // Length of source sample in milliseconds
+                    float               fActualLength;                                  // Length of processed sample in milliseconds
                     status_t            nStatus;                                        // Loading status
                     bool                bOn;                                            // On flag
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
+                    plug::IPort        *pStretchOn;                                     // Stretch enabled
+                    plug::IPort        *pStretch;                                       // Stretch amount
+                    plug::IPort        *pStretchStart;                                  // Stretch start
+                    plug::IPort        *pStretchEnd;                                    // Stretch end
+                    plug::IPort        *pStretchChunk;                                  // Stretch chunk
+                    plug::IPort        *pStretchFade;                                   // Stretch fade
+                    plug::IPort        *pStretchFadeType;                               // Stretch fade type
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length
@@ -110,8 +136,13 @@ namespace lsp
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pListen;                                        // Listen trigger
                     plug::IPort        *pReverse;                                       // Reverse sample
+                    plug::IPort        *pCompensate;                                    // Compensate
+                    plug::IPort        *pCompensateFade;                                // Compensate fade
+                    plug::IPort        *pCompensateChunk;                               // Compensate chunk
+                    plug::IPort        *pCompensateFadeType;                            // Compensate fade type
                     plug::IPort        *pGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain ports
                     plug::IPort        *pLength;                                        // Length of the file
+                    plug::IPort        *pActualLength;                                  // Actual length of the file
                     plug::IPort        *pStatus;                                        // Status of the file
                     plug::IPort        *pMesh;                                          // Dump of the file data
                     plug::IPort        *pNoteOn;                                        // Note on flag
@@ -162,6 +193,10 @@ namespace lsp
                 void        process_file_load_requests();
                 void        play_sample(const afile_t *af, float gain, size_t delay);
                 void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
+
+                template <class T>
+                static void commit_afile_value(afile_t *af, T & field, plug::IPort *port);
+                static void commit_afile_value(afile_t *af, bool & field, plug::IPort *port);
 
             protected:
                 void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;

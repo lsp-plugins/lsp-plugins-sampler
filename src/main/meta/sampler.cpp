@@ -149,6 +149,13 @@ namespace lsp
             { NULL, NULL }
         };
 
+        static const port_item_t sampler_crossfade_type[] =
+        {
+            { "Linear",         "fade.linear"      },
+            { "Const Power",    "fade.const_power" },
+            { NULL, NULL }
+        };
+
         #define S_DO_GROUP_PORTS(i) \
             STEREO_PORT_GROUP_PORTS(dout_ ## i, "dol_" #i, "dor_" #i)
 
@@ -178,6 +185,13 @@ namespace lsp
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
             CONTROL("pi", "Sample pitch", U_SEMITONES, sampler_metadata::SAMPLE_PITCH), \
+            SWITCH("so", "Sample stretch enabled", 0.0f), \
+            CONTROL("st", "Sample relative stretch time", U_MSEC, sampler_metadata::SAMPLE_STRETCH), \
+            CONTROL("ss", "Sample stretch region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("se", "Sample stretch region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("sc", "Sample stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
+            CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
+            COMBO("xt", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
@@ -189,10 +203,16 @@ namespace lsp
             SWITCH("on", "Sample enabled", 1.0f), \
             TRIGGER("ls", "Sample listen"), \
             SWITCH("rs", "Sample reverse", 0.0f), \
+            SWITCH("pc", "Sample auto-compensate", 0.0f), \
+            CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
+            CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \
+            COMBO("xc", "Sample auto-compensate crossfade type", 1, sampler_crossfade_type), \
             gain, \
             BLINK("ac", "Sample activity"), \
             BLINK("no", "Sample note on event"), \
-            { "fl", "Sample length", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+            { "fl", "Length of loaded sample", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+                    sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \
+            { "al", "Actual length of loaded sample", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \
             STATUS("fs", "Sample load status"), \
             MESH("fd", "Sample file contents", sampler_metadata::TRACKS_MAX, sampler_metadata::MESH_SIZE)
