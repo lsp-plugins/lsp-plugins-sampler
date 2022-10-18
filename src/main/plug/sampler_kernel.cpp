@@ -728,14 +728,14 @@ namespace lsp
 
             // Perform stretch of the sample
             ssize_t stretch_delta   = (af->bStretchOn) ? dspu::millis_to_samples(nSampleRate, af->fStretch) : 0.0f;
-            ssize_t s_begin         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
-            ssize_t s_end           = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
-            if (s_end < s_begin)
-                lsp::swap(s_begin, s_end);
-            samples                 = lsp_max(samples + stretch_delta, 0);
 
             if (stretch_delta != 0)
             {
+                ssize_t s_begin         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
+                ssize_t s_end           = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
+                if (s_end < s_begin)
+                    lsp::swap(s_begin, s_end);
+                ssize_t s_length        = lsp_max(s_end + stretch_delta - s_begin, 0);
                 size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
                 dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
                     dspu::SAMPLE_CROSSFADE_LINEAR :
@@ -743,7 +743,8 @@ namespace lsp
                 float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
 
                 // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
-                temp.stretch(samples, chunk_size, fade_type, crossfade, s_begin, s_end);
+                temp.stretch(s_length, chunk_size, fade_type, crossfade, s_begin, s_end);
+                samples                 = temp.length();
             }
 
             // Perform the head and tail cut operations

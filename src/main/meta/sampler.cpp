@@ -204,8 +204,8 @@ namespace lsp
             TRIGGER("ls", "Sample listen"), \
             SWITCH("rs", "Sample reverse", 0.0f), \
             SWITCH("pc", "Sample auto-compensate", 0.0f), \
-            CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
-            CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
+            CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
+            CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \
             COMBO("xc", "Sample auto-compensate crossfade type", 1, sampler_crossfade_type), \
             gain, \
             BLINK("ac", "Sample activity"), \
