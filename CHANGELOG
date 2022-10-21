@@ -4,6 +4,7 @@
 
 === 1.0.8 ===
 - TODO: update documentation.
+* Fixed broken configuration save and load with relative file paths.
 * Added 'Stretch' and 'Compensate' functions to the sampler plugin (contributed by
   Vitalius Kuchalskis).
 * Updated build scripts and dependencies.
