@@ -27,7 +27,7 @@
 
 namespace lsp
 {
-    namespace plugins
+    namespace plugui
     {
         class sampler_ui: public ui::Module, public ui::IPortListener
         {
@@ -47,10 +47,34 @@ namespace lsp
                     bool                bChanged;   // Change flag
                 } inst_name_t;
 
+                class BundleSerializer: public config::Serializer
+                {
+                    private:
+                        sampler_ui                 *pUI;
+                        lspc::File                 *pFD;
+                        lltl::phashset<char>        vEntries;
+                        lltl::pphash<char, char>    vFiles;
+
+                    protected:
+                        const char *make_bundle_path(const char *realpath);
+
+                    public:
+                        explicit BundleSerializer(sampler_ui *ui, lspc::File *fd);
+                        virtual ~BundleSerializer();
+
+                    public:
+                        virtual status_t    write_string(const LSPString *key, const LSPString *v, size_t flags) override;
+                        virtual status_t    write_string(const LSPString *key, const char *v, size_t flags) override;
+                        virtual status_t    write_string(const char *key, const LSPString *v, size_t flags) override;
+                        virtual status_t    write_string(const char *key, const char *v, size_t flags) override;
+                };
+
             protected:
                 ui::IPort                  *pHydrogenPath;
+                ui::IPort                  *pBundlePath;
                 ui::IPort                  *pCurrentInstrument;     // Name that holds number of current instrument
                 tk::FileDialog             *wHydrogenImport;
+                tk::FileDialog             *wBundleExport;
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
                 lltl::parray<h2drumkit_t>   vDrumkits;
                 lltl::darray<inst_name_t>   vInstNames; // Names of instruments
@@ -63,7 +87,14 @@ namespace lsp
                 static status_t     slot_commit_hydrogen_path(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data);
 
+                static status_t     slot_start_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_fetch_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_commit_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_call_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data);
+
                 static ssize_t      cmp_drumkit_files(const h2drumkit_t *a, const h2drumkit_t *b);
+
+                static status_t     allocate_temp_file(io::Path *dst, const io::Path *src);
 
             protected:
                 status_t            import_hydrogen_file(const LSPString *path);
@@ -78,10 +109,15 @@ namespace lsp
                 status_t            scan_hydrogen_directory(const io::Path *path, bool system);
                 status_t            add_drumkit(const io::Path *path, const hydrogen::drumkit_t *dk, bool system);
 
+                status_t            export_sampler_bundle(const io::Path *path);
+
             public:
                 explicit sampler_ui(const meta::plugin_t *meta);
                 virtual ~sampler_ui();
 
+                virtual void        destroy();
+
+            public:
                 virtual status_t    post_init();
 
                 virtual void        idle();
@@ -92,8 +128,8 @@ namespace lsp
 
                 virtual status_t    reset_settings();
         };
-    } // namespace ui
-} // namespace lsp
+    } /* namespace plugui */
+} /* namespace lsp */
 
 
 #endif /* LSP_PLUGINS_SAMPLER_INCLUDE_PRIVATE_UI_SAMPLER_H_ */
