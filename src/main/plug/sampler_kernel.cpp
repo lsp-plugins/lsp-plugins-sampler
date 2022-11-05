@@ -598,7 +598,7 @@ namespace lsp
             if (snew->pSource == NULL)
                 return STATUS_NO_MEM;
 
-            status_t status = snew->pSource->load(fname, meta::sampler_metadata::SAMPLE_LENGTH_MAX * 0.001f);
+            status_t status = snew->pSource->load_ext(fname, meta::sampler_metadata::SAMPLE_LENGTH_MAX * 0.001f);
             if (status != STATUS_OK)
             {
                 lsp_trace("load failed: status=%d (%s)", status, get_status(status));

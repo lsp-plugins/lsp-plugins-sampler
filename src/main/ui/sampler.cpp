@@ -189,6 +189,29 @@ namespace lsp
         }
 
         //---------------------------------------------------------------------
+        sampler_ui::BundleDeserializer::BundleDeserializer(sampler_ui *ui, const io::Path *path)
+        {
+            pUI         = ui;
+            pPath       = path;
+        }
+
+        status_t sampler_ui::BundleDeserializer::commit_param(const LSPString *key, const LSPString *value, size_t flags)
+        {
+            // We need to translate paths only
+            ui::IPort *port = pUI->wrapper()->port(key);
+            if ((port == NULL) || (!meta::is_path_port(port->metadata())) || (value->is_empty()))
+                return PullParser::commit_param(key, value, flags);
+
+            // Make path of the file based on the path of the whole bundle
+            io::Path tmp;
+            status_t res = tmp.set(pPath, value);
+            if (res != STATUS_OK)
+                return res;
+
+            return PullParser::commit_param(key, tmp.as_string(), flags);
+        }
+
+        //---------------------------------------------------------------------
         sampler_ui::sampler_ui(const meta::plugin_t *meta):
             ui::Module(meta)
         {
@@ -196,7 +219,8 @@ namespace lsp
             pBundlePath         = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
-            wBundleExport       = NULL;
+            wBundleDialog       = NULL;
+            wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
         }
 
@@ -204,7 +228,8 @@ namespace lsp
         {
             // Will be automatically destroyed from list of widgets
             wHydrogenImport     = NULL;
-            wBundleExport       = NULL;
+            wBundleDialog       = NULL;
+            wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
 
             // Destroy all information about drumkits
@@ -244,6 +269,7 @@ namespace lsp
             tk::Menu *menu          = tk::widget_cast<tk::Menu>(widgets->find(WUID_IMPORT_MENU));
             if (menu != NULL)
             {
+                // Hydrogen drumkit import
                 tk::MenuItem *child = new tk::MenuItem(pDisplay);
                 widgets->add(child);
                 child->init();
@@ -251,6 +277,15 @@ namespace lsp
                 child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_hydrogen_file, this);
                 menu->add(child);
 
+                // Bundle import
+                child = new tk::MenuItem(pDisplay);
+                widgets->add(child);
+                child->init();
+                child->text()->set("actions.sampler.import_bundle");
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_sampler_bundle, this);
+                menu->add(child);
+
+                // List of preinstalled drumkits for import
                 if (vDrumkits.size() > 0)
                 {
                     // Create menu item
@@ -278,7 +313,7 @@ namespace lsp
                 tk::MenuItem *child = new tk::MenuItem(pDisplay);
                 widgets->add(child);
                 child->init();
-                child->text()->set("actions.export_sampler_bundle");
+                child->text()->set("actions.sampler.export_bundle");
                 child->slots()->bind(tk::SLOT_SUBMIT, slot_start_export_sampler_bundle, this);
                 menu->add(child);
             }
@@ -612,7 +647,7 @@ namespace lsp
                     }
                 }
 
-                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_hydrogen_file, ptr);
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_hydrogen_file, _this);
                 dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_hydrogen_path, _this);
                 dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_hydrogen_path, _this);
             }
@@ -919,21 +954,16 @@ namespace lsp
             }
         }
 
-        status_t sampler_ui::slot_start_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        tk::FileDialog *sampler_ui::get_bundle_dialog(bool import)
         {
-            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-
-            tk::FileDialog *dlg = _this->wBundleExport;
+            tk::FileDialog *dlg = wBundleDialog;
             if (dlg == NULL)
             {
-                dlg = new tk::FileDialog(_this->pDisplay);
-                _this->pWrapper->controller()->widgets()->add(dlg);
-                _this->wBundleExport  = dlg;
+                dlg             = new tk::FileDialog(pDisplay);
+                wBundleDialog   = dlg;
+                pWrapper->controller()->widgets()->add(dlg);
 
                 dlg->init();
-                dlg->mode()->set(tk::FDM_SAVE_FILE);
-                dlg->title()->set("titles.export_hydrogen_drumkit");
-                dlg->action_text()->set("actions.export");
 
                 tk::FileFilters *f = dlg->filter();
                 {
@@ -954,12 +984,42 @@ namespace lsp
                     }
                 }
 
-                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_export_sampler_bundle, ptr);
-                dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_sampler_bundle_path, _this);
-                dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_sampler_bundle_path, _this);
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_process_sampler_bundle, this);
+                dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_sampler_bundle_path, this);
+                dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_sampler_bundle_path, this);
             }
 
-            dlg->show(_this->pWrapper->window());
+            if (import)
+            {
+                dlg->mode()->set(tk::FDM_OPEN_FILE);
+                dlg->title()->set("titles.sampler.import_bundle");
+                dlg->action_text()->set("actions.import");
+            }
+            else
+            {
+                dlg->mode()->set(tk::FDM_SAVE_FILE);
+                dlg->title()->set("titles.sampler.export_bundle");
+                dlg->action_text()->set("actions.export");
+            }
+
+            return wBundleDialog;
+        }
+
+        status_t sampler_ui::slot_start_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            tk::FileDialog *dlg = _this->get_bundle_dialog(false);
+            if (dlg != NULL)
+                dlg->show(_this->pWrapper->window());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_start_import_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            tk::FileDialog *dlg = _this->get_bundle_dialog(true);
+            if (dlg != NULL)
+                dlg->show(_this->pWrapper->window());
             return STATUS_OK;
         }
 
@@ -998,6 +1058,32 @@ namespace lsp
             return STATUS_OK;
         }
 
+        void sampler_ui::show_message(const char *title, const char *message, const expr::Parameters *params)
+        {
+            tk::MessageBox *dlg = wMessageBox;
+            if (dlg == NULL)
+            {
+                dlg             = new tk::MessageBox(pDisplay);
+                wMessageBox     = dlg;
+                pWrapper->controller()->widgets()->add(dlg);
+
+                dlg->init();
+                dlg->add("actions.ok", slot_close_message_box, dlg);
+            }
+
+            dlg->title()->set(title);
+            dlg->message()->set(message, params);
+            dlg->show(pWrapper->window());
+        }
+
+        status_t sampler_ui::slot_close_message_box(tk::Widget *sender, void *ptr, void *data)
+        {
+            tk::MessageBox *dlg = tk::widget_ptrcast<tk::MessageBox>(data);
+            if (dlg != NULL)
+                dlg->hide();
+            return STATUS_OK;
+        }
+
         status_t sampler_ui::allocate_temp_file(io::Path *dst, const io::Path *src)
         {
             const char *spath = src->as_utf8();
@@ -1012,28 +1098,54 @@ namespace lsp
             return STATUS_OK;
         }
 
-        status_t sampler_ui::slot_call_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        status_t sampler_ui::slot_call_process_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
             if (_this == NULL)
                 return STATUS_BAD_STATE;
 
             LSPString path;
-            status_t res = _this->wBundleExport->selected_file()->format(&path);
+            status_t res = _this->wBundleDialog->selected_file()->format(&path);
             if (res == STATUS_OK)
             {
-                io::Path dst, temp;
-                res = dst.set(&path);
-                if (res == STATUS_OK)
-                    res = allocate_temp_file(&temp, &dst);
-                if (res == STATUS_OK)
-                    res = _this->export_sampler_bundle(&temp);
-                if (res == STATUS_OK)
+                if (_this->wBundleDialog->mode()->get() == tk::FDM_SAVE_FILE)
                 {
-                    dst.remove();
-                    res = temp.rename(&dst);
+                    // Export bundle data
+                    io::Path dst, temp;
+                    res = dst.set(&path);
+                    if (res == STATUS_OK)
+                        res = allocate_temp_file(&temp, &dst);
+                    if (res == STATUS_OK)
+                        res = _this->export_sampler_bundle(&temp);
+                    if (res == STATUS_OK)
+                    {
+                        dst.remove();
+                        res = temp.rename(&dst);
+                    }
                 }
-                // TODO: analyze result
+                else
+                {
+                    // Import bundle data
+                    io::Path src;
+                    res = src.set(&path);
+                    if (res == STATUS_OK)
+                        res = _this->import_sampler_bundle(&src);
+                }
+
+                // Analyze result and output message if there were errors
+                if (res != STATUS_OK)
+                {
+                    expr::Parameters params;
+                    tk::prop::String str;
+                    LSPString status_key;
+                    status_key.append_ascii("statuses.std.");
+                    status_key.append_ascii(lsp::get_status_lc_key(res));
+                    str.bind(_this->wBundleDialog->style(), _this->pDisplay->dictionary());
+                    str.set(&status_key);
+
+                    params.set_string("reason", str.formatted());
+                    _this->show_message("titles.sampler.warning", "messages.sampler.failed_to_process_bundle", &params);
+                }
             }
             return STATUS_OK;
         }
@@ -1079,6 +1191,66 @@ namespace lsp
 
             // Close the bundle serializer
             if ((res = s.close()) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Close the LSPC file and return
+            return fd.close();
+        }
+
+        status_t sampler_ui::import_sampler_bundle(const io::Path *path)
+        {
+            status_t res;
+
+            // Obtain the parent directory
+            io::Path basedir;
+            io::Path *base = (path->get_parent(&basedir) == STATUS_OK) ? &basedir : NULL;
+
+            // Open LSPC file
+            lspc::File fd;
+            if ((res = fd.open(path)) != STATUS_OK)
+                return res;
+
+            // Find LSPC chunk
+            lspc::chunk_id_t *chunk_ids = NULL;
+            ssize_t nchunks     = fd.enumerate_chunks(LSPC_CHUNK_TEXT_CONFIG, &chunk_ids);
+            if (nchunks <= 0)
+            {
+                fd.close();
+                return (nchunks < 0) ? -nchunks : STATUS_NOT_FOUND;
+            }
+            lsp_finally { free(chunk_ids); };
+
+            // Obtain the input stream from the LSPC
+            io::IInStream *is = NULL;
+            if ((res = lspc::read_config(chunk_ids[0], &fd, &is)) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Create deserializer
+            BundleDeserializer d(this, path);
+            if ((res = d.wrap(is, WRAP_CLOSE | WRAP_DELETE, "UTF-8")) != STATUS_OK)
+            {
+                is->close();
+                delete is;
+                fd.close();
+                return res;
+            }
+
+            // Call wrapper to deserialize
+            if ((res = pWrapper->import_settings(&d, base)) != STATUS_OK)
+            {
+                d.close();
+                fd.close();
+                return res;
+            }
+
+            // Close the bundle serializer
+            if ((res = d.close()) != STATUS_OK)
             {
                 fd.close();
                 return res;
