@@ -1,0 +1,5 @@
+{
+	"sampler": {
+		"failed_to_process_bundle": "Не удалось обработать архив семплера: {@reason}"
+	}
+}

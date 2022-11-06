@@ -972,7 +972,7 @@ namespace lsp
                     if ((ffi = f->add()) != NULL)
                     {
                         ffi->pattern()->set("*.lspc");
-                        ffi->title()->set("files.bundle.lspc");
+                        ffi->title()->set("files.sampler.lspc");
                         ffi->extensions()->set_raw(".lspc");
                     }
 
