@@ -8,6 +8,7 @@
 * Added 'Stretch' and 'Compensate' functions to the sampler plugin (contributed by
   Vitalius Kuchalskis).
 * Updated build scripts and dependencies.
+* Added possibility to export and import sampler bundle as single file in LSPC format.
 
 === 1.0.7 ===
 * Updated build scripts and dependencies.

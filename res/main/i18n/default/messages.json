@@ -1,0 +1,5 @@
+{
+	"sampler": {
+		"failed_to_process_bundle": "Failed to process sampler bundle: {@reason}"
+	}
+}
