@@ -142,7 +142,7 @@ namespace lsp
         static const port_item_t sampler_x48_mixer_lines[] =
         {
             { "Instruments", "sampler.instruments" },
-            { "Mixer 0-11", "sampler.mixer_0:11" },
+            { "Mixer 0-11",  "sampler.mixer_0:11" },
             { "Mixer 12-23", "sampler.mixer_12:23" },
             { "Mixer 24-35", "sampler.mixer_24:35" },
             { "Mixer 36-47", "sampler.mixer_36:47" },
@@ -153,6 +153,15 @@ namespace lsp
         {
             { "Linear",         "fade.linear"      },
             { "Const Power",    "fade.const_power" },
+            { NULL, NULL }
+        };
+
+        static const port_item_t sampler_sample_editor_tabs[] =
+        {
+            { "Main",           "sampler.edit.main"      },
+            { "Pitch",          "sampler.edit.pitch"     },
+            { "Stretch",        "sampler.edit.stretch"   },
+            { "Loop",           "sampler.edit.loop"      },
             { NULL, NULL }
         };
 
@@ -176,7 +185,8 @@ namespace lsp
             CONTROL("fout", "Note-off fadeout", U_MSEC, sampler_metadata::FADEOUT), \
             DRY_GAIN(1.0f),         \
             WET_GAIN(1.0f),         \
-            OUT_GAIN
+            OUT_GAIN, \
+            COMBO("sets", "Sample Editor Tab Selection", 0, sampler_sample_editor_tabs)
 
         #define S_DO_CONTROL \
             SWITCH("do_gain", "Apply gain to direct-out", 1.0f), \

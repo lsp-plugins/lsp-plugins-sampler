@@ -116,122 +116,124 @@
 							clipboard.makeup="mk${idx}"
 							clipboard.predelay="pd${idx}"/>
 
-						<grid rows="3" cols="30" bg.color="bg" hspacing="2">
-							<ui:with width.min="50">
-								<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<cell cols="2">
-									<button id="pc${idx}" text="labels.sedit.compensate" bg.color="bg_schema"/>
-								</cell>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<button id="so${idx}" text="labels.sedit.stretch" bg.color="bg_schema"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.stretch_start" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.stretch_end" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.stretch_fade" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.head_cut" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.tail_cut" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.fade_in" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.fade_out" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.makeup" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.predelay" bg.color="bg_schema" padding="6"/>
-								<cell rows="3">
-									<vsep bg.color="bg"/>
-								</cell>
-								<label text="labels.sedit.listen" bg.color="bg_schema" padding="6"/>
-
+						<cgroup id="sets">
+							<grid rows="3" cols="30" bg.color="bg" hspacing="2">
+								<ui:with width.min="50">
+									<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<cell cols="2">
+										<button id="pc${idx}" text="labels.sedit.compensate" bg.color="bg_schema"/>
+									</cell>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<button id="so${idx}" text="labels.sedit.stretch" bg.color="bg_schema"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.stretch_start" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.stretch_end" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.stretch_fade" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.head_cut" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.tail_cut" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.fade_in" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.fade_out" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.makeup" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.predelay" bg.color="bg_schema" padding="6"/>
+									<cell rows="3">
+										<vsep bg.color="bg"/>
+									</cell>
+									<label text="labels.sedit.listen" bg.color="bg_schema" padding="6"/>
+	
+									<cell rows="2">
+										<vbox bg.color="bg_schema">
+											<button id="rs${idx}" size="32"/>
+											<label pad.b="6"/>
+											<label pad.b="6"/>
+										</vbox>
+									</cell>
+								</ui:with>
+	
+								<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
+									<knob id="pi${idx}"/>
+									<vbox bg.color="bg_schema">
+										<combo id="xc${idx}"/>
+										<knob id="xx${idx}"/>
+									</vbox>
+									<knob id="cc${idx}"/>
+									<knob id="st${idx}"/>
+									<knob id="ss${idx}"/>
+									<knob id="se${idx}"/>
+									<knob id="sc${idx}"/>
+									<vbox>
+										<combo id="xt${idx}"/>
+										<knob id="sx${idx}"/>
+									</vbox>
+									<knob id="hc${idx}"/>
+									<knob id="tc${idx}"/>
+									<knob id="fi${idx}" scolor="fade_in"/>
+									<knob id="fo${idx}" scolor="fade_out"/>
+									<knob id="mk${idx}"/>
+									<knob id="pd${idx}"/>
+								</ui:with>
 								<cell rows="2">
 									<vbox bg.color="bg_schema">
-										<button id="rs${idx}" size="32"/>
+										<button id="ls${idx}" size="32" ui:inject="Button_cyan" toggle="false"/>
 										<label pad.b="6"/>
 										<label pad.b="6"/>
 									</vbox>
 								</cell>
-							</ui:with>
-
-							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-								<knob id="pi${idx}"/>
-								<vbox bg.color="bg_schema">
-									<combo id="xc${idx}"/>
-									<knob id="xx${idx}"/>
-								</vbox>
-								<knob id="cc${idx}"/>
-								<knob id="st${idx}"/>
-								<knob id="ss${idx}"/>
-								<knob id="se${idx}"/>
-								<knob id="sc${idx}"/>
-								<vbox>
-									<combo id="xt${idx}"/>
-									<knob id="sx${idx}"/>
-								</vbox>
-								<knob id="hc${idx}"/>
-								<knob id="tc${idx}"/>
-								<knob id="fi${idx}" scolor="fade_in"/>
-								<knob id="fo${idx}" scolor="fade_out"/>
-								<knob id="mk${idx}"/>
-								<knob id="pd${idx}"/>
-							</ui:with>
-							<cell rows="2">
-								<vbox bg.color="bg_schema">
-									<button id="ls${idx}" size="32" ui:inject="Button_cyan" toggle="false"/>
-									<label pad.b="6"/>
-									<label pad.b="6"/>
-								</vbox>
-							</cell>
-							<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="xx${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="cc${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="ss${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="sx${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="hc${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="tc${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="fi${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="fo${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="mk${idx}" bg.color="bg_schema" pad.b="6"/>
-							<value id="pd${idx}" bg.color="bg_schema" pad.b="6"/>
-
-						</grid>
+								<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="xx${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="cc${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="ss${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="sx${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="hc${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="tc${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="fi${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="fo${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="mk${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="pd${idx}" bg.color="bg_schema" pad.b="6"/>
+	
+							</grid>
+						</cgroup>
 					</vbox>
 				</cgroup>
 
@@ -581,37 +583,38 @@
 									clipboard.makeup="mk${idx}"
 									clipboard.predelay="pd${idx}"/>
 								</cell>
-								<!-- pitch -->
-								<grid rows="3" cols="5" bg.color="bg" hspacing="2">
-									<ui:with width.min="50">
-										<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
-										<cell rows="3">
-											<vsep bg.color="bg"/>
-										</cell>
-											<button id="pc${idx}" text="labels.sedit.compensate" bg.color="bg_schema"/>
+								<cgroup id="sets">
+									<!-- pitch -->
+									<grid rows="3" cols="5" bg.color="bg" hspacing="2">
+										<ui:with width.min="50">
+											<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6"/>
 											<cell rows="3">
 												<vsep bg.color="bg"/>
 											</cell>
-											<void />
-									</ui:with>
-
-									<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-										<knob id="pi${idx}"/>
-										<vbox bg.color="bg_schema">
-											<combo id="xc${idx}"/>
-											<knob id="xx${idx}"/>
-										</vbox>
-										<knob id="cc${idx}"/>
-									</ui:with>
-
-
-									<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
-									<value id="xx${idx}" bg.color="bg_schema" pad.b="6"/>
-									<value id="cc${idx}" bg.color="bg_schema" pad.b="6"/>
-
-								</grid>
-								<!-- stretch -->
-								<grid rows="3" cols="9" bg.color="bg" hspacing="2">
+												<button id="pc${idx}" text="labels.sedit.compensate" bg.color="bg_schema"/>
+												<cell rows="3">
+													<vsep bg.color="bg"/>
+												</cell>
+												<void />
+										</ui:with>
+	
+										<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
+											<knob id="pi${idx}"/>
+											<vbox bg.color="bg_schema">
+												<combo id="xc${idx}"/>
+												<knob id="xx${idx}"/>
+											</vbox>
+											<knob id="cc${idx}"/>
+										</ui:with>
+	
+	
+										<value id="pi${idx}" bg.color="bg_schema" pad.b="6"/>
+										<value id="xx${idx}" bg.color="bg_schema" pad.b="6"/>
+										<value id="cc${idx}" bg.color="bg_schema" pad.b="6"/>
+	
+									</grid>
+									<!-- stretch -->
+									<grid rows="3" cols="9" bg.color="bg" hspacing="2">
 									<ui:with width.min="50">
 										<button id="so${idx}" text="labels.sedit.stretch" bg.color="bg_schema"/>
 										<cell rows="3">
@@ -653,7 +656,7 @@
 
 
 								</grid>
-
+								</cgroup>
 							</grid>
 						</cgroup>
 					</hbox>

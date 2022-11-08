@@ -1,5 +1,11 @@
 {
 	"sampler": {
+		"edit": {
+			"loop": "Loop",
+			"main": "Main",
+			"pitch": "Pitch",
+			"stretch": "Stretch"
+		},
 		"inst": {
 			"0": "Instrument 0",
 			"1": "Instrument 1",

@@ -240,6 +240,8 @@ namespace lsp
             pWet        = ports[port_id++];
             TRACE_PORT(ports[port_id]);
             pGain       = ports[port_id++];
+            TRACE_PORT(ports[port_id])
+            port_id++;  // Skip sample editor tab selector
             if (bDryPorts)
             {
                 TRACE_PORT(ports[port_id]);
