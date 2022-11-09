@@ -92,10 +92,14 @@
 						tcut=":tc${idx}"
 						fadein=":fi${idx}"
 						fadeout=":fo${idx}"
-						stretch.enable=":so${idx}"
+						stretch.enable="1"
+						stretch.color="(:so${idx} igt 0) ? 'stretch.color' : 'stretch.color.off'"
+						stretch.border.color="(:so${idx} igt 0) ? 'stretch.border.color' : 'stretch.border.color.off'"
+						loop.enable="1"
+						loop.color="(:so${idx} igt 0) ? 'loop.color' : 'loop.color.off'"
+						loop.border.color="(:so${idx} igt 0) ? 'loop.border.color' : 'loop.border.color.off'"
 						stretch.begin=":ss${idx}"
 						stretch.end=":se${idx}"
-						stretch.color="red"
 						length=":fl${idx}"
 						length.actual=":al${idx}"
 						status=":fs${idx}"
@@ -124,7 +128,7 @@
 
 					</hbox>
 
-					<cgroup id="sets" height.min="130" width.min="466">
+					<cgroup id="sets" height.min="136" width.min="481">
 
 						<!-- main -->
 						<grid rows="3" cols="13" bg.color="bg" hspacing="2">
@@ -222,7 +226,7 @@
 						</grid>
 						<!-- stretch -->
 						<grid rows="3" cols="11" bg.color="bg" hspacing="2">
-							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'kscale' : 'kscale_inactive'">
+							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'stretch' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<label text="labels.sedit.stretch" bg.color="bg_schema" padding="6"/>
 									<cell rows="3" hreduce="true">
@@ -230,7 +234,8 @@
 									</cell>
 									<cell rows="3">
 										<vbox bg.color="bg">
-											<button id="so${idx}" text="labels.sedit.stretch" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+											<button id="so${idx}"
+												ui:inject="Button_stretch" text="labels.sedit.stretch" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="xt${idx}" fill="false" pad.b="8" bg.color="bg_schema" pad.h="6"/>
 											<hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
 											<label vexpand="true" bg.color="bg_schema"/>
@@ -247,11 +252,12 @@
 									<cell rows="3" hreduce="true">
 										<vsep bg.color="bg" bg.bright="1.0" bright="1"/>
 									</cell>
-									<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
+									<label text="labels.sedit.stretch_fade" bg.color="bg_schema" padding="6"/>
 									<cell rows="3" hreduce="true">
 										<vsep bg.color="bg" bg.bright="1.0" bright="1"/>
 									</cell>
-									<label text="labels.sedit.stretch_fade" bg.color="bg_schema" padding="6"/>
+									<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
+
 
 								</ui:with>
 
@@ -259,26 +265,29 @@
 									<knob id="st${idx}"/>
 									<knob id="ss${idx}"/>
 									<knob id="se${idx}"/>
-									<knob id="sc${idx}"/>
 									<knob id="sx${idx}"/>
+									<knob id="sc${idx}"/>
+
 								</ui:with>
 
 								<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
 								<value id="ss${idx}" bg.color="bg_schema" pad.b="6"/>
 								<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>
-								<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
 								<value id="sx${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
+
 							</ui:with>
 
 						</grid>
 
 						<!-- loop -->
 						<grid rows="3" cols="7" bg.color="bg" hspacing="2">
-							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'kscale' : 'kscale_inactive'">
+							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'loop' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<cell rows="3">
 										<vbox bg.color="bg">
-											<button id="so${idx}" text="labels.sedit.loop" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+											<button id="so${idx}"
+												ui:inject="Button_loop" text="labels.sedit.loop" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="xt${idx}" fill="false" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="xt${idx}" fill="false" pad.b="8" bg.color="bg_schema" pad.h="6"/>
 											<hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
