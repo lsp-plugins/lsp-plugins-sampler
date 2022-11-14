@@ -128,7 +128,7 @@
 
 					</hbox>
 
-					<cgroup id="sets" height.min="136" width.min="481">
+					<tabs id="sets" height.min="136" width.min="481">
 
 						<!-- main -->
 						<grid rows="3" cols="13" bg.color="bg" hspacing="2">
@@ -321,7 +321,7 @@
 							</ui:with>
 
 						</grid>
-					</cgroup>
+					</tabs>
 
 				</vbox>
 			</cgroup>
