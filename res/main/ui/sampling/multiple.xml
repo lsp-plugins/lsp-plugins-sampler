@@ -128,7 +128,8 @@
 
 					</hbox>
 
-					<tabs id="sets" height.min="136" width.min="481">
+					<tabs id="sets" height.min="136" width.min="481"
+						hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 3) and (:so${idx}))) ? 1.0 : :const_bg_darken">
 
 						<!-- main -->
 						<grid rows="3" cols="13" bg.color="bg" hspacing="2">
@@ -187,7 +188,7 @@
 						</grid>
 						<!-- pitch -->
 						<grid rows="3" cols="7" bg.color="bg" hspacing="2">
-							<ui:with bright="(:pc${idx} igt 0) ? 1 : 0.75" bg.bright="(:pc${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:pc${idx} igt 0) ? 'kscale' : 'kscale_inactive'">
+							<ui:with bright="(:pc${idx}) ? 1 : 0.75" bg.bright="(:pc${idx}) ? 1.0 : :const_bg_darken" scolor="(:pc${idx}) ? 'kscale' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<label text="labels.sedit.pitch" bg.color="bg_schema" padding="6" bg.bright="1.0" bright="1"/>
 									<cell rows="3" hreduce="true">
@@ -226,7 +227,7 @@
 						</grid>
 						<!-- stretch -->
 						<grid rows="3" cols="11" bg.color="bg" hspacing="2">
-							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'stretch' : 'kscale_inactive'">
+							<ui:with bright="(:so${idx}) ? 1 : 0.75" bg.bright="(:so${idx}) ? 1.0 : :const_bg_darken" scolor="(:so${idx}) ? 'stretch' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<label text="labels.sedit.stretch" bg.color="bg_schema" padding="6"/>
 									<cell rows="3" hreduce="true">
