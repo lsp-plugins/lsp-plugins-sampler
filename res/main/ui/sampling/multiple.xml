@@ -128,7 +128,7 @@
 
 					</hbox>
 
-					<tabs id="sets" height.min="136" width.min="481"
+					<tabs id="sets" height.min="139" width.min="481"
 						hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 3) and (:so${idx}))) ? 1.0 : :const_bg_darken">
 
 						<!-- main -->
@@ -374,7 +374,7 @@
 			</group>
 			<group text="groups.sample_matrix" expand="true" ipadding="0">
 				<!-- Sample matrix -->
-				<grid rows="9" cols="17" transpose="true" hspacing="2" bg.color="bg">
+				<grid rows="10" cols="17" transpose="true" hspacing="2" bg.color="bg">
 					<ui:with bg.color="bg_schema">
 						<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0"/>
@@ -384,11 +384,12 @@
 						<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.signal.pan_right" fill="true" halign="0"/>
 						<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
-						<label text="labels.sedit.listen" fill="true" halign="0"/>
+						<label text="labels.sedit.listen" fill="true" halign="0" pad.b="6"/>
+						<void />
 					</ui:with>
 
 					<ui:for id="i" first="0" last="7">
-						<cell rows="9">
+						<cell rows="10">
 							<vsep/>
 						</cell>
 						<ui:with bg.color="bg_schema">
@@ -402,10 +403,8 @@
 							<value id="pl${idx}" detailed="false" pad.b="6"/>
 							<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r"/>
 							<value id="pr${idx}" detailed="false" pad.b="6"/>
-							<vbox expand="false">
-								<button id="ls${idx}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
-								<led id="no${idx}" pad.b="6"/>
-							</vbox>
+							<button id="ls${idx}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+							<led id="no${idx}" pad.b="6"/>
 						</ui:with>
 					</ui:for>
 				</grid>
