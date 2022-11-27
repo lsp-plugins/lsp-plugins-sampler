@@ -53,8 +53,6 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.197954724" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.other.254051967" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 $(shell pkg-config --cflags jack x11 cairo lv2 sndfile gl freetype2 xrandr)" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.warnings.extrawarn.1587985060" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.warnings.toerrors.875998448" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.449118389" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2022121099" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -109,7 +107,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="singletone.cpp|modules/lsp-tk-lib/src/test/main.cpp|modules/lsp-r3d-glx-lib/src/test/main.cpp|modules/lsp-plugins-shared/src/test/main.cpp|modules/lsp-lltl-lib/src/test/main.cpp|modules/lsp-dsp-lib/src/test/main.cpp|modules/lsp-test-fw/src/test/main.cpp|modules/lsp-3rd-party/src/test/main.cpp|modules/lsp-r3d-base-lib/src/test/main.cpp|modules/lsp-r3d-iface/src/test/main.cpp|modules/lsp-dsp-units/src/test/main.cpp|modules/lsp-runtime-lib/src/test/main.cpp|modules/lsp-ws-lib/src/test/main.cpp|modules/lsp-common-lib/src/test/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="modules/lsp-tk-lib/src/test/main.cpp|modules/lsp-r3d-glx-lib/src/test/main.cpp|modules/lsp-plugins-shared/src/test/main.cpp|modules/lsp-lltl-lib/src/test/main.cpp|modules/lsp-dsp-lib/src/test/main.cpp|modules/lsp-test-fw/src/test/main.cpp|modules/lsp-3rd-party/src/test/main.cpp|modules/lsp-r3d-base-lib/src/test/main.cpp|modules/lsp-r3d-iface/src/test/main.cpp|modules/lsp-dsp-units/src/test/main.cpp|modules/lsp-runtime-lib/src/test/main.cpp|modules/lsp-ws-lib/src/test/main.cpp|modules/lsp-common-lib/src/test/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -158,7 +156,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="singletone.cpp|modules/lsp-tk-lib/src/test/main.cpp|modules/lsp-r3d-glx-lib/src/test/main.cpp|modules/lsp-plugins-shared/src/test/main.cpp|modules/lsp-lltl-lib/src/test/main.cpp|modules/lsp-dsp-lib/src/test/main.cpp|modules/lsp-test-fw/src/test/main.cpp|modules/lsp-3rd-party/src/test/main.cpp|modules/lsp-r3d-base-lib/src/test/main.cpp|modules/lsp-r3d-iface/src/test/main.cpp|modules/lsp-dsp-units/src/test/main.cpp|modules/lsp-runtime-lib/src/test/main.cpp|modules/lsp-ws-lib/src/test/main.cpp|modules/lsp-common-lib/src/test/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="modules/lsp-tk-lib/src/test/main.cpp|modules/lsp-r3d-glx-lib/src/test/main.cpp|modules/lsp-plugins-shared/src/test/main.cpp|modules/lsp-lltl-lib/src/test/main.cpp|modules/lsp-dsp-lib/src/test/main.cpp|modules/lsp-test-fw/src/test/main.cpp|modules/lsp-3rd-party/src/test/main.cpp|modules/lsp-r3d-base-lib/src/test/main.cpp|modules/lsp-r3d-iface/src/test/main.cpp|modules/lsp-dsp-units/src/test/main.cpp|modules/lsp-runtime-lib/src/test/main.cpp|modules/lsp-ws-lib/src/test/main.cpp|modules/lsp-common-lib/src/test/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
