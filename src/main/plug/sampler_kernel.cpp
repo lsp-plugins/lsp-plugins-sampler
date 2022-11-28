@@ -61,6 +61,30 @@ namespace lsp
         }
 
         //-------------------------------------------------------------------------
+        sampler_kernel::AFRenderer::AFRenderer(sampler_kernel *base, afile_t *descr)
+        {
+            pCore       = base;
+            pFile       = descr;
+        }
+
+        sampler_kernel::AFRenderer::~AFRenderer()
+        {
+            pCore       = NULL;
+            pFile       = NULL;
+        }
+
+        status_t sampler_kernel::AFRenderer::run()
+        {
+            return pCore->render_sample(pFile);
+        };
+
+        void sampler_kernel::AFRenderer::dump(dspu::IStateDumper *v) const
+        {
+            v->write("pCore", pCore);
+            v->write("pFile", pFile);
+        }
+
+        //-------------------------------------------------------------------------
         sampler_kernel::sampler_kernel()
         {
             pExecutor       = NULL;
@@ -108,33 +132,26 @@ namespace lsp
             pExecutor       = executor;
 
             // Now determine object sizes
-            size_t afsample_size        = align_size(sizeof(afsample_t), DEFAULT_ALIGN);
-            size_t afile_size           = AFI_TOTAL * afsample_size;
-            size_t array_size           = align_size(sizeof(afile_t *) * files, DEFAULT_ALIGN);
-
-            lsp_trace("afsample_size        = %d", int(afsample_size));
-            lsp_trace("afile_size           = %d", int(afile_size));
-            lsp_trace("array_size           = %d", int(array_size));
+            size_t afile_szof           = align_size(sizeof(afile_t) * files, DEFAULT_ALIGN);
+            size_t vactive_szof         = align_size(sizeof(afile_t *) * files, DEFAULT_ALIGN);
+            size_t vbuffer_szof         = align_size(sizeof(float) * meta::sampler_metadata::BUFFER_SIZE, DEFAULT_ALIGN);
 
             // Allocate raw chunk and link data
-            size_t allocate             = array_size * 2 + afile_size * files;
+            size_t allocate             = afile_szof + vactive_szof + vbuffer_szof;
             uint8_t *ptr                = alloc_aligned<uint8_t>(pData, allocate);
             if (ptr == NULL)
                 return false;
-
-            #ifdef LSP_TRACE
+            lsp_guard_assert(
                 uint8_t *tail               = &ptr[allocate];
-                lsp_trace("allocate = %d, ptr range=%p-%p", int(allocate), ptr, tail);
-            #endif /* LSP_TRACE */
+            );
 
             // Allocate files
-            vFiles                      = new afile_t[files];
-            if (vFiles == NULL)
-                return false;
-
+            vFiles                      = reinterpret_cast<afile_t>(ptr);
+            ptr                        += afile_szof;
             vActive                     = reinterpret_cast<afile_t **>(ptr);
-            ptr                        += array_size;
-            lsp_trace("vActive              = %p", vActive);
+            ptr                        += vactive_szof;
+            vBuffer                     = reinterpret_cast<float *>(ptr);
+            ptr                        += vbuffer_szof;
 
             for (size_t i=0; i<files; ++i)
             {
@@ -142,8 +159,17 @@ namespace lsp
 
                 af->nID                     = i;
                 af->pLoader                 = NULL;
+                af->pRenderer               = NULL;
 
-                af->bDirty                  = false;
+                af->sListen.construct();
+                af->sNoteOn.construct();
+                af->pOriginal               = NULL;
+                af->pProcessed              = NULL;
+                for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
+                    af->vThumbs[j]              = NULL;
+
+                af->nUpdateReq              = 0;
+                af->nUpdateResp             = 0;
                 af->bSync                   = false;
                 af->fVelocity               = 1.0f;
                 af->fPitch                  = 0.0f;
@@ -207,40 +233,33 @@ namespace lsp
                     af->pGains[j]               = NULL;
                 }
 
-                for (size_t j=0; j<AFI_TOTAL; ++j)
-                {
-                    afsample_t *afs             = reinterpret_cast<afsample_t *>(ptr);
-                    ptr                        += afsample_size;
-
-                    af->vData[j]                = afs;
-                    lsp_trace("vFiles[%d]->vData[%d]    = %p", int(i), int(j), afs);
-
-                    afs->pSource                = NULL;
-                    afs->pSample                = NULL;
-
-                    for (size_t k=0; k<meta::sampler_metadata::TRACKS_MAX; ++k)
-                        afs->vThumbs[k]     = NULL;
-                }
-
                 vActive[i]                  = NULL;
             }
 
+            // Assert
+            lsp_assert(ptr <= tail);
+
             // Create additional objects: tasks for file loading
-            lsp_trace("Create loaders");
+            lsp_trace("Create tasks");
             for (size_t i=0; i<files; ++i)
             {
                 afile_t  *af        = &vFiles[i];
 
                 // Create loader
-                AFLoader *ldr       = new AFLoader(this, af);
-                if (ldr == NULL)
+                af->pLoader         = new AFLoader(this, af);
+                if (af->pLoader == NULL)
                 {
                     destroy_state();
                     return false;
                 }
 
-                // Store loader
-                af->pLoader         = ldr;
+                // Create renderer
+                af->pRenderer       = new AFRenderer(this, af);
+                if (af->pRenderer == NULL)
+                {
+                    destroy_state();
+                    return false;
+                }
             }
 
             // Initialize channels
@@ -253,17 +272,6 @@ namespace lsp
                     return false;
                 }
             }
-
-            // Allocate buffer
-            lsp_trace("Allocate buffer size=%d", int(meta::sampler_metadata::BUFFER_SIZE));
-            float *buf              = new float[meta::sampler_metadata::BUFFER_SIZE];
-            if (buf == NULL)
-            {
-                destroy_state();
-                return false;
-            }
-            lsp_trace("buffer = %p", buf);
-            vBuffer                 = buf;
 
             // Initialize toggle
             sListen.init();
@@ -343,42 +351,64 @@ namespace lsp
             pActivity       = TRACE_PORT(activity);
         }
 
-        void sampler_kernel::destroy_state()
+        void sampler_kernel::destroy_afile(afile_t *af)
         {
-            if (vBuffer != NULL)
+            // Delete audio file loader
+            if (af->pLoader != NULL)
             {
-                delete[] vBuffer;
-                vBuffer     = NULL;
+                delete af->pLoader;
+                af->pLoader = NULL;
             }
 
-            for (size_t i=0; i<nChannels; ++i)
-                vChannels[i].destroy(false);
+            // Delete audio file renderer
+            if (af->pRenderer != NULL)
+            {
+                delete af->pRenderer;
+                af->pRenderer = NULL;
+            }
 
+            // Destroy all sample-related data
+            unload_afile(af);
+
+            // Active sample is bound to the sampler, controlled by GC
+            af->pActive     = NULL;
+        }
+
+        void sampler_kernel::destroy_samples(dspu::Sample *gc_list)
+        {
+            // Iterate over the list and destroy each sample in the list
+            while (gc_list != NULL)
+            {
+                dspu::Sample *next = gc_list->gc_next();
+                gc_list->destroy();
+                delete gc_list;
+                gc_list = next;
+            }
+        }
+
+        void sampler_kernel::destroy_state()
+        {
             if (vFiles != NULL)
             {
                 for (size_t i=0; i<nFiles;++i)
-                {
-                    // Delete audio file loaders
-                    AFLoader *ldr   = vFiles[i].pLoader;
-                    if (ldr != NULL)
-                    {
-                        delete ldr;
-                        vFiles[i].pLoader = NULL;
-                    }
+                    destroy_afile(&vFiles[i]);
+            }
 
-                    // Destroy samples
-                    for (size_t j=0; j<AFI_TOTAL; ++j)
-                        destroy_afsample(vFiles[i].vData[j]);
-                }
-
-                // Drop list of files
-                delete [] vFiles;
-                vFiles = NULL;
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                dspu::SamplePlayer *sp = &vChannels[i];
+                sp->stop();
+                sp->unbind_all();
+                destroy_samples(sp->gc());
+                sp->destroy(false);
             }
 
             free_aligned(pData);
 
             // Foget variables
+            vFiles          = NULL;
+            vActive         = NULL;
+            vBuffer         = NULL;
             pExecutor       = NULL;
             nFiles          = 0;
             nChannels       = 0;
@@ -401,7 +431,7 @@ namespace lsp
             if (temp != field)
             {
                 field       = temp;
-                af->bDirty  = true;
+                ++af->nUpdateReq;
             }
         }
 
@@ -411,7 +441,7 @@ namespace lsp
             if (temp != field)
             {
                 field       = temp;
-                af->bDirty  = true;
+                ++af->nUpdateReq;
             }
         }
 
@@ -420,32 +450,6 @@ namespace lsp
             // Process listen toggle
             if (pListen != NULL)
                 sListen.submit(pListen->value());
-
-            // Process file load requests
-            for (size_t i=0; i<nFiles; ++i)
-            {
-                // Get descriptor
-                afile_t *af             = &vFiles[i];
-                if (af->pFile == NULL)
-                    continue;
-
-                // Get path
-                plug::path_t *path = af->pFile->buffer<plug::path_t>();
-                if ((path == NULL) || (!path->pending()))
-                    continue;
-
-                // Check task state
-                if (af->pLoader->idle())
-                {
-                    // Try to submit task
-                    if (pExecutor->submit(af->pLoader))
-                    {
-                        af->nStatus     = STATUS_LOADING;
-                        lsp_trace("successfully submitted task");
-                        path->accept();
-                    }
-                }
-            }
 
             // Update note and octave
             lsp_trace("Initializing samples...");
@@ -538,50 +542,43 @@ namespace lsp
                 vFiles[i].sNoteOn.init(sr);
         }
 
-        void sampler_kernel::destroy_afsample(afsample_t *af)
+        void sampler_kernel::unload_afile(afile_t *af)
         {
-            if (af->pSource != NULL)
+            // Destroy original sample if present
+            if (af->pOriginal != NULL)
             {
-                af->pSource->destroy();
-                delete af->pSource;
-                af->pSource     = NULL;
+                af->pOriginal->destroy();
+                delete af->pOriginal;
+                af->pOriginal = NULL;
             }
 
-            if (af->pSample != NULL)
+            // Destroy processed sample if present
+            if (af->pProcessed != NULL)
             {
-                af->pSample->destroy();
-                delete af->pSample;
-                af->pSample     = NULL;
+                af->pProcessed->destroy();
+                delete af->pProcessed;
+                af->pProcessed = NULL;
             }
 
-            if (af->vThumbs[0] != NULL)
+            // Destroy pointer to thumbnails
+            if (af->vThumbs[0])
             {
-                delete [] af->vThumbs[0];
+                free(af->vThumbs[0]);
                 for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
-                    af->vThumbs[i]      = NULL;
+                    af->vThumbs[i]              = NULL;
             }
         }
 
-        int sampler_kernel::load_file(afile_t *file)
+        status_t sampler_kernel::load_file(afile_t *file)
         {
             // Load sample
             lsp_trace("file = %p", file);
 
             // Validate arguments
-            if (file == NULL)
+            if ((file == NULL) || (file->pFile == NULL))
                 return STATUS_UNKNOWN_ERR;
 
-            // Destroy OLD data if exists
-            destroy_afsample(file->vData[AFI_OLD]);
-
-            // Check state
-            afsample_t *snew        = file->vData[AFI_NEW];
-            if ((snew->pSource != NULL) || (snew->pSample != NULL))
-                return STATUS_UNKNOWN_ERR;
-
-            // Check port binding
-            if (file->pFile == NULL)
-                return STATUS_UNKNOWN_ERR;
+            unload_afile(file);
 
             // Get path
             plug::path_t *path      = file->pFile->buffer<plug::path_t>();
@@ -594,93 +591,68 @@ namespace lsp
                 return STATUS_UNSPECIFIED;
 
             // Load audio file
-            snew->pSource           = new dspu::Sample();
-            if (snew->pSource == NULL)
+            dspu::Sample *source    = new dspu::Sample();
+            if (source == NULL)
                 return STATUS_NO_MEM;
+            lsp_finally {
+                if (source != NULL)
+                {
+                    source->destroy();
+                    delete source;
+                }
+            };
 
-            status_t status = snew->pSource->load_ext(fname, meta::sampler_metadata::SAMPLE_LENGTH_MAX * 0.001f);
+            // Load sample
+            status_t status = source->load_ext(fname, meta::sampler_metadata::SAMPLE_LENGTH_MAX * 0.001f);
             if (status != STATUS_OK)
             {
                 lsp_trace("load failed: status=%d (%s)", status, get_status(status));
-                destroy_afsample(snew);
                 return status;
             }
-            size_t channels         = lsp_min(nChannels, snew->pSource->channels());
-            if (!snew->pSource->set_channels(channels))
+            size_t channels         = lsp_min(nChannels, source->channels());
+            if (!source->set_channels(channels))
             {
                 lsp_trace("failed to resize source sample to %d channels", int(channels));
-                destroy_afsample(snew);
                 return status;
             }
 
-            // Create sample for playback
-            snew->pSample           = new dspu::Sample();
-            if (snew->pSample == NULL)
-            {
-                lsp_trace("sample initialization failed");
-                destroy_afsample(snew);
-                return STATUS_NO_MEM;
-            }
-
-            // Initialize thumbnails
-            float *thumbs           = new float[channels * meta::sampler_metadata::MESH_SIZE];
-            if (thumbs == NULL)
-            {
-                destroy_afsample(snew);
-                return STATUS_NO_MEM;
-            }
-
-            for (size_t i=0; i<channels; ++i)
-            {
-                snew->vThumbs[i]        = thumbs;
-                thumbs                 += meta::sampler_metadata::MESH_SIZE;
-            }
-
-            lsp_trace("file successful loaded: %s", fname);
+            // Commit the result
+            lsp_trace("file successfully loaded: %s", fname);
+            lsp::swap(file->pOriginal, source);
 
             return STATUS_OK;
         }
 
-        void sampler_kernel::copy_asample(afsample_t *dst, const afsample_t *src)
+        status_t sampler_kernel::render_sample(afile_t *af)
         {
-            dst->pSource        = src->pSource;
-            dst->pSample        = src->pSample;
-
-            for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
-                dst->vThumbs[j]     = src->vThumbs[j];
-        }
-
-        void sampler_kernel::clear_asample(afsample_t *dst)
-        {
-            dst->pSource        = NULL;
-            dst->pSample        = NULL;
-
-            for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
-                dst->vThumbs[j]     = NULL;
-        }
-
-        bool sampler_kernel::do_render_sample(afile_t *af)
-        {
-            // Get maximum sample count
             status_t res;
-            afsample_t *afs     = af->vData[AFI_CURR];
-            if (afs->pSource == NULL)
-                return false;
+
+            // Validate arguments
+            if (af == NULL)
+                return STATUS_UNKNOWN_ERR;
+
+            // Get maximum sample count
+            dspu::Sample *src       = af->pOriginal;
+            if (src == NULL)
+            {
+                lsp_warn("Original sample not specified");
+                return STATUS_UNSPECIFIED;
+            }
 
             // Copy data of original sample to temporary sample and perform resampling
             dspu::Sample temp;
-            size_t channels         = lsp_min(nChannels, afs->pSource->channels());
-            ssize_t src_samples     = afs->pSource->length();
+            size_t channels         = lsp_min(nChannels, src->channels());
+            ssize_t src_samples     = src->length();
             size_t sample_rate_dst  = nSampleRate * dspu::semitones_to_frequency_shift(-af->fPitch);
-            if (temp.copy(afs->pSource) != STATUS_OK)
+            if (temp.copy(src) != STATUS_OK)
             {
                 lsp_warn("Error copying source sample");
-                return false;
+                return STATUS_NO_MEM;
             }
             if (temp.resample(sample_rate_dst) != STATUS_OK)
             {
                 lsp_warn("Error resampling source sample");
-                return false;
+                return STATUS_NO_MEM;
             }
             if (af->bCompensate)
             {
@@ -691,7 +663,7 @@ namespace lsp
                 float crossfade         = lsp_limit(af->fCompensateFade * 0.01f, 0.0f, 1.0f);
 
                 if ((res = temp.stretch(src_samples, chunk_size, fade_type, crossfade)) != STATUS_OK)
-                    return false;
+                    return res;
             }
 
             // Determine the normalizing factor
@@ -705,11 +677,27 @@ namespace lsp
             }
             float norming       = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
 
-            // Render the thumbnail
+            // Need to create buffer for thumbails?
+            if (af->vThumbs[0] == NULL)
+            {
+                float thumb         = static_cast<float *>(malloc(sizeof(float) * meta::sampler_metadata::MESH_SIZE * channels));
+                if (thumb == NULL)
+                {
+                    lsp_warn("Could not allocate memory for thumbnails");
+                    return STATUS_NO_MEM;
+                }
+                for (size_t j=0; j<channels; ++j)
+                {
+                    af->vThumbs[j]  = thumb;
+                    thumb          += meta::sampler_metadata::MESH_SIZE;
+                }
+            }
+
+            // Render the thumbnails
             for (size_t j=0; j<channels; ++j)
             {
                 const float *src    = temp.channel(j);
-                float *dst          = afs->vThumbs[j];
+                float *dst          = af->vThumbs[j];
                 for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
                 {
                     size_t first    = (k * samples) / meta::sampler_metadata::MESH_SIZE;
@@ -755,11 +743,21 @@ namespace lsp
             samples             = c_end - c_begin;
 
             // Initialize target sample
-            dspu::Sample *s     = afs->pSample;
-            if (!s->resize(channels, samples, samples))
+            dspu::Sample *dst   = new dspu::Sample();
+            if (dst == NULL)
+                return STATUS_NO_MEM;
+            lsp_finally {
+                if (dst != NULL)
+                {
+                    dst->destroy();
+                    delete dst;
+                }
+            };
+
+            if (!dst->resize(channels, samples, samples))
             {
                 lsp_warn("Error initializing playback sample");
-                return false;
+                return STATUS_NO_MEM;
             }
 
             // Apply fade-in and fade-out to the buffer
@@ -768,7 +766,7 @@ namespace lsp
             for (size_t j=0; j<channels; ++j)
             {
                 const float *src    = temp.channel(j);
-                float *dst          = s->getBuffer(j);
+                float *dst          = dst->getBuffer(j);
 
                 dspu::fade_in(dst, &src[c_begin], fade_in, samples);
                 dspu::fade_out(dst, dst, fade_out, samples);
@@ -777,34 +775,10 @@ namespace lsp
             }
             af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
 
-            // (Re)bind sample
-            for (size_t j=0; j<nChannels; ++j)
-                vChannels[j].bind(af->nID, s, false);
+            // Commit the new sample to the processed
+            lsp::swap(dst, af->pProcessed);
 
-            return true;
-        }
-
-        void sampler_kernel::render_sample(afile_t *af)
-        {
-            if (!do_render_sample(af))
-            {
-                afsample_t *afs     = af->vData[AFI_CURR];
-                dspu::Sample *s     = afs->pSource;
-                if (s != NULL)
-                {
-                    // Cleanup sample data
-                    for (size_t j=0; j<s->channels(); ++j)
-                        dsp::fill_zero(afs->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
-                }
-
-                // Unbind empty sample
-                for (size_t j=0; j<nChannels; ++j)
-                    vChannels[j].unbind(af->nID);
-            }
-
-            // Reset dirty flag and set sync flag
-            af->bDirty      = false;
-            af->bSync       = true;
+            return STATUS_OK;
         }
 
         void sampler_kernel::reorder_samples()
@@ -817,7 +791,7 @@ namespace lsp
             {
                 if (!vFiles[i].bOn)
                     continue;
-                if (vFiles[i].vData[AFI_CURR]->pSample == NULL)
+                if (vFiles[i].pOriginal == NULL)
                     continue;
 
                 lsp_trace("file %d is active", int(nActive));
@@ -830,12 +804,7 @@ namespace lsp
                 for (size_t i=0; i<(nActive-1); ++i)
                     for (size_t j=i+1; j<nActive; ++j)
                         if (vActive[i]->fVelocity > vActive[j]->fVelocity)
-                        {
-                            // Swap file pointers
-                            afile_t    *af  = vActive[i];
-                            vActive[i]      = vActive[j];
-                            vActive[j]      = af;
-                        }
+                            lsp::swap(vActive[i], vActive[j]);
             }
 
             #ifdef LSP_TRACE
@@ -982,6 +951,55 @@ namespace lsp
 
         void sampler_kernel::process_file_load_requests()
         {
+            // Process file load requests
+            for (size_t i=0; i<nFiles; ++i)
+            {
+                // Get descriptor
+                afile_t *af             = &vFiles[i];
+                if (af->pFile == NULL)
+                    continue;
+
+                // Do nothing if rendering is in progress
+                if (!af->pRenderer->idle())
+                    continue;
+
+                // Get path
+                plug::path_t *path = af->pFile->buffer<plug::path_t>();
+                if (path == NULL)
+                    continue;
+
+                // If there is new load request and loader is idle, then wake up the loader
+                if ((path->pending()) && (af->pLoader->idle()))
+                {
+                    // Try to submit task
+                    if (pExecutor->submit(af->pLoader))
+                    {
+                        ++af->nUpdateReq;
+                        af->nStatus     = STATUS_LOADING;
+                        lsp_trace("successfully submitted loader task");
+                        path->accept();
+                    }
+                }
+                else if ((path->accepted()) && (af->pLoader->completed()))
+                {
+                    // Commit the result
+                    af->nStatus     = af->pLoader->code();
+                    af->fLength     = (af->nStatus == STATUS_OK) ?
+                                      dspu::samples_to_millis(af->pOriginal->sample_rate(), af->pOriginal->samples()) :
+                                      0.0f;
+
+                    // Trigger the state for reorder
+                    bReorder        = true;
+
+                    // Now we can surely commit changes and reset task state
+                    path->commit();
+                    af->pLoader->reset();
+                }
+            }
+        }
+
+        void sampler_kernel::process_file_render_requests()
+        {
             for (size_t i=0; i<nFiles; ++i)
             {
                 // Get descriptor
@@ -989,38 +1007,36 @@ namespace lsp
                 if (af->pFile == NULL)
                     continue;
 
+                // Do nothing if loader is in progress
+                if (!af->pLoader->idle())
+                    continue;
+
                 // Get path and check task state
-                plug::path_t *path = af->pFile->buffer<plug::path_t>();
-                if ((path != NULL) && (path->accepted()) && (af->pLoader->completed()))
+                if ((af->nUpdateReq != af->nUpdateResp) && (af->pRenderer->idle()))
                 {
-                    // Task has been completed
-                    lsp_trace("task has been completed");
-
-                    // Update state of audio file
-                    copy_asample(af->vData[AFI_OLD], af->vData[AFI_CURR]);
-                    copy_asample(af->vData[AFI_CURR], af->vData[AFI_NEW]);
-                    clear_asample(af->vData[AFI_NEW]);
-
-                    afsample_t *afs = af->vData[AFI_CURR];
-                    af->nStatus     = af->pLoader->code();
-                    af->bDirty      = true; // Mark sample for re-rendering
-                    af->fLength     = (af->nStatus == STATUS_OK) ?
-                                      dspu::samples_to_millis(afs->pSource->sample_rate(), afs->pSource->samples()) : 0.0f;
-
-                    lsp_trace("Current file: status=%d (%s), length=%f msec\n",
-                        int(af->nStatus), get_status(af->nStatus), af->fLength);
-
-                    // Now we surely can commit changes and reset task state
-                    path->commit();
-                    af->pLoader->reset();
-
-                    // Trigger the state for reorder
-                    bReorder        = true;
+                    // Try to submit task
+                    if (pExecutor->submit(af->pRenderer))
+                    {
+                        af->nUpdateResp     = af->nUpdateReq;
+                        lsp_trace("successfully submitted renderer task");
+                    }
                 }
+                else if (af->pRenderer->completed())
+                {
+                    // Commit changes if there is no more pending tasks
+                    if (af->nUpdateReq == af->nUpdateResp)
+                    {
+                        // Bind sample for all channels
+                        for (size_t j=0; j<nChannels; ++j)
+                            vChannels[j].bind(af->nID, af->pProcessed);
 
-                // Check that we need to re-render sample
-                if (af->bDirty)
-                    render_sample(af);
+                        // The sample is now under the garbage control inside of the sample player
+                        af->pProcessed      = NULL;
+                    }
+
+                    af->pRenderer->reset();
+                    af->bSync       = true;
+                }
             }
         }
 
@@ -1028,6 +1044,10 @@ namespace lsp
         {
             // Step 1
             // Process file load requests
+            process_file_load_requests();
+
+            // Step 2
+            // Process file rendering requests
             process_file_load_requests();
 
             // Reorder the files in ascending velocity order if needed
@@ -1038,11 +1058,11 @@ namespace lsp
                 bReorder = false;
             }
 
-            // Step 2
+            // Step 3
             // Process events
             process_listen_events();
 
-            // Step 3
+            // Step 4
             // Process the channels individually
             if (ins != NULL)
             {
@@ -1055,7 +1075,7 @@ namespace lsp
                     vChannels[i].process(outs[i], NULL, samples);
             }
 
-            // Step 4
+            // Step 5
             // Output parameters
             output_parameters(samples);
         }
@@ -1079,8 +1099,8 @@ namespace lsp
                 af->pNoteOn->set_value(af->sNoteOn.process(samples));
 
                 // Get file sample
-                afsample_t *afs     = af->vData[AFI_CURR];
-                size_t channels     = (afs->pSample != NULL) ? afs->pSample->channels() : 0;
+                dspu::Sample *active    = vChannels[0].get(af->nID);
+                size_t channels         = (active != NULL) ? active->channels() : 0;
                 if (channels > nChannels)
                     channels             =  nChannels;
 
@@ -1092,11 +1112,15 @@ namespace lsp
                 if ((mesh == NULL) || (!mesh->isEmpty()) || (!af->bSync))
                     continue;
 
-                if (channels > 0)
+                // Do not sync state of mesh if there are active tasks
+                if ((!af->pRenderer->idle()) || (!af->pLoader->idle()))
+                    continue;
+
+                if ((channels > 0) && (af->vThumbs[0] != NULL))
                 {
                     // Copy thumbnails
                     for (size_t j=0; j<channels; ++j)
-                        dsp::copy(mesh->pvData[j], afs->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
+                        dsp::copy(mesh->pvData[j], af->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
 
                     mesh->data(channels, meta::sampler_metadata::MESH_SIZE);
                 }
@@ -1107,30 +1131,18 @@ namespace lsp
             }
         }
 
-        void sampler_kernel::dump_afsample(dspu::IStateDumper *v, const afsample_t *f) const
-        {
-            if (f != NULL)
-            {
-                v->begin_object(f, sizeof(afsample_t));
-                {
-                    v->write_object("pSource", f->pSource);
-                    v->write_object("pSample", f->pSample);
-                    v->write("vThumbs", f->vThumbs);
-                }
-                v->end_object();
-            }
-            else
-                v->write(f);
-        }
-
         void sampler_kernel::dump_afile(dspu::IStateDumper *v, const afile_t *f) const
         {
             v->write("nID", f->nID);
             v->write_object("pLoader", f->pLoader);
+            v->write_object("pOriginal", f->pOriginal);
+            v->write_object("pProcessed", f->pProcessed);
+            v->write_object("pActive", f->pActive);
+            v->write("vThumbs", f->vThumbs);
             v->write_object("sListen", &f->sListen);
             v->write_object("sNoteOn", &f->sNoteOn);
 
-            v->write("bDirty", f->bDirty);
+//            v->write("bDirty", f->bDirty);
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
             v->write("fPitch", f->fPitch);
