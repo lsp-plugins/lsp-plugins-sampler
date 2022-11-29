@@ -379,6 +379,9 @@ namespace lsp
 
         void sampler_kernel::destroy_afile(afile_t *af)
         {
+            af->sListen.destroy();
+            af->sNoteOn.destroy();
+
             // Delete audio file loader
             if (af->pLoader != NULL)
             {
@@ -408,6 +411,7 @@ namespace lsp
                 dspu::Sample *next = gc_list->gc_next();
                 gc_list->destroy();
                 delete gc_list;
+                lsp_trace("Destroyed sample %p", gc_list);
                 gc_list = next;
             }
         }
@@ -585,6 +589,7 @@ namespace lsp
             {
                 af->pOriginal->destroy();
                 delete af->pOriginal;
+                lsp_trace("destroyed sample %p", af->pOriginal);
                 af->pOriginal = NULL;
             }
 
@@ -593,6 +598,7 @@ namespace lsp
             {
                 af->pProcessed->destroy();
                 delete af->pProcessed;
+                lsp_trace("destroyed sample %p", af->pProcessed);
                 af->pProcessed = NULL;
             }
 
@@ -670,10 +676,7 @@ namespace lsp
             // Get maximum sample count
             dspu::Sample *src       = af->pOriginal;
             if (src == NULL)
-            {
-                lsp_warn("Original sample not specified");
                 return STATUS_UNSPECIFIED;
-            }
 
             // Copy data of original sample to temporary sample and perform resampling
             dspu::Sample temp;
@@ -1024,7 +1027,8 @@ namespace lsp
                                       dspu::samples_to_millis(af->pOriginal->sample_rate(), af->pOriginal->samples()) :
                                       0.0f;
 
-                    // Trigger the state for reorder
+                    // Trigger the sample for update and the state for reorder
+                    af->nUpdateReq++;
                     bReorder        = true;
 
                     // Now we can surely commit changes and reset task state
@@ -1050,9 +1054,20 @@ namespace lsp
                 // Get path and check task state
                 if ((af->nUpdateReq != af->nUpdateResp) && (af->pRenderer->idle()))
                 {
-                    // Try to submit task
-                    if (pExecutor->submit(af->pRenderer))
+                    if (af->pOriginal == NULL)
                     {
+                        af->nUpdateResp     = af->nUpdateReq;
+                        af->pProcessed      = NULL;
+
+                        // Unbind sample for all channels
+                        for (size_t j=0; j<nChannels; ++j)
+                            vChannels[j].unbind(af->nID);
+
+                        af->bSync           = true;
+                    }
+                    else if (pExecutor->submit(af->pRenderer))
+                    {
+                        // Try to submit task
                         af->nUpdateResp     = af->nUpdateReq;
                         lsp_trace("successfully submitted renderer task");
                     }
@@ -1071,7 +1086,7 @@ namespace lsp
                     }
 
                     af->pRenderer->reset();
-                    af->bSync       = true;
+                    af->bSync           = true;
                 }
             }
         }
@@ -1106,7 +1121,11 @@ namespace lsp
 
             // Step 2
             // Process file rendering requests
-            process_file_load_requests();
+            process_file_render_requests();
+
+            // Step 3
+            // Collect garbage
+            process_gc_events();
 
             // Reorder the files in ascending velocity order if needed
             if (bReorder)
@@ -1116,11 +1135,11 @@ namespace lsp
                 bReorder = false;
             }
 
-            // Step 3
+            // Step 4
             // Process events
             process_listen_events();
 
-            // Step 4
+            // Step 5
             // Process the channels individually
             if (ins != NULL)
             {
@@ -1133,7 +1152,7 @@ namespace lsp
                     vChannels[i].process(outs[i], NULL, samples);
             }
 
-            // Step 5
+            // Step 6
             // Output parameters
             output_parameters(samples);
         }
