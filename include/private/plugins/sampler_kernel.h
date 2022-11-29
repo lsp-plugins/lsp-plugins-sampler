@@ -75,6 +75,20 @@ namespace lsp
                         void                    dump(dspu::IStateDumper *v) const;
                 };
 
+                class GCTask: public ipc::ITask
+                {
+                    private:
+                        sampler_kernel         *pCore;
+
+                    public:
+                        explicit GCTask(sampler_kernel *base);
+                        virtual ~GCTask();
+
+                    public:
+                        virtual status_t        run();
+                        void                    dump(dspu::IStateDumper *v) const;
+                };
+
             protected:
                 enum stretch_fade_t
                 {
@@ -158,6 +172,7 @@ namespace lsp
 
             protected:
                 ipc::IExecutor     *pExecutor;                                          // Executor service
+                dspu::Sample       *pGCList;                                            // Garbage collection list
                 afile_t            *vFiles;                                             // List of audio files
                 afile_t           **vActive;                                            // List of active audio files
                 dspu::SamplePlayer  vChannels[meta::sampler_metadata::TRACKS_MAX];      // List of channels
@@ -165,6 +180,7 @@ namespace lsp
                 dspu::Blink         sActivity;                                          // Note on led for instrument
                 dspu::Toggle        sListen;                                            // Listen toggle
                 dspu::Randomizer    sRandom;                                            // Randomizer
+                GCTask              sGCTask;                                            // Garbage collection task
 
                 size_t              nFiles;                                             // Number of files
                 size_t              nActive;                                            // Number of active files
@@ -190,6 +206,7 @@ namespace lsp
 
                 void        reorder_samples();
                 void        process_listen_events();
+                void        process_gc_events();
                 void        output_parameters(size_t samples);
                 void        process_file_load_requests();
                 void        process_file_render_requests();
@@ -205,6 +222,7 @@ namespace lsp
                 static void destroy_afile(afile_t *af);
                 static void destroy_samples(dspu::Sample *gc_list);
                 void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
+                void        perform_gc();
 
             public:
                 explicit sampler_kernel();

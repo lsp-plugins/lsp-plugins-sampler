@@ -21,6 +21,7 @@
 
 #include <private/plugins/sampler_kernel.h>
 #include <lsp-plug.in/common/alloc.h>
+#include <lsp-plug.in/common/atomic.h>
 #include <lsp-plug.in/common/debug.h>
 #include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/dsp-units/misc/fade.h>
@@ -84,10 +85,35 @@ namespace lsp
             v->write("pFile", pFile);
         }
 
+
+        sampler_kernel::GCTask::GCTask(sampler_kernel *base)
+        {
+            pCore       = base;
+        }
+
+        sampler_kernel::GCTask::~GCTask()
+        {
+            pCore       = NULL;
+        }
+
+
+        status_t sampler_kernel::GCTask::run()
+        {
+            pCore->perform_gc();
+            return STATUS_OK;
+        }
+
+        void sampler_kernel::GCTask::dump(dspu::IStateDumper *v) const
+        {
+            v->write("pCore", pCore);
+        }
+
         //-------------------------------------------------------------------------
-        sampler_kernel::sampler_kernel()
+        sampler_kernel::sampler_kernel():
+            sGCTask(this)
         {
             pExecutor       = NULL;
+            pGCList         = NULL;
             vFiles          = NULL;
             vActive         = NULL;
             nFiles          = 0;
@@ -146,7 +172,7 @@ namespace lsp
             );
 
             // Allocate files
-            vFiles                      = reinterpret_cast<afile_t>(ptr);
+            vFiles                      = reinterpret_cast<afile_t *>(ptr);
             ptr                        += afile_szof;
             vActive                     = reinterpret_cast<afile_t **>(ptr);
             ptr                        += vactive_szof;
@@ -386,6 +412,12 @@ namespace lsp
             }
         }
 
+        void sampler_kernel::perform_gc()
+        {
+            dspu::Sample *gc_list = lsp::atomic_swap(&pGCList, NULL);
+            destroy_samples(gc_list);
+        }
+
         void sampler_kernel::destroy_state()
         {
             if (vFiles != NULL)
@@ -394,6 +426,10 @@ namespace lsp
                     destroy_afile(&vFiles[i]);
             }
 
+            // Perform pending gabrage collection
+            perform_gc();
+
+            // Perform garbage collection for each channel
             for (size_t i=0; i<nChannels; ++i)
             {
                 dspu::SamplePlayer *sp = &vChannels[i];
@@ -680,7 +716,7 @@ namespace lsp
             // Need to create buffer for thumbails?
             if (af->vThumbs[0] == NULL)
             {
-                float thumb         = static_cast<float *>(malloc(sizeof(float) * meta::sampler_metadata::MESH_SIZE * channels));
+                float *thumb        = static_cast<float *>(malloc(sizeof(float) * meta::sampler_metadata::MESH_SIZE * channels));
                 if (thumb == NULL)
                 {
                     lsp_warn("Could not allocate memory for thumbnails");
@@ -743,18 +779,18 @@ namespace lsp
             samples             = c_end - c_begin;
 
             // Initialize target sample
-            dspu::Sample *dst   = new dspu::Sample();
-            if (dst == NULL)
+            dspu::Sample *out   = new dspu::Sample();
+            if (out == NULL)
                 return STATUS_NO_MEM;
             lsp_finally {
-                if (dst != NULL)
+                if (out != NULL)
                 {
-                    dst->destroy();
-                    delete dst;
+                    out->destroy();
+                    delete out;
                 }
             };
 
-            if (!dst->resize(channels, samples, samples))
+            if (!out->resize(channels, samples, samples))
             {
                 lsp_warn("Error initializing playback sample");
                 return STATUS_NO_MEM;
@@ -766,7 +802,7 @@ namespace lsp
             for (size_t j=0; j<channels; ++j)
             {
                 const float *src    = temp.channel(j);
-                float *dst          = dst->getBuffer(j);
+                float *dst          = out->getBuffer(j);
 
                 dspu::fade_in(dst, &src[c_begin], fade_in, samples);
                 dspu::fade_out(dst, dst, fade_out, samples);
@@ -776,7 +812,7 @@ namespace lsp
             af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
 
             // Commit the new sample to the processed
-            lsp::swap(dst, af->pProcessed);
+            lsp::swap(out, af->pProcessed);
 
             return STATUS_OK;
         }
@@ -1040,6 +1076,28 @@ namespace lsp
             }
         }
 
+        void sampler_kernel::process_gc_events()
+        {
+            if (sGCTask.idle())
+            {
+                // Obtain the list of samples for destroy
+                if (pGCList == NULL)
+                {
+                    for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
+                        if ((pGCList = vChannels[i].gc()) != NULL)
+                            break;
+                }
+
+                if (pGCList != NULL)
+                    pExecutor->submit(&sGCTask);
+            }
+            else if (sGCTask.completed())
+            {
+                // The garbage collection has succeeded
+                sGCTask.reset();
+            }
+        }
+
         void sampler_kernel::process(float **outs, const float **ins, size_t samples)
         {
             // Step 1
@@ -1137,12 +1195,12 @@ namespace lsp
             v->write_object("pLoader", f->pLoader);
             v->write_object("pOriginal", f->pOriginal);
             v->write_object("pProcessed", f->pProcessed);
-            v->write_object("pActive", f->pActive);
             v->write("vThumbs", f->vThumbs);
             v->write_object("sListen", &f->sListen);
             v->write_object("sNoteOn", &f->sNoteOn);
 
-//            v->write("bDirty", f->bDirty);
+            v->write("nUpdateReq", f->nUpdateReq);
+            v->write("nUpdateResp", f->nUpdateResp);
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
             v->write("fPitch", f->fPitch);
@@ -1200,17 +1258,12 @@ namespace lsp
             v->write("pNoteOn", f->pNoteOn);
             v->write("pOn", f->pOn);
             v->write("pActive", f->pActive);
-
-            v->begin_array("vData", f->vData, AFI_TOTAL);
-            {
-                for (size_t i=0; i<AFI_TOTAL; ++i)
-                    dump_afsample(v, f->vData[i]);
-            }
         }
 
         void sampler_kernel::dump(dspu::IStateDumper *v) const
         {
             v->write("pExecutor", pExecutor);
+            v->write("pGCList", pExecutor);
             v->begin_array("vFiles", vFiles, nFiles);
             {
                 for (size_t i=0; i<nFiles; ++i)
@@ -1229,6 +1282,7 @@ namespace lsp
             v->write_object("sActivity", &sActivity);
             v->write_object("sListen", &sListen);
             v->write_object("sRandom", &sRandom);
+            v->write_object("sGCTask", &sGCTask);
 
             v->write("nFiles", nFiles);
             v->write("nActive", nActive);
