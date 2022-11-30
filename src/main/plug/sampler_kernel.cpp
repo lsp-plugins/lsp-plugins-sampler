@@ -1178,8 +1178,7 @@ namespace lsp
                 // Get file sample
                 dspu::Sample *active    = vChannels[0].get(af->nID);
                 size_t channels         = (active != NULL) ? active->channels() : 0;
-                if (channels > nChannels)
-                    channels             =  nChannels;
+                channels                = lsp_min(channels, nChannels);
 
                 // Output activity flag
                 af->pActive->set_value(((af->bOn) && (channels > 0)) ? 1.0f : 0.0f);
