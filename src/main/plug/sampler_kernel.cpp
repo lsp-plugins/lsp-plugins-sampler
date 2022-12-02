@@ -967,7 +967,7 @@ namespace lsp
                 {
                     // Commit the result
                     af->nStatus     = af->pLoader->code();
-                    af->fLength     = (af->nStatus == STATUS_OK) ? af->pOriginal->duration() : 0.0f;
+                    af->fLength     = (af->nStatus == STATUS_OK) ? af->pOriginal->duration() * 1000.0f : 0.0f;
 
                     // Trigger the sample for update and the state for reorder
                     ++af->nUpdateReq;
