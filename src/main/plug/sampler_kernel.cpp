@@ -537,7 +537,14 @@ namespace lsp
     //            #endif
 
                 // Update velocity
-                commit_afile_value(af, af->fVelocity, af->pVelocity);
+                float value     = af->pVelocity->value();
+                if (value != af->fVelocity)
+                {
+                    af->fVelocity   = value;
+                    bReorder        = true;
+                }
+
+                // Update sample parameters
                 commit_afile_value(af, af->fPitch, af->pPitch);
                 commit_afile_value(af, af->bStretchOn, af->pStretchOn);
                 commit_afile_value(af, af->fStretch, af->pStretch);
@@ -817,38 +824,6 @@ namespace lsp
             return STATUS_OK;
         }
 
-        void sampler_kernel::reorder_samples()
-        {
-            lsp_trace("Reordering active files");
-
-            // Compute the list of active files
-            nActive     = 0;
-            for (size_t i=0; i<nFiles; ++i)
-            {
-                if (!vFiles[i].bOn)
-                    continue;
-                if (vFiles[i].pOriginal == NULL)
-                    continue;
-
-                lsp_trace("file %d is active", int(nActive));
-                vActive[nActive++]  = &vFiles[i];
-            }
-
-            // Sort the list of active files
-            if (nActive > 1)
-            {
-                for (size_t i=0; i<(nActive-1); ++i)
-                    for (size_t j=i+1; j<nActive; ++j)
-                        if (vActive[i]->fVelocity > vActive[j]->fVelocity)
-                            lsp::swap(vActive[i], vActive[j]);
-            }
-
-            #ifdef LSP_TRACE
-                for (size_t i=0; i<nActive; ++i)
-                    lsp_trace("active file #%d: velocity=%.3f", int(vActive[i]->nID), vActive[i]->fVelocity);
-            #endif /* LSP_TRACE */
-        }
-
         void sampler_kernel::play_sample(const afile_t *af, float gain, size_t delay)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
@@ -957,34 +932,6 @@ namespace lsp
                 vChannels[j].stop();
         }
 
-        void sampler_kernel::process_listen_events()
-        {
-            if (sListen.pending())
-            {
-                trigger_on(0, 0.5f);
-                sListen.commit();
-            }
-
-            for (size_t i=0; i<nFiles; ++i)
-            {
-                // Get descriptor
-                afile_t *af         = &vFiles[i];
-                if (af->pFile == NULL)
-                    continue;
-
-                // Trigger the event
-                if (af->sListen.pending())
-                {
-                    // Play sample
-                    play_sample(af, 0.5f, 0); // Listen at mid-velocity
-
-                    // Update states
-                    af->sListen.commit();
-                    af->sNoteOn.blink();
-                }
-            }
-        }
-
         void sampler_kernel::process_file_load_requests()
         {
             // Process file load requests
@@ -1020,12 +967,10 @@ namespace lsp
                 {
                     // Commit the result
                     af->nStatus     = af->pLoader->code();
-                    af->fLength     = (af->nStatus == STATUS_OK) ?
-                                      dspu::samples_to_millis(af->pOriginal->sample_rate(), af->pOriginal->samples()) :
-                                      0.0f;
+                    af->fLength     = (af->nStatus == STATUS_OK) ? af->pOriginal->duration() : 0.0f;
 
                     // Trigger the sample for update and the state for reorder
-                    af->nUpdateReq++;
+                    ++af->nUpdateReq;
                     bReorder        = true;
 
                     // Now we can surely commit changes and reset task state
@@ -1088,8 +1033,11 @@ namespace lsp
             }
         }
 
-        void sampler_kernel::process_gc_events()
+        void sampler_kernel::process_gc_tasks()
         {
+            if (sGCTask.completed())
+                sGCTask.reset();
+
             if (sGCTask.idle())
             {
                 // Obtain the list of samples for destroy
@@ -1103,41 +1051,74 @@ namespace lsp
                 if (pGCList != NULL)
                     pExecutor->submit(&sGCTask);
             }
-            else if (sGCTask.completed())
+        }
+
+        void sampler_kernel::process_listen_events()
+        {
+            if (sListen.pending())
             {
-                // The garbage collection has succeeded
-                sGCTask.reset();
+                trigger_on(0, 0.5f);
+                sListen.commit();
+            }
+
+            for (size_t i=0; i<nFiles; ++i)
+            {
+                // Get descriptor
+                afile_t *af         = &vFiles[i];
+                if (af->pFile == NULL)
+                    continue;
+
+                // Trigger the event
+                if (af->sListen.pending())
+                {
+                    // Play sample
+                    play_sample(af, 0.5f, 0); // Listen at mid-velocity
+
+                    // Update states
+                    af->sListen.commit();
+                    af->sNoteOn.blink();
+                }
             }
         }
 
-        void sampler_kernel::process(float **outs, const float **ins, size_t samples)
+        void sampler_kernel::reorder_samples()
         {
-            // Step 1
-            // Process file load requests
-            process_file_load_requests();
+            if (!bReorder)
+                return;
+            bReorder = false;
 
-            // Step 2
-            // Process file rendering requests
-            process_file_render_requests();
+            lsp_trace("Reordering active files");
 
-            // Step 3
-            // Collect garbage
-            process_gc_events();
-
-            // Reorder the files in ascending velocity order if needed
-            if (bReorder)
+            // Compute the list of active files
+            nActive     = 0;
+            for (size_t i=0; i<nFiles; ++i)
             {
-                // Reorder samples and reset the reorder flag
-                reorder_samples();
-                bReorder = false;
+                if (!vFiles[i].bOn)
+                    continue;
+                if (vFiles[i].pOriginal == NULL)
+                    continue;
+
+                lsp_trace("file %d is active", int(nActive));
+                vActive[nActive++]  = &vFiles[i];
             }
 
-            // Step 4
-            // Process events
-            process_listen_events();
+            // Sort the list of active files
+            if (nActive > 1)
+            {
+                for (size_t i=0; i<(nActive-1); ++i)
+                    for (size_t j=i+1; j<nActive; ++j)
+                        if (vActive[i]->fVelocity > vActive[j]->fVelocity)
+                            lsp::swap(vActive[i], vActive[j]);
+            }
 
-            // Step 5
-            // Process the channels individually
+            #ifdef LSP_TRACE
+                for (size_t i=0; i<nActive; ++i)
+                    lsp_trace("active file #%d: velocity=%.3f", int(vActive[i]->nID), vActive[i]->fVelocity);
+            #endif /* LSP_TRACE */
+        }
+
+        void sampler_kernel::play_samples(float **outs, const float **ins, size_t samples)
+        {
             if (ins != NULL)
             {
                 for (size_t i=0; i<nChannels; ++i)
@@ -1148,10 +1129,6 @@ namespace lsp
                 for (size_t i=0; i<nChannels; ++i)
                     vChannels[i].process(outs[i], NULL, samples);
             }
-
-            // Step 6
-            // Output parameters
-            output_parameters(samples);
         }
 
         void sampler_kernel::output_parameters(size_t samples)
@@ -1198,6 +1175,17 @@ namespace lsp
 
                 af->bSync           = false;
             }
+        }
+
+        void sampler_kernel::process(float **outs, const float **ins, size_t samples)
+        {
+            process_file_load_requests();
+            process_file_render_requests();
+            process_gc_tasks();
+            reorder_samples();
+            process_listen_events();
+            play_samples(outs, ins, samples);
+            output_parameters(samples);
         }
 
         void sampler_kernel::dump_afile(dspu::IStateDumper *v, const afile_t *f) const

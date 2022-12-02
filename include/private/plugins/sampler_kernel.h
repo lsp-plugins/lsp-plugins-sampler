@@ -202,15 +202,16 @@ namespace lsp
                 void        destroy_state();
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
-
-                void        reorder_samples();
-                void        process_listen_events();
-                void        process_gc_events();
-                void        output_parameters(size_t samples);
-                void        process_file_load_requests();
-                void        process_file_render_requests();
                 void        play_sample(const afile_t *af, float gain, size_t delay);
                 void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
+
+                void        process_file_load_requests();
+                void        process_file_render_requests();
+                void        process_gc_tasks();
+                void        reorder_samples();
+                void        process_listen_events();
+                void        play_samples(float **outs, const float **ins, size_t samples);
+                void        output_parameters(size_t samples);
 
                 template <class T>
                 static void commit_afile_value(afile_t *af, T & field, plug::IPort *port);
