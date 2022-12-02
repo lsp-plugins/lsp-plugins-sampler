@@ -106,7 +106,6 @@ namespace lsp
                     dspu::Blink         sNoteOn;                                        // Note on led
                     dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
                     dspu::Sample       *pProcessed;                                     // Processed sample
-                    dspu::Sample       *pCurrent;                                       // Active sample for playback (processed)
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
 
                     size_t              nUpdateReq;                                     // Update request

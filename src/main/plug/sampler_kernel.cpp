@@ -85,7 +85,7 @@ namespace lsp
             v->write("pFile", pFile);
         }
 
-
+        //-------------------------------------------------------------------------
         sampler_kernel::GCTask::GCTask(sampler_kernel *base)
         {
             pCore       = base;
@@ -424,6 +424,7 @@ namespace lsp
 
         void sampler_kernel::destroy_state()
         {
+            // Destroy audio files
             if (vFiles != NULL)
             {
                 for (size_t i=0; i<nFiles;++i)
@@ -443,6 +444,7 @@ namespace lsp
                 sp->destroy(false);
             }
 
+            // Drop all preallocated data
             free_aligned(pData);
 
             // Foget variables
@@ -658,6 +660,17 @@ namespace lsp
                 return status;
             }
 
+            // Initialize thumbnails
+            float *thumbs           = static_cast<float *>(malloc(sizeof(float) * channels * meta::sampler_metadata::MESH_SIZE));
+            if (thumbs == NULL)
+                return STATUS_NO_MEM;
+
+            for (size_t i=0; i<channels; ++i)
+            {
+                file->vThumbs[i]        = thumbs;
+                thumbs                 += meta::sampler_metadata::MESH_SIZE;
+            }
+
             // Commit the result
             lsp_trace("file successfully loaded: %s", fname);
             lsp::swap(file->pOriginal, source);
@@ -715,22 +728,6 @@ namespace lsp
                 abs_max                 = lsp_max(abs_max, a_max);
             }
             float norming       = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
-
-            // Need to create buffer for thumbails?
-            if (af->vThumbs[0] == NULL)
-            {
-                float *thumb        = static_cast<float *>(malloc(sizeof(float) * meta::sampler_metadata::MESH_SIZE * channels));
-                if (thumb == NULL)
-                {
-                    lsp_warn("Could not allocate memory for thumbnails");
-                    return STATUS_NO_MEM;
-                }
-                for (size_t j=0; j<channels; ++j)
-                {
-                    af->vThumbs[j]  = thumb;
-                    thumb          += meta::sampler_metadata::MESH_SIZE;
-                }
-            }
 
             // Render the thumbnails
             for (size_t j=0; j<channels; ++j)
@@ -1189,7 +1186,7 @@ namespace lsp
                     continue;
 
                 // Do not sync state of mesh if there are active tasks
-                if ((!af->pRenderer->idle()) || (!af->pLoader->idle()))
+                if (!af->pLoader->idle())
                     continue;
 
                 if ((channels > 0) && (af->vThumbs[0] != NULL))
