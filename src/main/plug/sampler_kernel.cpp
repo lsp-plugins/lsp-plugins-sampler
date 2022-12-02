@@ -1182,11 +1182,7 @@ namespace lsp
 
                 // Store file thumbnails to mesh
                 plug::mesh_t *mesh  = reinterpret_cast<plug::mesh_t *>(af->pMesh->buffer());
-                if ((mesh == NULL) || (!mesh->isEmpty()) || (!af->bSync))
-                    continue;
-
-                // Do not sync state of mesh if there are active tasks
-                if (!af->pLoader->idle())
+                if ((mesh == NULL) || (!mesh->isEmpty()) || (!af->bSync) || (!af->pLoader->idle()))
                     continue;
 
                 if ((channels > 0) && (af->vThumbs[0] != NULL))
