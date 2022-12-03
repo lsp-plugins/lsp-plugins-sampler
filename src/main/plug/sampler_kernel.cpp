@@ -440,11 +440,8 @@ namespace lsp
             for (size_t i=0; i<nChannels; ++i)
             {
                 dspu::SamplePlayer *sp = &vChannels[i];
-                sp->stop();
-                sp->unbind_all();
-                dspu::Sample *gc_list = sp->gc();
+                dspu::Sample *gc_list = sp->destroy(false);
                 destroy_samples(gc_list);
-                sp->destroy(false);
             }
 
             // Destroy audio files
