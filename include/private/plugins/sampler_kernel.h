@@ -221,6 +221,7 @@ namespace lsp
                 static void unload_afile(afile_t *file);
                 static void destroy_afile(afile_t *af);
                 static void destroy_samples(dspu::Sample *gc_list);
+                static void destroy_sample(dspu::Sample * &sample);
                 void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
                 void        perform_gc();
 

@@ -377,6 +377,17 @@ namespace lsp
             pActivity       = TRACE_PORT(activity);
         }
 
+        void sampler_kernel::destroy_sample(dspu::Sample * &sample)
+        {
+            if (sample == NULL)
+                return;
+
+            sample->destroy();
+            delete sample;
+            lsp_trace("Destroyed sample %p", sample);
+            sample  = NULL;
+        }
+
         void sampler_kernel::destroy_afile(afile_t *af)
         {
             af->sListen.destroy();
@@ -419,11 +430,23 @@ namespace lsp
         void sampler_kernel::perform_gc()
         {
             dspu::Sample *gc_list = lsp::atomic_swap(&pGCList, NULL);
+            lsp_trace("gc_list = %p", gc_list);
             destroy_samples(gc_list);
         }
 
         void sampler_kernel::destroy_state()
         {
+            // Perform garbage collection for each channel
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                dspu::SamplePlayer *sp = &vChannels[i];
+                sp->stop();
+                sp->unbind_all();
+                dspu::Sample *gc_list = sp->gc();
+                destroy_samples(gc_list);
+                sp->destroy(false);
+            }
+
             // Destroy audio files
             if (vFiles != NULL)
             {
@@ -433,16 +456,6 @@ namespace lsp
 
             // Perform pending gabrage collection
             perform_gc();
-
-            // Perform garbage collection for each channel
-            for (size_t i=0; i<nChannels; ++i)
-            {
-                dspu::SamplePlayer *sp = &vChannels[i];
-                sp->stop();
-                sp->unbind_all();
-                destroy_samples(sp->gc());
-                sp->destroy(false);
-            }
 
             // Drop all preallocated data
             free_aligned(pData);
@@ -594,22 +607,8 @@ namespace lsp
         void sampler_kernel::unload_afile(afile_t *af)
         {
             // Destroy original sample if present
-            if (af->pOriginal != NULL)
-            {
-                af->pOriginal->destroy();
-                delete af->pOriginal;
-                lsp_trace("destroyed sample %p", af->pOriginal);
-                af->pOriginal = NULL;
-            }
-
-            // Destroy processed sample if present
-            if (af->pProcessed != NULL)
-            {
-                af->pProcessed->destroy();
-                delete af->pProcessed;
-                lsp_trace("destroyed sample %p", af->pProcessed);
-                af->pProcessed = NULL;
-            }
+            destroy_sample(af->pOriginal);
+            destroy_sample(af->pProcessed);
 
             // Destroy pointer to thumbnails
             if (af->vThumbs[0])
@@ -645,13 +644,8 @@ namespace lsp
             dspu::Sample *source    = new dspu::Sample();
             if (source == NULL)
                 return STATUS_NO_MEM;
-            lsp_finally {
-                if (source != NULL)
-                {
-                    source->destroy();
-                    delete source;
-                }
-            };
+            lsp_trace("Allocated sample %p", source);
+            lsp_finally { destroy_sample(source); };
 
             // Load sample
             status_t status = source->load_ext(fname, meta::sampler_metadata::SAMPLE_LENGTH_MAX * 0.001f);
@@ -789,13 +783,8 @@ namespace lsp
             dspu::Sample *out   = new dspu::Sample();
             if (out == NULL)
                 return STATUS_NO_MEM;
-            lsp_finally {
-                if (out != NULL)
-                {
-                    out->destroy();
-                    delete out;
-                }
-            };
+            lsp_trace("Allocated sample %p", out);
+            lsp_finally { destroy_sample(out); };
 
             if (!out->resize(channels, samples, samples))
             {
