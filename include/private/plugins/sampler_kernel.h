@@ -60,22 +60,36 @@ namespace lsp
                         void                    dump(dspu::IStateDumper *v) const;
                 };
 
+                class AFRenderer: public ipc::ITask
+                {
+                    private:
+                        sampler_kernel         *pCore;
+                        afile_t                *pFile;
+
+                    public:
+                        explicit AFRenderer(sampler_kernel *base, afile_t *descr);
+                        virtual ~AFRenderer();
+
+                    public:
+                        virtual status_t        run();
+                        void                    dump(dspu::IStateDumper *v) const;
+                };
+
+                class GCTask: public ipc::ITask
+                {
+                    private:
+                        sampler_kernel         *pCore;
+
+                    public:
+                        explicit GCTask(sampler_kernel *base);
+                        virtual ~GCTask();
+
+                    public:
+                        virtual status_t        run();
+                        void                    dump(dspu::IStateDumper *v) const;
+                };
+
             protected:
-                struct afsample_t
-                {
-                    dspu::Sample       *pSource;                                        // Source sample (unchanged)
-                    dspu::Sample       *pSample;                                        // Sample for playback (processed)
-                    float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
-                };
-
-                enum afindex_t
-                {
-                    AFI_CURR,
-                    AFI_NEW,
-                    AFI_OLD,
-                    AFI_TOTAL
-                };
-
                 enum stretch_fade_t
                 {
                     XFADE_LINEAR,
@@ -87,10 +101,15 @@ namespace lsp
                 {
                     size_t              nID;                                            // ID of sample
                     AFLoader           *pLoader;                                        // Audio file loader task
+                    AFRenderer         *pRenderer;                                      // Audio file renderer task
                     dspu::Toggle        sListen;                                        // Listen toggle
                     dspu::Blink         sNoteOn;                                        // Note on led
+                    dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
+                    dspu::Sample       *pProcessed;                                     // Processed sample
+                    float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
 
-                    bool                bDirty;                                         // Dirty flag
+                    size_t              nUpdateReq;                                     // Update request
+                    size_t              nUpdateResp;                                    // Update response
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
                     float               fPitch;                                         // Pitch (st)
@@ -148,12 +167,11 @@ namespace lsp
                     plug::IPort        *pNoteOn;                                        // Note on flag
                     plug::IPort        *pOn;                                            // Sample on flag
                     plug::IPort        *pActive;                                        // Sample activity flag
-
-                    afsample_t         *vData[AFI_TOTAL];                               // Currently used audio file
                 };
 
             protected:
                 ipc::IExecutor     *pExecutor;                                          // Executor service
+                dspu::Sample       *pGCList;                                            // Garbage collection list
                 afile_t            *vFiles;                                             // List of audio files
                 afile_t           **vActive;                                            // List of active audio files
                 dspu::SamplePlayer  vChannels[meta::sampler_metadata::TRACKS_MAX];      // List of channels
@@ -161,6 +179,7 @@ namespace lsp
                 dspu::Blink         sActivity;                                          // Note on led for instrument
                 dspu::Toggle        sListen;                                            // Listen toggle
                 dspu::Randomizer    sRandom;                                            // Randomizer
+                GCTask              sGCTask;                                            // Garbage collection task
 
                 size_t              nFiles;                                             // Number of files
                 size_t              nActive;                                            // Number of active files
@@ -181,26 +200,30 @@ namespace lsp
 
             protected:
                 void        destroy_state();
-                void        destroy_afsample(afsample_t *af);
-                int         load_file(afile_t *file);
-                void        copy_asample(afsample_t *dst, const afsample_t *src);
-                void        clear_asample(afsample_t *dst);
-                bool        do_render_sample(afile_t *af);
-                void        render_sample(afile_t *af);
-                void        reorder_samples();
-                void        process_listen_events();
-                void        output_parameters(size_t samples);
-                void        process_file_load_requests();
+                status_t    load_file(afile_t *file);
+                status_t    render_sample(afile_t *af);
                 void        play_sample(const afile_t *af, float gain, size_t delay);
                 void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
+
+                void        process_file_load_requests();
+                void        process_file_render_requests();
+                void        process_gc_tasks();
+                void        reorder_samples();
+                void        process_listen_events();
+                void        play_samples(float **outs, const float **ins, size_t samples);
+                void        output_parameters(size_t samples);
 
                 template <class T>
                 static void commit_afile_value(afile_t *af, T & field, plug::IPort *port);
                 static void commit_afile_value(afile_t *af, bool & field, plug::IPort *port);
 
             protected:
+                static void unload_afile(afile_t *file);
+                static void destroy_afile(afile_t *af);
+                static void destroy_samples(dspu::Sample *gc_list);
+                static void destroy_sample(dspu::Sample * &sample);
                 void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
-                void        dump_afsample(dspu::IStateDumper *v, const afsample_t *f) const;
+                void        perform_gc();
 
             public:
                 explicit sampler_kernel();
