@@ -1242,7 +1242,7 @@ namespace lsp
             }
 
             // Call wrapper to deserialize
-            if ((res = pWrapper->import_settings(&d, base)) != STATUS_OK)
+            if ((res = pWrapper->import_settings(&d, ui::IMPORT_FLAG_PRESET, base)) != STATUS_OK)
             {
                 d.close();
                 fd.close();
