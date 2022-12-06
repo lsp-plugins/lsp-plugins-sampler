@@ -25,6 +25,7 @@
 #include <lsp-plug.in/common/debug.h>
 #include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/dsp-units/misc/fade.h>
+#include <lsp-plug.in/dsp-units/sampling/PlaySettings.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
 namespace lsp
@@ -189,6 +190,8 @@ namespace lsp
 
                 af->sListen.construct();
                 af->sNoteOn.construct();
+                for (size_t i=0; i<4; ++i)
+                    af->vPlayback[i].construct();
                 af->pOriginal               = NULL;
                 af->pProcessed              = NULL;
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
@@ -232,6 +235,12 @@ namespace lsp
                 af->pStretchChunk           = NULL;
                 af->pStretchFade            = NULL;
                 af->pStretchFadeType        = NULL;
+                af->pLoopOn                 = NULL;
+                af->pLoopMode               = NULL;
+                af->pLoopStart              = NULL;
+                af->pLoopEnd                = NULL;
+                af->pLoopFade               = NULL;
+                af->pLoopFadeType           = NULL;
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
@@ -246,12 +255,13 @@ namespace lsp
                 af->pCompensateFade         = NULL;
                 af->pCompensateChunk        = NULL;
                 af->pCompensateFadeType     = NULL;
+                af->pActive                 = NULL;
+                af->pPlayPosition           = NULL;
+                af->pNoteOn                 = NULL;
                 af->pLength                 = NULL;
                 af->pActualLength           = NULL;
                 af->pStatus                 = NULL;
                 af->pMesh                   = NULL;
-                af->pActive                 = NULL;
-                af->pNoteOn                 = NULL;
 
                 for (size_t j=0; j < meta::sampler_metadata::TRACKS_MAX; ++j)
                 {
@@ -337,6 +347,12 @@ namespace lsp
                 af->pStretchChunk       = TRACE_PORT(ports[port_id++]);
                 af->pStretchFade        = TRACE_PORT(ports[port_id++]);
                 af->pStretchFadeType    = TRACE_PORT(ports[port_id++]);
+                af->pLoopOn             = TRACE_PORT(ports[port_id++]);
+                af->pLoopMode           = TRACE_PORT(ports[port_id++]);
+                af->pLoopStart          = TRACE_PORT(ports[port_id++]);
+                af->pLoopEnd            = TRACE_PORT(ports[port_id++]);
+                af->pLoopFade           = TRACE_PORT(ports[port_id++]);
+                af->pLoopFadeType       = TRACE_PORT(ports[port_id++]);
                 af->pHeadCut            = TRACE_PORT(ports[port_id++]);
                 af->pTailCut            = TRACE_PORT(ports[port_id++]);
                 af->pFadeIn             = TRACE_PORT(ports[port_id++]);
@@ -356,6 +372,7 @@ namespace lsp
                     af->pGains[j]           = TRACE_PORT(ports[port_id++]);
 
                 af->pActive             = TRACE_PORT(ports[port_id++]);
+                af->pPlayPosition       = TRACE_PORT(ports[port_id++]);
                 af->pNoteOn             = TRACE_PORT(ports[port_id++]);
                 af->pLength             = TRACE_PORT(ports[port_id++]);
                 af->pActualLength       = TRACE_PORT(ports[port_id++]);
@@ -477,24 +494,47 @@ namespace lsp
         }
 
         template <class T>
-        void sampler_kernel::commit_afile_value(afile_t *af, T & field, plug::IPort *port)
+        void sampler_kernel::commit_value(size_t & counter, T & field, plug::IPort *port)
         {
             const T temp = port->value();
             if (temp != field)
             {
                 field       = temp;
-                ++af->nUpdateReq;
+                ++counter;
             }
         }
 
-        void sampler_kernel::commit_afile_value(afile_t *af, bool & field, plug::IPort *port)
+        void sampler_kernel::commit_value(size_t & counter, bool & field, plug::IPort *port)
         {
             const bool temp = port->value() >= 0.5f;
             if (temp != field)
             {
                 field       = temp;
-                ++af->nUpdateReq;
+                ++counter;
             }
+        }
+
+        dspu::sample_loop_t sampler_kernel::decode_loop_mode(plug::IPort *on, plug::IPort *mode)
+        {
+            if ((on == NULL) || (on->value() < 0.5f))
+                return dspu::SAMPLE_LOOP_NONE;
+            if (mode == NULL)
+                return dspu::SAMPLE_LOOP_DIRECT;
+
+            switch (int(mode->value()))
+            {
+                case LOOP_DIRECT:           return dspu::SAMPLE_LOOP_DIRECT;
+                case LOOP_REVERSE:          return dspu::SAMPLE_LOOP_REVERSE;
+                case LOOP_DIRECT_HALF_PP:   return dspu::SAMPLE_LOOP_DIRECT_HALF_PP;
+                case LOOP_REVERSE_HALF_PP:  return dspu::SAMPLE_LOOP_REVERSE_HALF_PP;
+                case LOOP_DIRECT_FULL_PP:   return dspu::SAMPLE_LOOP_DIRECT_FULL_PP;
+                case LOOP_REVERSE_FULL_PP:  return dspu::SAMPLE_LOOP_REVERSE_FULL_PP;
+                case LOOP_DIRECT_SMART_PP:  return dspu::SAMPLE_LOOP_DIRECT_SMART_PP;
+                case LOOP_REVERSE_SMART_PP: return dspu::SAMPLE_LOOP_REVERSE_SMART_PP;
+                default: break;
+            }
+
+            return dspu::SAMPLE_LOOP_DIRECT;
         }
 
         void sampler_kernel::update_settings()
@@ -555,23 +595,40 @@ namespace lsp
                 }
 
                 // Update sample parameters
-                commit_afile_value(af, af->fPitch, af->pPitch);
-                commit_afile_value(af, af->bStretchOn, af->pStretchOn);
-                commit_afile_value(af, af->fStretch, af->pStretch);
-                commit_afile_value(af, af->fStretchStart, af->pStretchStart);
-                commit_afile_value(af, af->fStretchEnd, af->pStretchEnd);
-                commit_afile_value(af, af->fStretchChunk, af->pStretchChunk);
-                commit_afile_value(af, af->fStretchFade, af->pStretchFade);
-                commit_afile_value(af, af->nStretchFadeType, af->pStretchFadeType);
-                commit_afile_value(af, af->fHeadCut, af->pHeadCut);
-                commit_afile_value(af, af->fTailCut, af->pTailCut);
-                commit_afile_value(af, af->fFadeIn, af->pFadeIn);
-                commit_afile_value(af, af->fFadeOut, af->pFadeOut);
-                commit_afile_value(af, af->bReverse, af->pReverse);
-                commit_afile_value(af, af->bCompensate, af->pCompensate);
-                commit_afile_value(af, af->fCompensateFade, af->pCompensateFade);
-                commit_afile_value(af, af->fCompensateChunk, af->pCompensateChunk);
-                commit_afile_value(af, af->nCompensateFadeType, af->pCompensateFadeType);
+                commit_value(af->nUpdateReq, af->fPitch, af->pPitch);
+                commit_value(af->nUpdateReq, af->bStretchOn, af->pStretchOn);
+                commit_value(af->nUpdateReq, af->fStretch, af->pStretch);
+                commit_value(af->nUpdateReq, af->fStretchStart, af->pStretchStart);
+                commit_value(af->nUpdateReq, af->fStretchEnd, af->pStretchEnd);
+                commit_value(af->nUpdateReq, af->fStretchChunk, af->pStretchChunk);
+                commit_value(af->nUpdateReq, af->fStretchFade, af->pStretchFade);
+                commit_value(af->nUpdateReq, af->nStretchFadeType, af->pStretchFadeType);
+                commit_value(af->nUpdateReq, af->fHeadCut, af->pHeadCut);
+                commit_value(af->nUpdateReq, af->fTailCut, af->pTailCut);
+                commit_value(af->nUpdateReq, af->fFadeIn, af->pFadeIn);
+                commit_value(af->nUpdateReq, af->fFadeOut, af->pFadeOut);
+                commit_value(af->nUpdateReq, af->bReverse, af->pReverse);
+                commit_value(af->nUpdateReq, af->bCompensate, af->pCompensate);
+                commit_value(af->nUpdateReq, af->fCompensateFade, af->pCompensateFade);
+                commit_value(af->nUpdateReq, af->fCompensateChunk, af->pCompensateChunk);
+                commit_value(af->nUpdateReq, af->nCompensateFadeType, af->pCompensateFadeType);
+
+                // Update loop parameters
+                size_t loop_update = 0;
+                dspu::sample_loop_t loop_mode = decode_loop_mode(af->pLoopOn, af->pLoopMode);
+                if (af->enLoopMode != loop_mode)
+                {
+                    af->enLoopMode = loop_mode;
+                    ++loop_update;
+                }
+                commit_value(loop_update, af->fLoopStart, af->pLoopStart);
+                commit_value(loop_update, af->fLoopEnd, af->pLoopStart);
+                commit_value(loop_update, af->fLoopFade, af->pLoopFade);
+                commit_value(loop_update, af->nLoopFadeType, af->pLoopFadeType);
+                if (loop_update > 0)
+                {
+                    // TODO: modify current loop if sample is active
+                }
             }
 
             // Get humanisation parameters
@@ -750,7 +807,6 @@ namespace lsp
 
             // Perform stretch of the sample
             ssize_t stretch_delta   = (af->bStretchOn) ? dspu::millis_to_samples(nSampleRate, af->fStretch) : 0.0f;
-
             if (stretch_delta != 0)
             {
                 ssize_t s_begin         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
@@ -810,35 +866,48 @@ namespace lsp
             return STATUS_OK;
         }
 
-        void sampler_kernel::play_sample(const afile_t *af, float gain, size_t delay)
+        void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
 
             // Scale the final output gain
             gain    *= af->fMakeup;
 
+            dspu::PlaySettings ps;
+            ps.set_sample_id(af->nID);
+            ps.set_loop_range(
+                af->enLoopMode,
+                dspu::millis_to_samples(nSampleRate, af->fLoopStart),
+                dspu::millis_to_samples(nSampleRate, af->fLoopEnd));
+            ps.set_loop_xfade(
+                (af->nLoopFadeType == XFADE_LINEAR) ? dspu::SAMPLE_CROSSFADE_LINEAR : dspu::SAMPLE_CROSSFADE_CONST_POWER,
+                dspu::millis_to_samples(nSampleRate, af->fLoopFade));
+            ps.set_delay(delay);
+
             if (nChannels == 1)
             {
                 lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(0), int(af->nID), int(0), gain * af->fGains[0], int(delay));
-                vChannels[0].play(af->nID, 0, gain * af->fGains[0], delay);
+                ps.set_sample_channel(0);
+                ps.set_volume(gain * af->fGains[0]);
+                af->vPlayback[0].set(vChannels[0].play(&ps));
+                af->vPlayback[1].clear();
+                af->vPlayback[2].clear();
+                af->vPlayback[3].clear();
             }
-            else if (nChannels == 2)
+            else // if (nChannels == 2)
             {
-                for (size_t i=0; i<nChannels; ++i)
+                size_t pb_id = 0;
+                for (size_t i=0; i<2; ++i)
                 {
                     size_t j=i^1; // j = (i + 1) % 2
+                    ps.set_sample_channel(i);
+
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(i), int(af->nID), int(i), gain * af->fGains[i], int(delay));
-                    vChannels[i].play(af->nID, i, gain * af->fGains[i], delay);
+                    ps.set_volume(gain * af->fGains[i]);
+                    af->vPlayback[pb_id++].set(vChannels[i].play(&ps));
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(j), int(i), int(af->nID), gain * (1.0f - af->fGains[i]), int(delay));
-                    vChannels[j].play(af->nID, i, gain * (1.0f - af->fGains[i]), delay);
-                }
-            }
-            else
-            {
-                for (size_t i=0; i<nChannels; ++i)
-                {
-                    lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(i), int(af->nID), int(i), gain * af->fGains[i], int(delay));
-                    vChannels[i].play(af->nID, i, gain * af->fGains[i], delay);
+                    ps.set_volume(gain * (1.0f - af->fGains[i]));
+                    af->vPlayback[pb_id++].set(vChannels[j].play(&ps));
                 }
             }
         }
@@ -1142,6 +1211,7 @@ namespace lsp
 
                 // Output activity flag
                 af->pActive->set_value(((af->bOn) && (channels > 0)) ? 1.0f : 0.0f);
+                af->pPlayPosition->set_value(compute_play_position(af));
 
                 // Store file thumbnails to mesh
                 plug::mesh_t *mesh  = reinterpret_cast<plug::mesh_t *>(af->pMesh->buffer());
@@ -1172,6 +1242,21 @@ namespace lsp
             process_listen_events();
             play_samples(outs, ins, samples);
             output_parameters(samples);
+        }
+
+        float sampler_kernel::compute_play_position(const afile_t *f)
+        {
+            const dspu::Playback *pb = &f->vPlayback[0];
+            if (!pb->valid())
+                return meta::sampler_metadata::SAMPLE_PLAYBACK_MIN;
+
+            ssize_t position = pb->position();
+            if (position < 0)
+                return meta::sampler_metadata::SAMPLE_PLAYBACK_MIN;
+
+            const dspu::Sample *s = pb->sample();
+            size_t pos = lsp_min(size_t(position), s->length());
+            return dspu::samples_to_millis(s->sample_rate(), pos);
         }
 
         void sampler_kernel::dump_afile(dspu::IStateDumper *v, const afile_t *f) const

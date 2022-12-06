@@ -95,11 +95,13 @@
 						stretch.enable="1"
 						stretch.color="(:so${idx}) ? 'stretch_color' : 'stretch_color_off'"
 						stretch.border.color="(:so${idx}) ? 'stretch_border_color' : 'stretch_border_color_off'"
-						loop.enable="1"
-						loop.color="(:so${idx}) ? 'loop_color' : 'loop_color_off'"
-						loop.border.color="(:so${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
 						stretch.begin=":ss${idx}"
 						stretch.end=":se${idx}"
+						loop.enable=":lo${idx}"
+						loop.color="(:lo${idx}) ? 'loop_color' : 'loop_color_off'"
+						loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
+						loop.begin=":lb${idx}"
+						loop.end=":le${idx}"
 						length=":fl${idx}"
 						length.actual=":al${idx}"
 						status=":fs${idx}"
@@ -113,6 +115,9 @@
 						clipboard.stretch_end="se${idx}"
 						clipboard.stretch_chunk="sc${idx}"
 						clipboard.stretch_fade="sx${idx}"
+						clipboard.loop_on="lo${idx}"
+						clipboard.loop_start="lb${idx}"
+						clipboard.loop_end="le${idx}"
 						clipboard.crossfade_type="xt${idx}"
 						clipboard.head_cut="hc${idx}"
 						clipboard.tail_cut="tc${idx}"
@@ -283,14 +288,15 @@
 
 						<!-- loop -->
 						<grid rows="3" cols="7" bg.color="bg" hspacing="2">
-							<ui:with bright="(:so${idx} igt 0) ? 1 : 0.75" bg.bright="(:so${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:so${idx} igt 0) ? 'loop' : 'kscale_inactive'">
+							<ui:with bright="(:lo${idx} igt 0) ? 1 : 0.75" bg.bright="(:lo${idx} igt 0) ? 1.0 : :const_bg_darken"
+								scolor="(:lo${idx} igt 0) ? 'loop' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<cell rows="3">
 										<vbox bg.color="bg">
-											<button id="so${idx}"
+											<button id="lo${idx}"
 												ui:inject="Button_loop" text="labels.sedit.loop" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
-											<combo id="xt${idx}" fill="false" pad.b="4" bg.color="bg_schema" pad.h="6"/>
-											<combo id="xt${idx}" fill="false" pad.b="8" bg.color="bg_schema" pad.h="6"/>
+											<combo id="lm${idx}" fill="false" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+											<combo id="lx${idx}" fill="false" pad.b="8" bg.color="bg_schema" pad.h="6"/>
 											<hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
 											<label vexpand="true" bg.color="bg_schema"/>
 										</vbox>
@@ -311,19 +317,17 @@
 								</ui:with>
 
 								<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-									<knob id="ss${idx}"/>
-									<knob id="se${idx}"/>
-									<knob id="sx${idx}"/>
+									<knob id="lb${idx}"/>
+									<knob id="le${idx}"/>
+									<knob id="ll${idx}"/>
 								</ui:with>
 
-								<value id="ss${idx}" bg.color="bg_schema" pad.b="6"/>
-								<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>
-								<value id="sx${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="lb${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="le${idx}" bg.color="bg_schema" pad.b="6"/>
+								<value id="ll${idx}" bg.color="bg_schema" pad.b="6"/>
 							</ui:with>
-
 						</grid>
 					</tabs>
-
 				</vbox>
 			</cgroup>
 

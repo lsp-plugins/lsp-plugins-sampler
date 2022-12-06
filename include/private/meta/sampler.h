@@ -68,6 +68,11 @@ namespace lsp
             static constexpr float SAMPLE_LENGTH_DFL            = 0.0f;         // Sample length (ms)
             static constexpr float SAMPLE_LENGTH_STEP           = 0.1f;         // Sample step (ms)
 
+            static constexpr float SAMPLE_PLAYBACK_MIN          = -1.0f;        // Minimum playback position (ms)
+            static constexpr float SAMPLE_PLAYBACK_MAX          = 64000.0f;     // Maximum playback posotin (ms)
+            static constexpr float SAMPLE_PLAYBACK_DFL          = -1.0f;        // Default playback position (ms)
+            static constexpr float SAMPLE_PLAYBACK_STEP         = 0.1f;         // Playback step (ms)
+
             static constexpr float RANGE_MIN                    = -1.0f;        // Minimum bound of range (ms)
             static constexpr float RANGE_MAX                    = 64000.0f;     // Maximum bound of range (ms)
             static constexpr float RANGE_DFL                    = -1.0f;        // Default bound of range (ms)
