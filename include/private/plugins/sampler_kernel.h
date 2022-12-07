@@ -109,6 +109,16 @@ namespace lsp
                     LOOP_REVERSE_SMART_PP
                 };
 
+                struct render_params_t
+                {
+                    size_t              nLength;
+                    ssize_t             nHeadCut;
+                    ssize_t             nTailCut;
+                    ssize_t             nStretchDelta;
+                    ssize_t             nStretchStart;
+                    ssize_t             nStretchEnd;
+                };
+
                 struct afile_t
                 {
                     size_t              nID;                                            // ID of sample

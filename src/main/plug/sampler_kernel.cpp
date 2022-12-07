@@ -399,6 +399,15 @@ namespace lsp
             if (sample == NULL)
                 return;
 
+            // Free user data associated with sample
+            render_params_t *params = static_cast<render_params_t *>(sample->user_data());
+            if (params != NULL)
+            {
+                delete params;
+                sample->set_user_data(NULL);
+            }
+
+            // Destroy the sample
             sample->destroy();
             delete sample;
             lsp_trace("Destroyed sample %p", sample);
@@ -805,15 +814,30 @@ namespace lsp
             }
             af->fLength             = dspu::samples_to_millis(nSampleRate, samples);
 
+            // Allocate user data
+            render_params_t *rp     = new render_params_t;
+            if (rp == NULL)
+                return STATUS_NO_MEM;
+            lsp_finally {
+                if (rp != NULL)
+                    delete rp;
+            };
+            rp->nLength             = samples;
+            rp->nHeadCut            = 0;
+            rp->nTailCut            = 0;
+            rp->nStretchDelta       = 0;
+            rp->nStretchStart       = 0;
+            rp->nStretchEnd         = 0;
+
             // Perform stretch of the sample
-            ssize_t stretch_delta   = (af->bStretchOn) ? dspu::millis_to_samples(nSampleRate, af->fStretch) : 0.0f;
-            if (stretch_delta != 0)
+            rp->nStretchDelta       = (af->bStretchOn) ? dspu::millis_to_samples(nSampleRate, af->fStretch) : 0.0f;
+            if (rp->nStretchDelta != 0)
             {
-                ssize_t s_begin         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
-                ssize_t s_end           = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
-                if (s_end < s_begin)
-                    lsp::swap(s_begin, s_end);
-                ssize_t s_length        = lsp_max(s_end + stretch_delta - s_begin, 0);
+                rp->nStretchStart       = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
+                rp->nStretchEnd         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
+                if (rp->nStretchEnd < rp->nStretchStart)
+                    lsp::swap(rp->nStretchStart, rp->nStretchEnd);
+                ssize_t s_length        = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
                 size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
                 dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
                     dspu::SAMPLE_CROSSFADE_LINEAR :
@@ -821,19 +845,20 @@ namespace lsp
                 float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
 
                 // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
-                temp.stretch(s_length, chunk_size, fade_type, crossfade, s_begin, s_end);
+                temp.stretch(s_length, chunk_size, fade_type, crossfade, rp->nStretchStart, rp->nStretchEnd);
                 samples                 = temp.length();
             }
 
             // Perform the head and tail cut operations
             ssize_t head_cut    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
             ssize_t tail_cut    = dspu::millis_to_samples(nSampleRate, af->fTailCut);
-            ssize_t c_begin     = lsp_limit(head_cut, 0, samples);
-            ssize_t c_end       = lsp_limit(samples - tail_cut, c_begin, samples);
-            samples             = c_end - c_begin;
+            rp->nHeadCut        = lsp_limit(head_cut, 0, samples);
+            rp->nTailCut        = lsp_limit(samples - tail_cut, rp->nHeadCut, samples);
+            samples             = rp->nTailCut - rp->nHeadCut;
 
             // Initialize target sample
             dspu::Sample *out   = new dspu::Sample();
+            out->set_sample_rate(nSampleRate);
             if (out == NULL)
                 return STATUS_NO_MEM;
             lsp_trace("Allocated sample %p", out);
@@ -853,7 +878,7 @@ namespace lsp
                 const float *src    = temp.channel(j);
                 float *dst          = out->getBuffer(j);
 
-                dspu::fade_in(dst, &src[c_begin], fade_in, samples);
+                dspu::fade_in(dst, &src[rp->nHeadCut], fade_in, samples);
                 dspu::fade_out(dst, dst, fade_out, samples);
                 if (af->bReverse)
                     dsp::reverse1(dst, samples);
@@ -861,6 +886,7 @@ namespace lsp
             af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
 
             // Commit the new sample to the processed
+            rp  = static_cast<render_params_t *>(out->set_user_data(rp));
             lsp::swap(out, af->pProcessed);
 
             return STATUS_OK;
@@ -1254,9 +1280,37 @@ namespace lsp
             if (position < 0)
                 return meta::sampler_metadata::SAMPLE_PLAYBACK_MIN;
 
+            // We need to translate the current play position of the processed sample
+            // into the current play position of thumbnail sample
             const dspu::Sample *s = pb->sample();
-            size_t pos = lsp_min(size_t(position), s->length());
-            return dspu::samples_to_millis(s->sample_rate(), pos);
+            size_t s_srate = s->sample_rate();
+            const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
+
+            ssize_t pos     = rp->nHeadCut + lsp_min(size_t(position), s->length());
+            ssize_t s_pos   = pos;
+            if (rp->nStretchDelta != 0)
+            {
+                ssize_t s_length    = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
+                ssize_t s_head      = rp->nStretchStart;
+                ssize_t s_tail      = s_head + s_length;
+
+                if (pos <= s_head)
+                    s_pos               = pos;
+                else if (pos >= s_tail)
+                    s_pos               = pos - rp->nStretchDelta;
+                else
+                {
+                    double s_before     = rp->nStretchEnd - rp->nStretchStart;
+                    double k            = s_before / s_length;
+                    s_pos               = s_head + (pos - s_head) * k;
+                }
+            }
+
+            float time = dspu::samples_to_millis(s_srate, s_pos);
+
+            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
+
+            return time;
         }
 
         void sampler_kernel::dump_afile(dspu::IStateDumper *v, const afile_t *f) const

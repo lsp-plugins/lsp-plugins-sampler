@@ -102,6 +102,7 @@
 						loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
 						loop.begin=":lb${idx}"
 						loop.end=":le${idx}"
+						play.position=":pp${idx}"
 						length=":fl${idx}"
 						length.actual=":al${idx}"
 						status=":fs${idx}"
