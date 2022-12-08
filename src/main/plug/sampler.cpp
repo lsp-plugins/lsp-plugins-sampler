@@ -22,10 +22,14 @@
 #include <private/plugins/sampler.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
-#define TRACE_PORT(p) lsp_trace("  port id=%s", (p)->metadata()->id);
-
 namespace lsp
 {
+    static plug::IPort *TRACE_PORT(plug::IPort *p)
+    {
+        lsp_trace("  port id=%s", (p)->metadata()->id);
+        return p;
+    }
+
     namespace plugins
     {
         //---------------------------------------------------------------------
@@ -201,8 +205,7 @@ namespace lsp
             lsp_trace("Binding audio inputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i].pIn        = ports[port_id++];
+                vChannels[i].pIn        = TRACE_PORT(ports[port_id++]);
                 vChannels[i].vIn        = NULL;
             }
 
@@ -210,60 +213,44 @@ namespace lsp
             lsp_trace("Binding audio outputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i].pOut       = ports[port_id++];
+                vChannels[i].pOut       = TRACE_PORT(ports[port_id++]);
                 vChannels[i].vOut       = NULL;
             }
 
             // Bind MIDI ports
             lsp_trace("Binding MIDI ports...");
-            TRACE_PORT(ports[port_id]);
-            pMidiIn     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMidiOut    = ports[port_id++];
+            pMidiIn     = TRACE_PORT(ports[port_id++]);
+            pMidiOut    = TRACE_PORT(ports[port_id++]);
 
             // Bind ports
             lsp_trace("Binding Global ports...");
-            TRACE_PORT(ports[port_id]);
-            pBypass     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMute       = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMuting     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pNoteOff    = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pFadeout    = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pDry        = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pWet        = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pGain       = ports[port_id++];
-            TRACE_PORT(ports[port_id])
-            port_id++;  // Skip sample editor tab selector
+            pBypass     = TRACE_PORT(ports[port_id++]);
+            pMute       = TRACE_PORT(ports[port_id++]);
+            pMuting     = TRACE_PORT(ports[port_id++]);
+            pNoteOff    = TRACE_PORT(ports[port_id++]);
+            pFadeout    = TRACE_PORT(ports[port_id++]);
+            pDry        = TRACE_PORT(ports[port_id++]);
+            pWet        = TRACE_PORT(ports[port_id++]);
+            pGain       = TRACE_PORT(ports[port_id++]);
+            TRACE_PORT(ports[port_id++]); // Skip sample editor tab selector
             if (bDryPorts)
             {
-                TRACE_PORT(ports[port_id]);
-                pDOGain     = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                pDOPan      = ports[port_id++];
+                pDOGain     = TRACE_PORT(ports[port_id++]);
+                pDOPan      = TRACE_PORT(ports[port_id++]);
             }
 
             // If number of samplers <= 2 - skip area selector
             if (nSamplers > 2)
             {
                 lsp_trace("Skipping mixer selector port...");
-                TRACE_PORT(ports[port_id]);
-                port_id++;
+                TRACE_PORT(ports[port_id++]);
             }
 
             // If number of samplers > 0 - skip instrument selector
             if (nSamplers > 1)
             {
                 lsp_trace("Skipping instrument selector...");
-                TRACE_PORT(ports[port_id]);
-                port_id     ++;
+                TRACE_PORT(ports[port_id++]);
             }
 
             // Now process each instrument
@@ -273,23 +260,16 @@ namespace lsp
 
                 // Bind trigger
                 lsp_trace("Binding trigger #%d ports...", int(i));
-                TRACE_PORT(ports[port_id]);
-                s->pChannel     = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                s->pNote        = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                s->pOctave      = ports[port_id++];
+                s->pChannel     = TRACE_PORT(ports[port_id++]);
+                s->pNote        = TRACE_PORT(ports[port_id++]);
+                s->pOctave      = TRACE_PORT(ports[port_id++]);
                 if (nSamplers > 1)
                 {
-                    TRACE_PORT(ports[port_id]);
-                    s->pMuteGroup   = ports[port_id++];
-                    TRACE_PORT(ports[port_id]);
-                    s->pMuting      = ports[port_id++];
-                    TRACE_PORT(ports[port_id]);
-                    s->pNoteOff     = ports[port_id++];
+                    s->pMuteGroup   = TRACE_PORT(ports[port_id++]);
+                    s->pMuting      = TRACE_PORT(ports[port_id++]);
+                    s->pNoteOff     = TRACE_PORT(ports[port_id++]);
                 }
-                TRACE_PORT(ports[port_id]);
-                s->pMidiNote    = ports[port_id++];
+                s->pMidiNote    = TRACE_PORT(ports[port_id++]);
 
                 // Bind sampler
                 lsp_trace("Binding sampler #%d ports...", int(i));
@@ -304,40 +284,31 @@ namespace lsp
 
                     // Bind Bypass port
                     lsp_trace("Binding bypass port...");
-                    TRACE_PORT(ports[port_id]);
-                    s->pBypass      = ports[port_id++];
+                    s->pBypass      = TRACE_PORT(ports[port_id++]);
 
                     // Bind mixing gain port
                     lsp_trace("Binding gain port...");
-                    TRACE_PORT(ports[port_id]);
-                    s->pGain    = ports[port_id++];
+                    s->pGain        = TRACE_PORT(ports[port_id++]);
 
                     // Bind panorama port
                     if (nChannels > 1)
                     {
                         lsp_trace("Binding panorama ports...");
                         for (size_t j=0; j<nChannels; ++j)
-                        {
-                            TRACE_PORT(ports[port_id]);
-                            s->vChannels[j].pPan    = ports[port_id++];
-                        }
+                            s->vChannels[j].pPan    = TRACE_PORT(ports[port_id++]);
                     }
 
                     // Bind activity port
-                    s->sSampler.bind_activity(ports[port_id++]);
+                    s->sSampler.bind_activity(TRACE_PORT(ports[port_id++]));
 
                     // Bind dry port if present
                     if (bDryPorts)
                     {
                         lsp_trace("Binding dry ports...");
-                        TRACE_PORT(ports[port_id]);
-                        s->pDryBypass       = ports[port_id++];
+                        s->pDryBypass       = TRACE_PORT(ports[port_id++]);
 
                         for (size_t j=0; j<nChannels; ++j)
-                        {
-                            TRACE_PORT(ports[port_id]);
-                            s->vChannels[j].pDry    = ports[port_id++];
-                        }
+                            s->vChannels[j].pDry    = TRACE_PORT(ports[port_id++]);
                     }
                 }
             }
