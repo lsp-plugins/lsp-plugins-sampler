@@ -830,6 +830,7 @@ namespace lsp
                 if (rp != NULL)
                     delete rp;
             };
+            rp->bReverse            = af->bReverse;
             rp->nLength             = samples;
             rp->nHeadCut            = 0;
             rp->nTailCut            = 0;
@@ -888,7 +889,7 @@ namespace lsp
 
                 dspu::fade_in(dst, &src[rp->nHeadCut], fade_in, samples);
                 dspu::fade_out(dst, dst, fade_out, samples);
-                if (af->bReverse)
+                if (rp->bReverse)
                     dsp::reverse1(dst, samples);
             }
             af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
@@ -900,19 +901,49 @@ namespace lsp
             return STATUS_OK;
         }
 
+        size_t sampler_kernel::compute_loop_position(const dspu::Sample *s, float time) const
+        {
+            const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
+            ssize_t pos             = dspu::millis_to_samples(nSampleRate, time);
+            if (rp == NULL)
+                return pos;
+
+            if (rp->bReverse)
+                pos                 = rp->nLength - pos;
+            if (rp->nStretchDelta == 0)
+                return pos;
+
+            if (pos <= rp->nStretchStart)
+                return pos;
+            else if (pos >= rp->nStretchEnd)
+                return pos + rp->nStretchDelta;
+
+            ssize_t s_length    = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
+            float s_before      = rp->nStretchEnd - rp->nStretchStart;
+            float k             = s_length / s_before;
+            return rp->nStretchStart + (pos - rp->nStretchStart) * k;
+        }
+
         void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
+
+            // Obtain the sample that will be used for playback
+            dspu::Sample *s = vChannels[0].get(af->nID);
+            if (s == NULL)
+                return;
 
             // Scale the final output gain
             gain    *= af->fMakeup;
 
             dspu::PlaySettings ps;
+            size_t loop_start = compute_loop_position(s, af->fLoopStart);
+            size_t loop_end   = compute_loop_position(s, af->fLoopEnd);
+            if (loop_end < loop_start)
+                lsp::swap(loop_end, loop_start);
+
             ps.set_sample_id(af->nID);
-            ps.set_loop_range(
-                af->enLoopMode,
-                dspu::millis_to_samples(nSampleRate, af->fLoopStart),
-                dspu::millis_to_samples(nSampleRate, af->fLoopEnd));
+            ps.set_loop_range(af->enLoopMode, loop_start, loop_end);
             ps.set_loop_xfade(
                 (af->nLoopFadeType == XFADE_LINEAR) ? dspu::SAMPLE_CROSSFADE_LINEAR : dspu::SAMPLE_CROSSFADE_CONST_POWER,
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
@@ -926,10 +957,10 @@ namespace lsp
                 lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(0), int(af->nID), int(0), gain * af->fGains[0], int(delay));
                 ps.set_sample_channel(0);
                 ps.set_volume(gain * af->fGains[0]);
-                vpb->set(vChannels[0].play(&ps));
-                vpb->clear();
-                vpb->clear();
-                vpb->clear();
+                vpb[0].set(vChannels[0].play(&ps));
+                vpb[1].clear();
+                vpb[2].clear();
+                vpb[3].clear();
             }
             else // if (nChannels == 2)
             {
@@ -1368,12 +1399,14 @@ namespace lsp
                     s_pos               = pos - rp->nStretchDelta;
                 else
                 {
-                    double s_before     = rp->nStretchEnd - rp->nStretchStart;
-                    double k            = s_before / s_length;
+                    float s_before      = rp->nStretchEnd - rp->nStretchStart;
+                    float k             = s_before / s_length;
                     s_pos               = s_head + (pos - s_head) * k;
                 }
             }
 
+            if (rp->bReverse)
+                s_pos               = rp->nLength - s_pos;
             float time = dspu::samples_to_millis(s_srate, s_pos);
 
 //            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
