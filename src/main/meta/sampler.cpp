@@ -216,7 +216,7 @@ namespace lsp
             CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
             COMBO("xt", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
             SWITCH("lo", "Sample loop enabled", 0.0f), \
-            COMBO("lm", "Sample loop mode", 1, sampler_loop_mode), \
+            COMBO("lm", "Sample loop mode", 0, sampler_loop_mode), \
             CONTROL("lb", "Sample loop region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("le", "Sample loop region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("ll", "Sample loop fade", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \

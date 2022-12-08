@@ -97,6 +97,13 @@ namespace lsp
                     XFADE_DFL = XFADE_CONST_POWER
                 };
 
+                enum play_mode_t
+                {
+                    PLAY_NOTE,
+                    PLAY_INSTRUMENT,
+                    PLAY_FILE
+                };
+
                 enum loop_mode_t
                 {
                     LOOP_DIRECT,
@@ -127,6 +134,7 @@ namespace lsp
                     dspu::Toggle        sListen;                                        // Listen toggle
                     dspu::Blink         sNoteOn;                                        // Note on led
                     dspu::Playback      vPlayback[4];                                   // Active playback handle
+                    dspu::Playback      vListen[4];                                     // Listen playback handle
                     dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
                     dspu::Sample       *pProcessed;                                     // Processed sample
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
@@ -213,6 +221,7 @@ namespace lsp
                 afile_t           **vActive;                                            // List of active audio files
                 dspu::SamplePlayer  vChannels[meta::sampler_metadata::TRACKS_MAX];      // List of channels
                 dspu::Bypass        vBypass[meta::sampler_metadata::TRACKS_MAX];        // List of bypasses
+                dspu::Playback      vListen[4];                                         // Listen playback handle for instrument
                 dspu::Blink         sActivity;                                          // Note on led for instrument
                 dspu::Toggle        sListen;                                            // Listen toggle
                 dspu::Randomizer    sRandom;                                            // Randomizer
@@ -239,8 +248,11 @@ namespace lsp
                 void        destroy_state();
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
-                void        play_sample(afile_t *af, float gain, size_t delay);
-                void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
+                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode);
+                void        start_listen_file(afile_t *af, float gain);
+                void        stop_listen_file(afile_t *af, bool force);
+                void        start_listen_instrument(float velocity, float gain);
+                void        stop_listen_instrument(bool force);
 
                 void        process_file_load_requests();
                 void        process_file_render_requests();
@@ -249,6 +261,7 @@ namespace lsp
                 void        process_listen_events();
                 void        play_samples(float **outs, const float **ins, size_t samples);
                 void        output_parameters(size_t samples);
+                afile_t    *select_active_sample(float velocity);
 
                 template <class T>
                 static void commit_value(size_t & counter, T & field, plug::IPort *port);
@@ -260,7 +273,7 @@ namespace lsp
                 static void                 destroy_samples(dspu::Sample *gc_list);
                 static void                 destroy_sample(dspu::Sample * &sample);
                 static dspu::sample_loop_t  decode_loop_mode(plug::IPort *on, plug::IPort *mode);
-                static float                compute_play_position(const afile_t *f);
+                float                       compute_play_position(const afile_t *f);
                 void                        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
                 void                        perform_gc();
 
@@ -270,8 +283,8 @@ namespace lsp
 
             public:
                 void        trigger_on(size_t timestamp, float level);
-                void        trigger_off(size_t timestamp, float level);
-                void        trigger_stop(size_t timestamp);
+                void        trigger_off(size_t timestamp, bool handle);
+                void        trigger_cancel(size_t timestamp);
 
             public:
                 void        set_fadeout(float length);

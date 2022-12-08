@@ -191,7 +191,10 @@ namespace lsp
                 af->sListen.construct();
                 af->sNoteOn.construct();
                 for (size_t i=0; i<4; ++i)
+                {
                     af->vPlayback[i].construct();
+                    af->vListen[i].construct();
+                }
                 af->pOriginal               = NULL;
                 af->pProcessed              = NULL;
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
@@ -418,6 +421,11 @@ namespace lsp
         {
             af->sListen.destroy();
             af->sNoteOn.destroy();
+            for (size_t i=0; i<4; ++i)
+            {
+                af->vPlayback[i].destroy();
+                af->vListen[i].destroy();
+            }
 
             // Delete audio file loader
             if (af->pLoader != NULL)
@@ -631,7 +639,7 @@ namespace lsp
                     ++loop_update;
                 }
                 commit_value(loop_update, af->fLoopStart, af->pLoopStart);
-                commit_value(loop_update, af->fLoopEnd, af->pLoopStart);
+                commit_value(loop_update, af->fLoopEnd, af->pLoopEnd);
                 commit_value(loop_update, af->fLoopFade, af->pLoopFade);
                 commit_value(loop_update, af->nLoopFadeType, af->pLoopFadeType);
                 if (loop_update > 0)
@@ -892,7 +900,7 @@ namespace lsp
             return STATUS_OK;
         }
 
-        void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay)
+        void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
 
@@ -910,15 +918,18 @@ namespace lsp
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
             ps.set_delay(delay);
 
+            dspu::Playback *vpb = (mode == PLAY_FILE) ? af->vListen :
+                                  (mode == PLAY_INSTRUMENT) ? vListen :
+                                  af->vPlayback;
             if (nChannels == 1)
             {
                 lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(0), int(af->nID), int(0), gain * af->fGains[0], int(delay));
                 ps.set_sample_channel(0);
                 ps.set_volume(gain * af->fGains[0]);
-                af->vPlayback[0].set(vChannels[0].play(&ps));
-                af->vPlayback[1].clear();
-                af->vPlayback[2].clear();
-                af->vPlayback[3].clear();
+                vpb->set(vChannels[0].play(&ps));
+                vpb->clear();
+                vpb->clear();
+                vpb->clear();
             }
             else // if (nChannels == 2)
             {
@@ -930,63 +941,101 @@ namespace lsp
 
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(i), int(af->nID), int(i), gain * af->fGains[i], int(delay));
                     ps.set_volume(gain * af->fGains[i]);
-                    af->vPlayback[pb_id++].set(vChannels[i].play(&ps));
+                    vpb[pb_id++].set(vChannels[i].play(&ps));
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(j), int(i), int(af->nID), gain * (1.0f - af->fGains[i]), int(delay));
                     ps.set_volume(gain * (1.0f - af->fGains[i]));
-                    af->vPlayback[pb_id++].set(vChannels[j].play(&ps));
+                    vpb[pb_id++].set(vChannels[j].play(&ps));
                 }
             }
         }
 
-        void sampler_kernel::cancel_sample(const afile_t *af, size_t fadeout, size_t delay)
+        void sampler_kernel::stop_listen_file(afile_t *af, bool force)
         {
-            lsp_trace("id=%d, delay=%d", int(af->nID), int(delay));
+//            lsp_trace("id=%d, force=%s", int(af->nID), (force) ? "true" : "false");
 
-            // Cancel all playbacks
-            for (size_t i=0; i<nChannels; ++i)
+            if (force)
             {
-                lsp_trace("channels[%d].cancel(%d, %d, %d)", int(af->nID), int(i), int(fadeout), int(delay));
-                vChannels[i].cancel_all(af->nID, i, fadeout, delay);
+                size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
+                for (size_t i=0; i<4; ++i)
+                    af->vListen[i].cancel(fadeout, 0);
+            }
+            else
+            {
+                for (size_t i=0; i<4; ++i)
+                    af->vListen[i].stop();
             }
         }
 
-        void sampler_kernel::trigger_on(size_t timestamp, float level)
+        void sampler_kernel::start_listen_file(afile_t *af, float gain)
+        {
+            play_sample(af, gain, 0, PLAY_FILE);
+        }
+
+        void sampler_kernel::start_listen_instrument(float velocity, float gain)
+        {
+            // Obtain the active file and
+            afile_t *af     = select_active_sample(velocity);
+            if (af != NULL)
+                play_sample(af, gain, 0, PLAY_INSTRUMENT);
+        }
+
+        void sampler_kernel::stop_listen_instrument(bool force)
+        {
+//            lsp_trace("force=%s", (force) ? "true" : "false");
+            if (force)
+            {
+                size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
+                for (size_t i=0; i<4; ++i)
+                    vListen[i].cancel(fadeout, 0);
+            }
+            else
+                for (size_t i=0; i<4; ++i)
+                    vListen[i].stop(0);
+            {
+            }
+        }
+
+        sampler_kernel::afile_t *sampler_kernel::select_active_sample(float velocity)
         {
             if (nActive <= 0)
-                return;
+                return NULL;
 
             // Binary search of sample
-            lsp_trace("normalized velocity = %f", level);
-            level      *=   100.0f; // Make velocity in percentage
+            lsp_trace("normalized velocity = %f", velocity);
             ssize_t f_first = 0, f_last = nActive-1;
             while (f_last > f_first)
             {
                 ssize_t f_mid = (f_last + f_first) >> 1;
-                if (level <= vActive[f_mid]->fVelocity)
+                if (velocity <= vActive[f_mid]->fVelocity)
                     f_last  = f_mid;
                 else
                     f_first = f_mid + 1;
             }
-            if (f_last < 0)
-                f_last      = 0;
-            else if (f_last >= ssize_t(nActive))
-                f_last      = nActive - 1;
 
+            f_last      = lsp_limit(f_last, 0, ssize_t(nActive) - 1);
+            return vActive[f_last];
+        }
+
+        void sampler_kernel::trigger_on(size_t timestamp, float level)
+        {
             // Get the file and ajdust gain
-            afile_t *af     = vActive[f_last];
-            size_t delay    = dspu::millis_to_samples(nSampleRate, af->fPreDelay) + timestamp;
+            float velocity  = level * 100.0f;       // Compute velocity in percents
+            afile_t *af     = select_active_sample(velocity);
+            if (af == NULL)
+                return;
 
-            lsp_trace("f_last=%d, af->id=%d, af->velocity=%.3f", int(f_last), int(af->nID), af->fVelocity);
+            size_t delay    = dspu::millis_to_samples(nSampleRate, af->fPreDelay) + timestamp;
+            lsp_trace("af->id=%d, af->velocity=%.3f", int(af->nID), af->fVelocity);
 
             // Apply changes to all ports
             if (af->fVelocity > 0.0f)
             {
                 // Apply 'Humanisation' parameters
-                level       = level * ((1.0f - fDynamics*0.5) + fDynamics * sRandom.random(dspu::RND_EXP)) / af->fVelocity;
+                level       = velocity * ((1.0f - fDynamics*0.5) + fDynamics * sRandom.random(dspu::RND_EXP)) / af->fVelocity;
                 delay      += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
 
                 // Play sample
-                play_sample(af, level, delay);
+                play_sample(af, level, delay, PLAY_NOTE);
 
                 // Trigger the note On indicator
                 af->sNoteOn.blink();
@@ -994,23 +1043,35 @@ namespace lsp
             }
         }
 
-        void sampler_kernel::trigger_off(size_t timestamp, float level)
+        void sampler_kernel::trigger_off(size_t timestamp, bool note_off)
         {
-            if (nActive <= 0)
-                return;
+            lsp_trace("timestamp=%d, note_off=%s",
+                int(timestamp),
+                (note_off) ? "true" : "false");
 
-            size_t delay    = timestamp;
-            size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
-
-            for (size_t i=0; i<nActive; ++i)
-                cancel_sample(vActive[i], fadeout, delay);
+            // Stop active playback and listen events
+            for (size_t i=0; i<nFiles; ++i)
+            {
+                afile_t *af = &vFiles[i];
+                if ((note_off) || (af->enLoopMode != dspu::SAMPLE_LOOP_NONE))
+                {
+                    for (size_t j=0; j<4; ++j)
+                        af->vPlayback[j].stop(timestamp);
+                }
+            }
         }
 
-        void sampler_kernel::trigger_stop(size_t timestamp)
+        void sampler_kernel::trigger_cancel(size_t timestamp)
         {
-            // Apply changes to all ports
+            lsp_trace("timestamp=%d", int(timestamp));
+
+            // Cancel active playback
+            size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
             for (size_t j=0; j<nChannels; ++j)
-                vChannels[j].stop();
+            {
+                for (size_t i=0; i<nFiles; ++i)
+                    vChannels[j].cancel_all(vFiles[i].nID, j, fadeout, timestamp);
+            }
         }
 
         void sampler_kernel::process_file_load_requests()
@@ -1138,9 +1199,12 @@ namespace lsp
         {
             if (sListen.pending())
             {
-                trigger_on(0, 0.5f);
+                stop_listen_instrument(true);
+                start_listen_instrument(0.5f, 1.0f);
                 sListen.commit();
             }
+            else if (sListen.off())
+                stop_listen_instrument(false);
 
             for (size_t i=0; i<nFiles; ++i)
             {
@@ -1149,16 +1213,16 @@ namespace lsp
                 if (af->pFile == NULL)
                     continue;
 
-                // Trigger the event
+                // Play audio file
                 if (af->sListen.pending())
                 {
-                    // Play sample
-                    play_sample(af, 0.5f, 0); // Listen at mid-velocity
-
-                    // Update states
-                    af->sListen.commit();
+                    stop_listen_file(af, true);
+                    start_listen_file(af, 1.0f);
                     af->sNoteOn.blink();
+                    af->sListen.commit();
                 }
+                else if (af->sListen.off())
+                    stop_listen_file(af, false);
             }
         }
 
@@ -1272,7 +1336,11 @@ namespace lsp
 
         float sampler_kernel::compute_play_position(const afile_t *f)
         {
-            const dspu::Playback *pb = &f->vPlayback[0];
+            const dspu::Playback *pb = &f->vListen[0];
+            if (!pb->valid())
+                pb = &vListen[0];
+            if (!pb->valid())
+                pb = &f->vPlayback[0];
             if (!pb->valid())
                 return meta::sampler_metadata::SAMPLE_PLAYBACK_MIN;
 
@@ -1308,7 +1376,7 @@ namespace lsp
 
             float time = dspu::samples_to_millis(s_srate, s_pos);
 
-            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
+//            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
 
             return time;
         }

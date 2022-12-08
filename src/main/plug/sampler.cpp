@@ -103,6 +103,7 @@ namespace lsp
             pBuffer         = NULL;
             fDry            = 1.0f;
             fWet            = 1.0f;
+            bMuting         = false;
 
             pMidiIn         = NULL;
             pMidiOut        = NULL;
@@ -390,7 +391,7 @@ namespace lsp
             }
 
             // Update settings on all samplers and triggers
-            bool muting     = pMuting->value() >= 0.5f;
+            bMuting         = pMuting->value() >= 0.5f;
             bool note_off   = pNoteOff->value() >= 0.5f;
             nDOMode         = 0;
             if ((pDOGain != NULL) && (pDOGain->value() >= 0.5f))
@@ -398,7 +399,7 @@ namespace lsp
             if ((pDOPan != NULL) && (pDOPan->value() >= 0.5f))
                 nDOMode        |= DM_APPLY_PAN;
 
-            lsp_trace("muting=%s", (muting) ? "true" : "false");
+            lsp_trace("muting=%s", (bMuting) ? "true" : "false");
             lsp_trace("note_off=%s", (note_off) ? "true" : "false");
             lsp_trace("do_mode=0x%x", int(nDOMode));
 
@@ -411,7 +412,6 @@ namespace lsp
                 s->nChannel     = s->pChannel->value();
                 s->nMuteGroup   = (s->pMuteGroup != NULL) ? s->pMuteGroup->value() : i;
                 s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : false;
-                s->bMuting      = s->bMuting || muting;
                 s->bNoteOff     = (s->pNoteOff != NULL) ? s->pNoteOff->value() >= 0.5f : false;
                 s->bNoteOff     = s->bNoteOff || note_off;
 
@@ -494,7 +494,7 @@ namespace lsp
             {
                 // Cancel playback for all samplers
                 for (size_t i=0; i<nSamplers; ++i)
-                    vSamplers[i].sSampler.trigger_stop(0);
+                    vSamplers[i].sSampler.trigger_cancel(0);
                 sMute.commit(true);
             }
 
@@ -559,7 +559,7 @@ namespace lsp
                             if (triggered)
                                 s->sSampler.trigger_on(me->timestamp, gain);
                             else if (muted)
-                                s->sSampler.trigger_off(me->timestamp, gain);
+                                s->sSampler.trigger_cancel(me->timestamp);
                         }
                         break;
                     }
@@ -567,33 +567,38 @@ namespace lsp
                     case midi::MIDI_MSG_NOTE_OFF:
                     {
                         lsp_trace("NOTE_OFF: channel=%d, pitch=%d, velocity=%d",
-                                int(me->channel), int(me->note.pitch), int(me->note.velocity));
-                        float gain = me->note.velocity / 127.0f;
+                            int(me->channel), int(me->note.pitch), int(me->note.velocity));
 
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((!s->bNoteOff) || (s->nNote != me->note.pitch) || (s->nChannel != me->channel))
+                            if ((s->nNote != me->note.pitch) || (s->nChannel != me->channel))
                                 continue;
 
-                            s->sSampler.trigger_off(me->timestamp, gain);
+                            if (s->bMuting)
+                                s->sSampler.trigger_cancel(me->timestamp);
+                            else
+                                s->sSampler.trigger_off(me->timestamp, s->bNoteOff);
                         }
                         break;
                     }
 
                     case midi::MIDI_MSG_NOTE_CONTROLLER:
                         lsp_trace("NOTE_CONTROLLER: channel=%d, control=%02x, value=%d",
-                                int(me->channel), int(me->ctl.control), int(me->ctl.value));
+                            int(me->channel), int(me->ctl.control), int(me->ctl.value));
                         if (me->ctl.control != midi::MIDI_CTL_ALL_NOTES_OFF)
                             break;
 
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((!s->bMuting) || (me->channel != s->nChannel))
+                            if (me->channel != s->nChannel)
+                                continue;
+                            bool muting = s->bMuting || bMuting;
+                            if (!muting)
                                 continue;
 
-                            s->sSampler.trigger_stop(me->timestamp);
+                            s->sSampler.trigger_cancel(me->timestamp);
                         }
                         break;
 
@@ -811,6 +816,7 @@ namespace lsp
             v->write("pBuffer", pBuffer);
             v->write("fDry", fDry);
             v->write("fWet", fWet);
+            v->write("bMuting", bMuting);
 
             v->write("pMidiIn", pMidiIn);
             v->write("pMidiOut", pMidiOut);

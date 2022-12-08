@@ -61,10 +61,10 @@
 			"ping_pong": {
 				"direct_full": "PP: Full Direct",
 				"direct_half": "PP: Half Direct",
-				"direct_smart": "PP: Full Direct",
+				"direct_smart": "PP: Smart Direct",
 				"reverse_full": "PP: Full Reverse",
 				"reverse_half": "PP: Half Reverse",
-				"reverse_smart": "PP: Full Reverse"
+				"reverse_smart": "PP: Smart Reverse"
 			},
 			"simple": {
 				"direct": "Simple: Direct",
