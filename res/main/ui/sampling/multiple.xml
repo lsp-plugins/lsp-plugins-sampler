@@ -97,7 +97,7 @@
 						stretch.border.color="(:so${idx}) ? 'stretch_border_color' : 'stretch_border_color_off'"
 						stretch.begin=":ss${idx}"
 						stretch.end=":se${idx}"
-						loop.enable=":lo${idx}"
+						loop.enable="1"
 						loop.color="(:lo${idx}) ? 'loop_color' : 'loop_color_off'"
 						loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
 						loop.begin=":lb${idx}"
@@ -295,9 +295,9 @@
 									<cell rows="3">
 										<vbox bg.color="bg">
 											<button id="lo${idx}"
-												ui:inject="Button_loop" text="labels.sedit.loop" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+												ui:inject="Button_loop" text="labels.sedit.loop" width.min="118" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="lm${idx}" fill="false" pad.b="4" bg.color="bg_schema" pad.h="6"/>
-											<combo id="lx${idx}" fill="false" pad.b="8" bg.color="bg_schema" pad.h="6"/>
+											<combo id="lx${idx}" fill="false" width.min="118" pad.b="8" bg.color="bg_schema" pad.h="6"/>
 											<hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
 											<label vexpand="true" bg.color="bg_schema"/>
 										</vbox>
@@ -332,49 +332,59 @@
 				</vbox>
 			</cgroup>
 
+
 			<group text="groups.audio_output" spacing="4" ipadding="0">
-				<grid rows="1" cols="3" hspacing="2" bg.color="bg">
-					<grid rows="1" cols="3" hspacing="2">
+				<grid rows="3" cols="7" bg.color="bg" transpose="true" >
+					<!-- <grid rows="1" cols="3" hspacing="2"> -->
 						<!-- note off block -->
-						<grid rows="3" cols="1" spacing="4" fill="false" bg.color="bg_schema" pad.l="6" pad.r="6">
-							<hbox >
-								<button id="noff" led="true" ui:inject="Button_green" size="12" pad.r="6"/>
-								<label text="labels.midi.note_off"/>
-							</hbox>
+						<!-- <grid rows="3" cols="1" spacing="4" fill="false" bg.color="bg_schema" pad.l="6" pad.r="6"> -->
+							<!-- <hbox > -->
+							<ui:with bg.color="bg_schema">
+								<!-- <cell> -->
+									<align hpos="1">
+								<button text="labels.midi.note_off" id="noff" height="18" width="50" ui:inject="Button_green" led="true"   />
+							</align>
+							<!-- </cell> -->
+								<!-- <button id="noff" led="true" ui:inject="Button_green" size="12" pad.r="6"/>
+								<label text="labels.midi.note_off"/> -->
+							<!-- </hbox> -->
 							<knob id="fout" size="20"/>
 							<value id="fout" sline="true"/>
-						</grid>
+						<!-- </grid> -->
 						<!-- separator -->
-						<cell>
-							<vsep/>
+						<cell rows="3" hreduce="true" bg.color="bg">
+							<vsep  pad.h="2"/>
 						</cell>
 						<!-- mutting and mute buttons -->
-						<grid rows="3" cols="1" vspacing="2">
+						<cell rows="3">
+							<grid rows="3" cols="1">
 							<button text="labels.muting" id="muting" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
-							<cell>
-								<hsep/>
+							<cell vreduce="true" bg.color="bg">
+								<hsep pad.v="2"/>
 							</cell>
 							<button text="labels.mute" id="mute" ui:inject="Button_red" height="18" width="50" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 						</grid>
-					</grid>
 
-					<cell rows="3">
-						<vsep/>
 					</cell>
-					<grid rows="3" cols="3" bg.color="bg_schema" padding="6">
+
+					<cell rows="3" hreduce="true" bg.color="bg">
+						<vsep  pad.h="2"/>
+					</cell>
+					<!-- <grid rows="3" cols="3" bg.color="bg_schema" padding="6"> -->
 
 						<label text="labels.signal.dry" pad.b="6"/>
-						<label text="labels.signal.wet" pad.b="6"/>
-						<label text="labels.output" pad.b="6"/>
-
 						<knob id="dry" pad.b="6" scolor="dry"/>
-						<knob id="wet" pad.b="6" scolor="wet"/>
-						<knob id="g_out" pad.b="6"/>
-
 						<value id="dry" width.min="54" sline="true"/>
+
+						<label text="labels.signal.wet" pad.b="6"/>
+						<knob id="wet" pad.b="6" scolor="wet"/>
 						<value id="wet" width.min="54" sline="true"/>
+
+						<label text="labels.output" pad.b="6"/>
+						<knob id="g_out" pad.b="6"/>
 						<value id="g_out" width.min="54" sline="true"/>
-					</grid>
+					<!-- </grid> -->
+				</ui:with>
 				</grid>
 			</group>
 			<group text="groups.sample_matrix" expand="true" ipadding="0">
