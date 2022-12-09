@@ -411,7 +411,7 @@ namespace lsp
                 s->nNote        = (s->pOctave->value() * 12) + s->pNote->value();
                 s->nChannel     = s->pChannel->value();
                 s->nMuteGroup   = (s->pMuteGroup != NULL) ? s->pMuteGroup->value() : i;
-                s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : false;
+                s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : bMuting;
                 s->bNoteOff     = (s->pNoteOff != NULL) ? s->pNoteOff->value() >= 0.5f : false;
                 s->bNoteOff     = s->bNoteOff || note_off;
 
