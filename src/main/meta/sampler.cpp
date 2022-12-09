@@ -156,6 +156,19 @@ namespace lsp
             { NULL, NULL }
         };
 
+        static const port_item_t sampler_loop_mode[] =
+        {
+            { "Simple: Direct",     "sampler.loop.simple.direct"            },
+            { "Simple: Reverse",    "sampler.loop.simple.reverse"           },
+            { "PP: Half Direct",    "sampler.loop.ping_pong.direct_half"    },
+            { "PP: Half Reverse",   "sampler.loop.ping_pong.reverse_half"   },
+            { "PP: Full Direct",    "sampler.loop.ping_pong.direct_full"    },
+            { "PP: Full Reverse",   "sampler.loop.ping_pong.reverse_full"   },
+            { "PP: Smart Direct",   "sampler.loop.ping_pong.direct_smart"   },
+            { "PP: Smart Reverse",  "sampler.loop.ping_pong.reverse_smart"  },
+            { NULL, NULL }
+        };
+
         static const port_item_t sampler_sample_editor_tabs[] =
         {
             { "Main",           "sampler.edit.main"      },
@@ -202,6 +215,12 @@ namespace lsp
             CONTROL("sc", "Sample stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
             CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
             COMBO("xt", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
+            SWITCH("lo", "Sample loop enabled", 0.0f), \
+            COMBO("lm", "Sample loop mode", 0, sampler_loop_mode), \
+            CONTROL("lb", "Sample loop region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("le", "Sample loop region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("ll", "Sample loop fade", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            COMBO("lx", "Sample loop crossfade type", 1, sampler_crossfade_type), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
@@ -219,6 +238,7 @@ namespace lsp
             COMBO("xc", "Sample auto-compensate crossfade type", 1, sampler_crossfade_type), \
             gain, \
             BLINK("ac", "Sample activity"), \
+            METER("pp", "Sample play position", U_MSEC, sampler_metadata::SAMPLE_PLAYBACK), \
             BLINK("no", "Sample note on event"), \
             { "fl", "Length of loaded sample", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \

@@ -90,11 +90,41 @@ namespace lsp
                 };
 
             protected:
-                enum stretch_fade_t
+                enum crossfade_t
                 {
                     XFADE_LINEAR,
                     XFADE_CONST_POWER,
                     XFADE_DFL = XFADE_CONST_POWER
+                };
+
+                enum play_mode_t
+                {
+                    PLAY_NOTE,
+                    PLAY_INSTRUMENT,
+                    PLAY_FILE
+                };
+
+                enum loop_mode_t
+                {
+                    LOOP_DIRECT,
+                    LOOP_REVERSE,
+                    LOOP_DIRECT_HALF_PP,
+                    LOOP_REVERSE_HALF_PP,
+                    LOOP_DIRECT_FULL_PP,
+                    LOOP_REVERSE_FULL_PP,
+                    LOOP_DIRECT_SMART_PP,
+                    LOOP_REVERSE_SMART_PP
+                };
+
+                struct render_params_t
+                {
+                    bool                bReverse;
+                    size_t              nLength;
+                    ssize_t             nHeadCut;
+                    ssize_t             nTailCut;
+                    ssize_t             nStretchDelta;
+                    ssize_t             nStretchStart;
+                    ssize_t             nStretchEnd;
                 };
 
                 struct afile_t
@@ -104,6 +134,8 @@ namespace lsp
                     AFRenderer         *pRenderer;                                      // Audio file renderer task
                     dspu::Toggle        sListen;                                        // Listen toggle
                     dspu::Blink         sNoteOn;                                        // Note on led
+                    dspu::Playback      vPlayback[4];                                   // Active playback handle
+                    dspu::Playback      vListen[4];                                     // Listen playback handle
                     dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
                     dspu::Sample       *pProcessed;                                     // Processed sample
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
@@ -118,8 +150,14 @@ namespace lsp
                     float               fStretchStart;                                  // Stretch start (ms)
                     float               fStretchEnd;                                    // Stretch end (ms)
                     float               fStretchChunk;                                  // Stretch chunk (bar)
-                    float               fStretchFade;                                   // Stretch fade
-                    size_t              nStretchFadeType;                               // Stretch fade type
+                    float               fStretchFade;                                   // Stretch cross-fade length
+                    size_t              nStretchFadeType;                               // Stretch cross-fade type
+                    float               fLoopOn;                                        // Loop enabled
+                    dspu::sample_loop_t enLoopMode;                                     // Loop mode
+                    float               fLoopStart;                                     // Stretch start (ms)
+                    float               fLoopEnd;                                       // Stretch end (ms)
+                    float               fLoopFade;                                      // Loop cross-fade length
+                    size_t              nLoopFadeType;                                  // Loop cross-fade type
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
@@ -139,13 +177,20 @@ namespace lsp
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
+
                     plug::IPort        *pStretchOn;                                     // Stretch enabled
                     plug::IPort        *pStretch;                                       // Stretch amount
-                    plug::IPort        *pStretchStart;                                  // Stretch start
-                    plug::IPort        *pStretchEnd;                                    // Stretch end
+                    plug::IPort        *pStretchStart;                                  // Start of the stretch region
+                    plug::IPort        *pStretchEnd;                                    // End of the stretch region
                     plug::IPort        *pStretchChunk;                                  // Stretch chunk
-                    plug::IPort        *pStretchFade;                                   // Stretch fade
-                    plug::IPort        *pStretchFadeType;                               // Stretch fade type
+                    plug::IPort        *pStretchFade;                                   // Stretch cross-fade length
+                    plug::IPort        *pStretchFadeType;                               // Stretch cross-fade type
+                    plug::IPort        *pLoopOn;                                        // Loop enabled
+                    plug::IPort        *pLoopMode;                                      // Loop mode
+                    plug::IPort        *pLoopStart;                                     // Start of the loop region
+                    plug::IPort        *pLoopEnd;                                       // End of the loop region
+                    plug::IPort        *pLoopFadeType;                                  // Loop cross-fade type
+                    plug::IPort        *pLoopFade;                                      // Loop cross-fade length
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length
@@ -153,6 +198,7 @@ namespace lsp
                     plug::IPort        *pMakeup;                                        // Makup gain
                     plug::IPort        *pVelocity;                                      // Velocity range top
                     plug::IPort        *pPreDelay;                                      // Pre-delay
+                    plug::IPort        *pOn;                                            // Sample on outputflag
                     plug::IPort        *pListen;                                        // Listen trigger
                     plug::IPort        *pReverse;                                       // Reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
@@ -160,13 +206,13 @@ namespace lsp
                     plug::IPort        *pCompensateChunk;                               // Compensate chunk
                     plug::IPort        *pCompensateFadeType;                            // Compensate fade type
                     plug::IPort        *pGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain ports
+                    plug::IPort        *pActive;                                        // Sample activity flag
+                    plug::IPort        *pPlayPosition;                                  // Output current playback position
+                    plug::IPort        *pNoteOn;                                        // Note on flag
                     plug::IPort        *pLength;                                        // Length of the file
                     plug::IPort        *pActualLength;                                  // Actual length of the file
                     plug::IPort        *pStatus;                                        // Status of the file
                     plug::IPort        *pMesh;                                          // Dump of the file data
-                    plug::IPort        *pNoteOn;                                        // Note on flag
-                    plug::IPort        *pOn;                                            // Sample on flag
-                    plug::IPort        *pActive;                                        // Sample activity flag
                 };
 
             protected:
@@ -176,6 +222,7 @@ namespace lsp
                 afile_t           **vActive;                                            // List of active audio files
                 dspu::SamplePlayer  vChannels[meta::sampler_metadata::TRACKS_MAX];      // List of channels
                 dspu::Bypass        vBypass[meta::sampler_metadata::TRACKS_MAX];        // List of bypasses
+                dspu::Playback      vListen[4];                                         // Listen playback handle for instrument
                 dspu::Blink         sActivity;                                          // Note on led for instrument
                 dspu::Toggle        sListen;                                            // Listen toggle
                 dspu::Randomizer    sRandom;                                            // Randomizer
@@ -202,8 +249,11 @@ namespace lsp
                 void        destroy_state();
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
-                void        play_sample(const afile_t *af, float gain, size_t delay);
-                void        cancel_sample(const afile_t *af, size_t fadeout, size_t delay);
+                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode);
+                void        start_listen_file(afile_t *af, float gain);
+                void        stop_listen_file(afile_t *af, bool force);
+                void        start_listen_instrument(float velocity, float gain);
+                void        stop_listen_instrument(bool force);
 
                 void        process_file_load_requests();
                 void        process_file_render_requests();
@@ -212,18 +262,22 @@ namespace lsp
                 void        process_listen_events();
                 void        play_samples(float **outs, const float **ins, size_t samples);
                 void        output_parameters(size_t samples);
+                afile_t    *select_active_sample(float velocity);
 
                 template <class T>
-                static void commit_afile_value(afile_t *af, T & field, plug::IPort *port);
-                static void commit_afile_value(afile_t *af, bool & field, plug::IPort *port);
+                static void commit_value(size_t & counter, T & field, plug::IPort *port);
+                static void commit_value(size_t & counter, bool & field, plug::IPort *port);
 
             protected:
-                static void unload_afile(afile_t *file);
-                static void destroy_afile(afile_t *af);
-                static void destroy_samples(dspu::Sample *gc_list);
-                static void destroy_sample(dspu::Sample * &sample);
-                void        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
-                void        perform_gc();
+                static void                 unload_afile(afile_t *file);
+                static void                 destroy_afile(afile_t *af);
+                static void                 destroy_samples(dspu::Sample *gc_list);
+                static void                 destroy_sample(dspu::Sample * &sample);
+                static dspu::sample_loop_t  decode_loop_mode(plug::IPort *on, plug::IPort *mode);
+                float                       compute_play_position(const afile_t *f);
+                void                        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
+                size_t                      compute_loop_position(const dspu::Sample *s, float time) const;
+                void                        perform_gc();
 
             public:
                 explicit sampler_kernel();
@@ -231,8 +285,8 @@ namespace lsp
 
             public:
                 void        trigger_on(size_t timestamp, float level);
-                void        trigger_off(size_t timestamp, float level);
-                void        trigger_stop(size_t timestamp);
+                void        trigger_off(size_t timestamp, bool handle);
+                void        trigger_cancel(size_t timestamp);
 
             public:
                 void        set_fadeout(float length);

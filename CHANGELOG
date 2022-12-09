@@ -3,10 +3,10 @@
 *******************************************************************************
 
 === 1.0.8 ===
-- TODO: update documentation.
 * Fixed broken configuration save and load with relative file paths.
 * Added 'Stretch' and 'Compensate' functions to the sampler plugin (contributed by
   Vitalius Kuchalskis).
+* Added support of 'Loop' feature by the sampler plugin.
 * Updated build scripts and dependencies.
 * Added possibility to export and import sampler bundle as single file in LSPC format.
 
