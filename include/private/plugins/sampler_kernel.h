@@ -152,7 +152,6 @@ namespace lsp
                     float               fStretchChunk;                                  // Stretch chunk (bar)
                     float               fStretchFade;                                   // Stretch cross-fade length
                     size_t              nStretchFadeType;                               // Stretch cross-fade type
-                    float               fLoopOn;                                        // Loop enabled
                     dspu::sample_loop_t enLoopMode;                                     // Loop mode
                     float               fLoopStart;                                     // Stretch start (ms)
                     float               fLoopEnd;                                       // Stretch end (ms)
@@ -177,7 +176,6 @@ namespace lsp
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
-
                     plug::IPort        *pStretchOn;                                     // Stretch enabled
                     plug::IPort        *pStretch;                                       // Stretch amount
                     plug::IPort        *pStretchStart;                                  // Start of the stretch region

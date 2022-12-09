@@ -212,6 +212,11 @@ namespace lsp
                 af->fStretchChunk           = 0.0f;
                 af->fStretchFade            = 0.0f;
                 af->nStretchFadeType        = XFADE_DFL;
+                af->enLoopMode              = dspu::SAMPLE_LOOP_NONE;
+                af->fLoopStart              = 0.0f;
+                af->fLoopEnd                = 0.0f;
+                af->fLoopFade               = 0.0f;
+                af->nLoopFadeType           = 0;
                 af->fHeadCut                = 0.0f;
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
@@ -222,12 +227,13 @@ namespace lsp
                 af->fCompensateChunk        = 0.0f;
                 af->nCompensateFadeType     = XFADE_DFL;
                 af->fPreDelay               = meta::sampler_metadata::PREDELAY_DFL;
-                af->sListen.init();
-                af->bOn                     = true;
                 af->fMakeup                 = 1.0f;
+                for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
+                    af->fGains[j]               = 0;
                 af->fLength                 = 0.0f;
                 af->fActualLength           = 0.0f;
                 af->nStatus                 = STATUS_UNSPECIFIED;
+                af->bOn                     = true;
 
                 af->pFile                   = NULL;
                 af->pPitch                  = NULL;
@@ -1396,7 +1402,7 @@ namespace lsp
                 if (pos <= s_head)
                     s_pos               = pos;
                 else if (pos >= s_tail)
-                    s_pos               = pos - rp->nStretchDelta;
+                    s_pos               = rp->nStretchEnd + pos - s_tail;
                 else
                 {
                     float s_before      = rp->nStretchEnd - rp->nStretchStart;
@@ -1418,24 +1424,32 @@ namespace lsp
         {
             v->write("nID", f->nID);
             v->write_object("pLoader", f->pLoader);
+            v->write_object("pRenderer", f->pRenderer);
+            v->write_object("sListen", &f->sListen);
+            v->write_object("sNoteOn", &f->sNoteOn);
+            v->write_object_array("vPlayback", f->vPlayback, 4);
+            v->write_object_array("vListen", f->vListen, 4);
             v->write_object("pOriginal", f->pOriginal);
             v->write_object("pProcessed", f->pProcessed);
             v->write("vThumbs", f->vThumbs);
-            v->write_object("sListen", &f->sListen);
-            v->write_object("sNoteOn", &f->sNoteOn);
 
             v->write("nUpdateReq", f->nUpdateReq);
             v->write("nUpdateResp", f->nUpdateResp);
             v->write("bSync", f->bSync);
             v->write("fVelocity", f->fVelocity);
             v->write("fPitch", f->fPitch);
-            v->write("bStretch", f->bStretchOn);
+            v->write("bStretchOn", f->bStretchOn);
             v->write("fStretch", f->fStretch);
             v->write("fStretchStart", f->fStretchStart);
             v->write("fStretchEnd", f->fStretchEnd);
             v->write("fStretchChunk", f->fStretchChunk);
             v->write("fStretchFade", f->fStretchFade);
             v->write("nStretchFadeType", f->nStretchFadeType);
+            v->write("enLoopMode", int(f->enLoopMode));
+            v->write("fLoopStart", f->fLoopStart);
+            v->write("fLoopEnd", f->fLoopEnd);
+            v->write("fLoopFade", f->fLoopFade);
+            v->write("nLoopFadeType", f->nLoopFadeType);
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1462,6 +1476,12 @@ namespace lsp
             v->write("pStretchChunk", f->pStretchChunk);
             v->write("pStretchFade", f->pStretchFade);
             v->write("pStretchFadeType", f->pStretchFadeType);
+            v->write("pLoopOn", f->pLoopOn);
+            v->write("pLoopMode", f->pLoopMode);
+            v->write("pLoopStart", f->pLoopStart);
+            v->write("pLoopEnd", f->pLoopEnd);
+            v->write("pLoopFadeType", f->pLoopFadeType);
+            v->write("pLoopFade", f->pLoopFade);
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);
@@ -1469,6 +1489,7 @@ namespace lsp
             v->write("pMakeup", f->pMakeup);
             v->write("pVelocity", f->pVelocity);
             v->write("pPreDelay", f->pPreDelay);
+            v->write("pOn", f->pOn);
             v->write("pListen", f->pListen);
             v->write("pReverse", f->pReverse);
             v->write("pCompensate", f->pCompensate);
@@ -1476,13 +1497,13 @@ namespace lsp
             v->write("pCompensateChunk", f->pCompensateChunk);
             v->write("pCompensateFadeType", f->pCompensateFadeType);
             v->writev("pGains", f->pGains, meta::sampler_metadata::TRACKS_MAX);
+            v->write("pActive", f->pActive);
+            v->write("pPlayPosition", f->pPlayPosition);
+            v->write("pNoteOn", f->pNoteOn);
             v->write("pLength", f->pLength);
             v->write("pActualLength", f->pActualLength);
             v->write("pStatus", f->pStatus);
             v->write("pMesh", f->pMesh);
-            v->write("pNoteOn", f->pNoteOn);
-            v->write("pOn", f->pOn);
-            v->write("pActive", f->pActive);
         }
 
         void sampler_kernel::dump(dspu::IStateDumper *v) const
@@ -1504,6 +1525,7 @@ namespace lsp
 
             v->write_object_array("vChannels", vChannels, meta::sampler_metadata::TRACKS_MAX);
             v->write_object_array("vBypass", vBypass, meta::sampler_metadata::TRACKS_MAX);
+            v->write_object_array("vListen", vListen, 4);
             v->write_object("sActivity", &sActivity);
             v->write_object("sListen", &sListen);
             v->write_object("sRandom", &sRandom);
