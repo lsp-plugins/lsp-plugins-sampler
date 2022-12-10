@@ -828,21 +828,25 @@ namespace lsp
             }
             af->fLength             = dspu::samples_to_millis(nSampleRate, samples);
 
-            // Allocate user data
+            // Allocate target sample
+            dspu::Sample *out   = new dspu::Sample();
+            if (out == NULL)
+                return STATUS_NO_MEM;
+            lsp_trace("Allocated sample %p", out);
+            lsp_finally { destroy_sample(out); };
+            out->set_sample_rate(nSampleRate);
+
+            // Allocate user data and bind to the sample
             render_params_t *rp     = new render_params_t;
             if (rp == NULL)
                 return STATUS_NO_MEM;
-            lsp_finally {
-                if (rp != NULL)
-                    delete rp;
-            };
-            rp->bReverse            = af->bReverse;
             rp->nLength             = samples;
             rp->nHeadCut            = 0;
             rp->nTailCut            = 0;
             rp->nStretchDelta       = 0;
             rp->nStretchStart       = 0;
             rp->nStretchEnd         = 0;
+            out->set_user_data(rp);
 
             // Perform stretch of the sample
             rp->nStretchDelta       = (af->bStretchOn) ? dspu::millis_to_samples(nSampleRate, af->fStretch) : 0.0f;
@@ -865,20 +869,17 @@ namespace lsp
             }
 
             // Perform the head and tail cut operations
-            ssize_t head_cut    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
-            ssize_t tail_cut    = dspu::millis_to_samples(nSampleRate, af->fTailCut);
-            rp->nHeadCut        = lsp_limit(head_cut, 0, samples);
-            rp->nTailCut        = lsp_limit(samples - tail_cut, rp->nHeadCut, samples);
-            samples             = rp->nTailCut - rp->nHeadCut;
+            ssize_t head_pos    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
+            ssize_t tail_pos    = src->length() - dspu::millis_to_samples(nSampleRate, af->fTailCut);
+            head_pos            = lsp_limit(head_pos, 0, samples);
+            tail_pos            = lsp_limit(tail_pos, head_pos, samples);
+            head_pos            = to_stretched(head_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
+            tail_pos            = to_stretched(tail_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
+            rp->nHeadCut        = head_pos;
+            rp->nTailCut        = samples - tail_pos;
+            samples             = tail_pos - head_pos;
 
             // Initialize target sample
-            dspu::Sample *out   = new dspu::Sample();
-            out->set_sample_rate(nSampleRate);
-            if (out == NULL)
-                return STATUS_NO_MEM;
-            lsp_trace("Allocated sample %p", out);
-            lsp_finally { destroy_sample(out); };
-
             if (!out->resize(channels, samples, samples))
             {
                 lsp_warn("Error initializing playback sample");
@@ -895,8 +896,6 @@ namespace lsp
 
                 dspu::fade_in(dst, &src[rp->nHeadCut], fade_in, samples);
                 dspu::fade_out(dst, dst, fade_out, samples);
-                if (rp->bReverse)
-                    dsp::reverse1(dst, samples);
             }
             af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
 
@@ -907,27 +906,14 @@ namespace lsp
             return STATUS_OK;
         }
 
-        size_t sampler_kernel::compute_loop_position(const dspu::Sample *s, float time) const
+        size_t sampler_kernel::compute_loop_point(const dspu::Sample *s, size_t position)
         {
+            ssize_t pos         = dspu::millis_to_samples(s->sample_rate(), position);
             const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
-            ssize_t pos             = dspu::millis_to_samples(nSampleRate, time);
-            if (rp == NULL)
-                return pos;
+            if (rp != NULL)
+                pos                 = to_stretched(pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
 
-            if (rp->bReverse)
-                pos                 = rp->nLength - pos;
-            if (rp->nStretchDelta == 0)
-                return pos;
-
-            if (pos <= rp->nStretchStart)
-                return pos;
-            else if (pos >= rp->nStretchEnd)
-                return pos + rp->nStretchDelta;
-
-            ssize_t s_length    = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
-            float s_before      = rp->nStretchEnd - rp->nStretchStart;
-            float k             = s_length / s_before;
-            return rp->nStretchStart + (pos - rp->nStretchStart) * k;
+            return lsp_limit(pos - rp->nHeadCut, 0, ssize_t(s->length()));
         }
 
         void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode)
@@ -940,11 +926,9 @@ namespace lsp
                 return;
 
             // Scale the final output gain
-            gain    *= af->fMakeup;
-
             dspu::PlaySettings ps;
-            size_t loop_start = compute_loop_position(s, af->fLoopStart);
-            size_t loop_end   = compute_loop_position(s, af->fLoopEnd);
+            ssize_t loop_start  = compute_loop_point(s, af->fLoopStart);
+            ssize_t loop_end    = compute_loop_point(s, af->fLoopEnd);
             if (loop_end < loop_start)
                 lsp::swap(loop_end, loop_start);
 
@@ -954,10 +938,12 @@ namespace lsp
                 (af->nLoopFadeType == XFADE_LINEAR) ? dspu::SAMPLE_CROSSFADE_LINEAR : dspu::SAMPLE_CROSSFADE_CONST_POWER,
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
             ps.set_delay(delay);
+            ps.set_start((af->bReverse) ? s->length() : 0, af->bReverse);
 
             dspu::Playback *vpb = (mode == PLAY_FILE) ? af->vListen :
                                   (mode == PLAY_INSTRUMENT) ? vListen :
                                   af->vPlayback;
+            gain               *= af->fMakeup;
             if (nChannels == 1)
             {
                 lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(0), int(af->nID), int(0), gain * af->fGains[0], int(delay));
@@ -1371,6 +1357,34 @@ namespace lsp
             output_parameters(samples);
         }
 
+        ssize_t sampler_kernel::to_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta)
+        {
+            if ((s_delta == 0) || (pos <= s_start))
+                return pos;
+
+            ssize_t len_after  = lsp_max(s_end - s_start + s_delta, 0);
+            ssize_t len_before = lsp_max(s_end - s_start, 0);
+            if (pos >= s_end)
+                return pos - len_before + len_after;
+
+            float k = float(len_after) / float(len_before);
+            return s_start + (pos - s_start) * k;
+        }
+
+        ssize_t sampler_kernel::from_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta)
+        {
+            if ((s_delta == 0) || (pos <= s_start))
+                return pos;
+
+            ssize_t len_after  = lsp_max(s_end - s_start + s_delta, 0);
+            ssize_t len_before = lsp_max(s_end - s_start, 0);
+            if (pos >= (s_start + len_after))
+                return pos - len_after + len_before;
+
+            float k = float(len_before) / float(len_after);
+            return s_start + (pos - s_start) * k;
+        }
+
         float sampler_kernel::compute_play_position(const afile_t *f)
         {
             const dspu::Playback *pb = &f->vListen[0];
@@ -1391,29 +1405,8 @@ namespace lsp
             size_t s_srate = s->sample_rate();
             const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
 
-            ssize_t pos     = rp->nHeadCut + lsp_min(size_t(position), s->length());
-            ssize_t s_pos   = pos;
-            if (rp->nStretchDelta != 0)
-            {
-                ssize_t s_length    = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
-                ssize_t s_head      = rp->nStretchStart;
-                ssize_t s_tail      = s_head + s_length;
-
-                if (pos <= s_head)
-                    s_pos               = pos;
-                else if (pos >= s_tail)
-                    s_pos               = rp->nStretchEnd + pos - s_tail;
-                else
-                {
-                    float s_before      = rp->nStretchEnd - rp->nStretchStart;
-                    float k             = s_before / s_length;
-                    s_pos               = s_head + (pos - s_head) * k;
-                }
-            }
-
-            if (rp->bReverse)
-                s_pos               = rp->nLength - s_pos;
-            float time = dspu::samples_to_millis(s_srate, s_pos);
+            ssize_t pos     = from_stretched(rp->nHeadCut + position, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
+            float time = dspu::samples_to_millis(s_srate, pos);
 
 //            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
 

@@ -118,7 +118,6 @@ namespace lsp
 
                 struct render_params_t
                 {
-                    bool                bReverse;
                     size_t              nLength;
                     ssize_t             nHeadCut;
                     ssize_t             nTailCut;
@@ -271,10 +270,12 @@ namespace lsp
                 static void                 destroy_afile(afile_t *af);
                 static void                 destroy_samples(dspu::Sample *gc_list);
                 static void                 destroy_sample(dspu::Sample * &sample);
+                static ssize_t              to_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta);
+                static ssize_t              from_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta);
+                static size_t               compute_loop_point(const dspu::Sample *s, size_t position);
                 static dspu::sample_loop_t  decode_loop_mode(plug::IPort *on, plug::IPort *mode);
                 float                       compute_play_position(const afile_t *f);
                 void                        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;
-                size_t                      compute_loop_position(const dspu::Sample *s, float time) const;
                 void                        perform_gc();
 
             public:
