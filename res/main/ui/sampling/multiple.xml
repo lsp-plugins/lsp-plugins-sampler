@@ -134,8 +134,7 @@
 
 					</hbox>
 
-					<tabs id="sets" height.min="139" width.min="481"
-						hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 3) and (:lo${idx}))) ? 1.0 : :const_bg_darken">
+					<tabs id="sets" height.min="139" width.min="481" hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 3) and (:lo${idx}))) ? 1.0 : :const_bg_darken">
 
 						<!-- main -->
 						<grid rows="3" cols="13" bg.color="bg" hspacing="2">
@@ -241,8 +240,7 @@
 									</cell>
 									<cell rows="3">
 										<vbox bg.color="bg">
-											<button id="so${idx}"
-												ui:inject="Button_stretch" text="labels.sedit.stretch" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+											<button id="so${idx}" ui:inject="Button_stretch" text="labels.sedit.stretch" width.min="107" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="xt${idx}" fill="false" width.min="107" pad.b="8" bg.color="bg_schema" pad.h="6"/>
 											<hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
 											<label vexpand="true" bg.color="bg_schema"/>
@@ -264,7 +262,6 @@
 										<vsep bg.color="bg" bg.bright="1.0" bright="1"/>
 									</cell>
 									<label text="labels.sedit.stretch_chunk" bg.color="bg_schema" padding="6"/>
-
 
 								</ui:with>
 
@@ -289,17 +286,13 @@
 
 						<!-- loop -->
 						<grid rows="3" cols="7" bg.color="bg" hspacing="2">
-							<ui:with bright="(:lo${idx} igt 0) ? 1 : 0.75" bg.bright="(:lo${idx} igt 0) ? 1.0 : :const_bg_darken"
-								scolor="(:lo${idx} igt 0) ? 'loop' : 'kscale_inactive'">
+							<ui:with bright="(:lo${idx} igt 0) ? 1 : 0.75" bg.bright="(:lo${idx} igt 0) ? 1.0 : :const_bg_darken" scolor="(:lo${idx} igt 0) ? 'loop' : 'kscale_inactive'">
 								<ui:with width.min="50">
 									<cell rows="3">
 										<vbox bg.color="bg">
-											<button id="lo${idx}"
-												ui:inject="Button_loop" text="labels.sedit.loop" width.min="118" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
+											<button id="lo${idx}" ui:inject="Button_loop" text="labels.sedit.loop" width.min="118" pad.t="8" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="lm${idx}" fill="false" width.min="118" pad.b="4" bg.color="bg_schema" pad.h="6"/>
 											<combo id="lx${idx}" fill="false" width.min="118" pad.b="8" bg.color="bg_schema" pad.h="6"/>
-											<!-- <hsep bg.color="bg" vreduce="true" pad.v="2" bg.bright="1.0" bright="1"/>
-											<label vexpand="true" bg.color="bg_schema"/> -->
 										</vbox>
 									</cell>
 									<cell rows="3" hreduce="true">
@@ -332,18 +325,14 @@
 				</vbox>
 			</cgroup>
 
-
 			<group text="groups.audio_output" spacing="4" ipadding="0">
 				<grid rows="1" cols="3" hspacing="2" bg.color="bg">
 					<grid rows="1" cols="3" hspacing="2">
 						<!-- note off block -->
-						<grid rows="4" cols="1" spacing="4" bg.color="bg_schema" pad.h="6" pad.t="6" pad.b="7" bright="(:noff igt 0) ? 1 : 0.75" bg.bright="(:noff igt 0) ? 1.0 : :const_bg_darken">
-							<ui:with bright="(:noff igt 0) ? 1 : 0.75" bg.bright="(:noff igt 0) ? 1.0 : :const_bg_darken"
-								scolor="(:noff igt 0) ? 'green' : 'kscale_inactive'">
-<button text="labels.midi.note_off" id="noff" height="18" width="50" ui:inject="Button_green" led="true" pad.t="8"/>
-							<knob id="fout" size="20"/>
+						<grid rows="4" cols="1" spacing="4" bg.color="bg_schema" pad.h="6" pad.t="6" pad.b="7">
+							<button text="labels.midi.note_off" id="noff" height="18" width="50" ui:inject="Button_green" led="true" pad.t="8"/>
+							<knob id="fout" size="20" scolor="green"/>
 							<value id="fout" sline="true"/>
-						</ui:with>
 						</grid>
 						<!-- separator -->
 						<cell>
@@ -391,7 +380,7 @@
 						<label text="labels.signal.pan_right" fill="true" halign="0"/>
 						<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.sedit.listen" fill="true" halign="0" pad.b="6"/>
-						<void />
+						<void/>
 					</ui:with>
 
 					<ui:for id="i" first="0" last="7">
