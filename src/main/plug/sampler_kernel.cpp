@@ -648,10 +648,6 @@ namespace lsp
                 commit_value(loop_update, af->fLoopEnd, af->pLoopEnd);
                 commit_value(loop_update, af->fLoopFade, af->pLoopFade);
                 commit_value(loop_update, af->nLoopFadeType, af->pLoopFadeType);
-                if (loop_update > 0)
-                {
-                    // TODO: modify current loop if sample is active
-                }
             }
 
             // Get humanisation parameters
@@ -870,7 +866,7 @@ namespace lsp
 
             // Perform the head and tail cut operations
             ssize_t head_pos    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
-            ssize_t tail_pos    = src->length() - dspu::millis_to_samples(nSampleRate, af->fTailCut);
+            ssize_t tail_pos    = samples - dspu::millis_to_samples(nSampleRate, af->fTailCut);
             head_pos            = lsp_limit(head_pos, 0, samples);
             tail_pos            = lsp_limit(tail_pos, head_pos, samples);
             head_pos            = to_stretched(head_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
@@ -1406,7 +1402,7 @@ namespace lsp
             const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
 
             ssize_t pos     = from_stretched(rp->nHeadCut + position, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
-            float time = dspu::samples_to_millis(s_srate, pos);
+            float time      = dspu::samples_to_millis(s_srate, pos);
 
 //            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
 
