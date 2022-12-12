@@ -118,7 +118,7 @@ namespace lsp
 
                 struct render_params_t
                 {
-                    size_t              nLength;
+                    ssize_t             nLength;
                     ssize_t             nHeadCut;
                     ssize_t             nTailCut;
                     ssize_t             nStretchDelta;

@@ -860,19 +860,24 @@ namespace lsp
                 float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
 
                 // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
-                temp.stretch(s_length, chunk_size, fade_type, crossfade, rp->nStretchStart, rp->nStretchEnd);
+                res = temp.stretch(s_length, chunk_size, fade_type, crossfade, rp->nStretchStart, rp->nStretchEnd);
+                if (res != STATUS_OK)
+                {
+                    lsp_trace("Failed to stretch sample: %d", int(res));
+                    rp->nStretchDelta       = 0;
+                }
                 samples                 = temp.length();
             }
 
             // Perform the head and tail cut operations
             ssize_t head_pos    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
-            ssize_t tail_pos    = samples - dspu::millis_to_samples(nSampleRate, af->fTailCut);
-            head_pos            = lsp_limit(head_pos, 0, samples);
-            tail_pos            = lsp_limit(tail_pos, head_pos, samples);
+            ssize_t tail_pos    = rp->nLength - dspu::millis_to_samples(nSampleRate, af->fTailCut);
+            head_pos            = lsp_limit(head_pos, 0, rp->nLength);
+            tail_pos            = lsp_limit(tail_pos, head_pos, rp->nLength);
             head_pos            = to_stretched(head_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
             tail_pos            = to_stretched(tail_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
-            rp->nHeadCut        = head_pos;
-            rp->nTailCut        = samples - tail_pos;
+            rp->nHeadCut        = lsp_limit(head_pos, 0, samples);
+            rp->nTailCut        = lsp_limit(samples - tail_pos, 0, samples);
             samples             = tail_pos - head_pos;
 
             // Initialize target sample
