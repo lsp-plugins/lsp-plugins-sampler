@@ -247,6 +247,7 @@ namespace lsp
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
                 void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode);
+                void        cancel_sample(afile_t *af, size_t delay);
                 void        start_listen_file(afile_t *af, float gain);
                 void        stop_listen_file(afile_t *af, bool force);
                 void        start_listen_instrument(float velocity, float gain);

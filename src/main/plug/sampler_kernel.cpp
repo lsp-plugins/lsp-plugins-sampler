@@ -618,6 +618,7 @@ namespace lsp
                 }
 
                 // Update sample parameters
+                size_t upd_req = af->nUpdateReq;
                 commit_value(af->nUpdateReq, af->fPitch, af->pPitch);
                 commit_value(af->nUpdateReq, af->bStretchOn, af->pStretchOn);
                 commit_value(af->nUpdateReq, af->fStretch, af->pStretch);
@@ -648,6 +649,9 @@ namespace lsp
                 commit_value(loop_update, af->fLoopEnd, af->pLoopEnd);
                 commit_value(loop_update, af->fLoopFade, af->pLoopFade);
                 commit_value(loop_update, af->nLoopFadeType, af->pLoopFadeType);
+
+                if ((loop_update > 0) || (upd_req != af->nUpdateReq))
+                    cancel_sample(af, 0);
             }
 
             // Get humanisation parameters
@@ -917,6 +921,24 @@ namespace lsp
             return lsp_limit(pos - rp->nHeadCut, 0, ssize_t(s->length()));
         }
 
+        void sampler_kernel::cancel_sample(afile_t *af, size_t delay)
+        {
+            size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
+
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                dspu::SamplePlayer *p = &vChannels[i];
+                for (size_t j=0; j<nChannels; ++j)
+                    p->cancel_all(af->nID, j, fadeout, delay);
+            }
+
+            for (size_t i=0; i<4; ++i)
+            {
+                af->vListen[i].clear();
+                af->vPlayback[i].clear();
+            }
+        }
+
         void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
@@ -1090,12 +1112,8 @@ namespace lsp
             lsp_trace("timestamp=%d", int(timestamp));
 
             // Cancel active playback
-            size_t fadeout  = dspu::millis_to_samples(nSampleRate, fFadeout);
-            for (size_t j=0; j<nChannels; ++j)
-            {
-                for (size_t i=0; i<nFiles; ++i)
-                    vChannels[j].cancel_all(vFiles[i].nID, j, fadeout, timestamp);
-            }
+            for (size_t i=0; i<nFiles; ++i)
+                cancel_sample(&vFiles[i], timestamp);
         }
 
         void sampler_kernel::process_file_load_requests()
@@ -1182,6 +1200,9 @@ namespace lsp
                 }
                 else if (af->pRenderer->completed())
                 {
+                    // Canel all current playbacks for the audio file
+                    cancel_sample(af, 0);
+
                     // Commit changes if there is no more pending tasks
                     if (af->nUpdateReq == af->nUpdateResp)
                     {
