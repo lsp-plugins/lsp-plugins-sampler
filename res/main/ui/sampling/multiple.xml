@@ -109,6 +109,7 @@
 						sample.full="true"
 						width.min="320"
 						height.min="160"
+						load.preview="true"
 						clipboard.pitch="pi${idx}"
 						clipboard.stretch_on="so${idx}"
 						clipboard.stretch="st${idx}"
