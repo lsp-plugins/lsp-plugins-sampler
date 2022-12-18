@@ -460,9 +460,7 @@ namespace lsp
             while (gc_list != NULL)
             {
                 dspu::Sample *next = gc_list->gc_next();
-                gc_list->destroy();
-                delete gc_list;
-                lsp_trace("Destroyed sample %p", gc_list);
+                destroy_sample(gc_list);
                 gc_list = next;
             }
         }
