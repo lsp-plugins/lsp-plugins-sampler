@@ -19,16 +19,18 @@
  * along with lsp-plugins-sampler. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <private/plugins/sampler.h>
-#include <private/ui/sampler.h>
+#include <lsp-plug.in/fmt/lspc/lspc.h>
+#include <lsp-plug.in/fmt/lspc/util.h>
+#include <lsp-plug.in/io/Dir.h>
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/plug-fw/meta/func.h>
-#include <lsp-plug.in/io/Dir.h>
 #include <lsp-plug.in/runtime/system.h>
+#include <private/plugins/sampler.h>
+#include <private/ui/sampler.h>
 
 namespace lsp
 {
-    namespace plugins
+    namespace plugui
     {
         //---------------------------------------------------------------------
         // Plugin UI factory
@@ -77,12 +79,148 @@ namespace lsp
         };
 
         //---------------------------------------------------------------------
+        sampler_ui::BundleSerializer::BundleSerializer(sampler_ui *ui, lspc::File *fd)
+        {
+            pUI = ui;
+            pFD = fd;
+        }
+
+        sampler_ui::BundleSerializer::~BundleSerializer()
+        {
+            lltl::parray<char> v;
+            vEntries.values(&v);
+            for (size_t i=0, n=v.size(); i<n; ++i)
+            {
+                char *str = v.uget(i);
+                if (str != NULL)
+                    free(str);
+            }
+
+            vFiles.flush();
+            vEntries.flush();
+        }
+
+        status_t sampler_ui::BundleSerializer::write_string(const LSPString *key, const LSPString *v, size_t flags)
+        {
+            return write_string(key->get_utf8(), v->get_utf8(), flags);
+        }
+
+        status_t sampler_ui::BundleSerializer::write_string(const LSPString *key, const char *v, size_t flags)
+        {
+            return write_string(key->get_utf8(), v, flags);
+        }
+
+        status_t sampler_ui::BundleSerializer::write_string(const char *key, const LSPString *v, size_t flags)
+        {
+            return write_string(key, v->get_utf8(), flags);
+        }
+
+        const char *sampler_ui::BundleSerializer::make_bundle_path(const char *realpath)
+        {
+            // Try to fetch item
+            const char *p = vFiles.get(realpath);
+            if (p != NULL)
+                return p;
+
+            // Item not found, allocate new entry
+            io::Path path, last;
+            if (path.set(realpath) != STATUS_OK)
+                return NULL;
+            if (path.get_last(&last) != STATUS_OK)
+                return NULL;
+
+            // Generate unique path in the bundle
+            LSPString bundle_path;
+            for (int i=0; ; ++i)
+            {
+                if (bundle_path.fmt_utf8("%d/%s", i, last.as_utf8()) <= 0)
+                    return NULL;
+                if (!vEntries.contains(bundle_path.get_utf8()))
+                    break;
+            }
+
+            // Now we can store the path in the collection
+            char *result = bundle_path.clone_utf8();
+            if (result == NULL)
+                return NULL;
+            if (!vEntries.put(result))
+            {
+                free(result);
+                return NULL;
+            }
+            // Value `result` is stored in vEntries, we don't need to free() it anymore
+            if (!vFiles.create(realpath, result))
+                return NULL;
+            return result;
+        }
+
+        status_t sampler_ui::BundleSerializer::write_string(const char *key, const char *v, size_t flags)
+        {
+            status_t res;
+
+            // We need to translate paths only
+            ui::IPort *port = pUI->wrapper()->port(key);
+            if ((port == NULL) || (!meta::is_path_port(port->metadata())))
+                return Serializer::write_string(key, v, flags);
+
+            // Obtain the source path
+            const char *source_path = port->buffer<char>();
+            if (strlen(source_path) <= 0)
+                return Serializer::write_string(key, v, flags);
+
+            // Translate path in context of drumkit (exclude duplicate entry names)
+            const char *bundle_path = make_bundle_path(source_path);
+            if (bundle_path == NULL)
+                return STATUS_NO_MEM;
+
+            // Save audio to LSPC
+            lspc::chunk_id_t audio_chunk;
+            if ((res = lspc::write_audio(&audio_chunk, pFD, source_path)) == STATUS_OK)
+            {
+                // Save path
+                if ((res = lspc::write_path(NULL, pFD, bundle_path, 0, audio_chunk)) != STATUS_OK)
+                    return res;
+                v   = bundle_path;
+            }
+            else
+                v   = "";
+
+            return Serializer::write_string(key, v, flags);
+        }
+
+        //---------------------------------------------------------------------
+        sampler_ui::BundleDeserializer::BundleDeserializer(sampler_ui *ui, const io::Path *path)
+        {
+            pUI         = ui;
+            pPath       = path;
+        }
+
+        status_t sampler_ui::BundleDeserializer::commit_param(const LSPString *key, const LSPString *value, size_t flags)
+        {
+            // We need to translate paths only
+            ui::IPort *port = pUI->wrapper()->port(key);
+            if ((port == NULL) || (!meta::is_path_port(port->metadata())) || (value->is_empty()))
+                return PullParser::commit_param(key, value, flags);
+
+            // Make path of the file based on the path of the whole bundle
+            io::Path tmp;
+            status_t res = tmp.set(pPath, value);
+            if (res != STATUS_OK)
+                return res;
+
+            return PullParser::commit_param(key, tmp.as_string(), flags);
+        }
+
+        //---------------------------------------------------------------------
         sampler_ui::sampler_ui(const meta::plugin_t *meta):
             ui::Module(meta)
         {
             pHydrogenPath       = NULL;
+            pBundlePath         = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
+            wBundleDialog       = NULL;
+            wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
         }
 
@@ -90,6 +228,8 @@ namespace lsp
         {
             // Will be automatically destroyed from list of widgets
             wHydrogenImport     = NULL;
+            wBundleDialog       = NULL;
+            wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
 
             // Destroy all information about drumkits
@@ -107,6 +247,11 @@ namespace lsp
             vInstNames.flush();
         }
 
+        void sampler_ui::destroy()
+        {
+            ui::Module::destroy();
+        }
+
         status_t sampler_ui::post_init()
         {
             status_t res = ui::Module::post_init();
@@ -115,14 +260,16 @@ namespace lsp
 
             lookup_hydrogen_files();
 
-            // Find hydrogen port
+            // Find different paths
             pHydrogenPath   =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_HYDROGEN_PATH_ID);
+            pBundlePath     =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_LSPC_BUNDLE_PATH_ID);
 
             // Add subwidgets
             tk::Registry *widgets   = pWrapper->controller()->widgets();
             tk::Menu *menu          = tk::widget_cast<tk::Menu>(widgets->find(WUID_IMPORT_MENU));
             if (menu != NULL)
             {
+                // Hydrogen drumkit import
                 tk::MenuItem *child = new tk::MenuItem(pDisplay);
                 widgets->add(child);
                 child->init();
@@ -130,6 +277,15 @@ namespace lsp
                 child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_hydrogen_file, this);
                 menu->add(child);
 
+                // Bundle import
+                child = new tk::MenuItem(pDisplay);
+                widgets->add(child);
+                child->init();
+                child->text()->set("actions.sampler.import_bundle");
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_sampler_bundle, this);
+                menu->add(child);
+
+                // List of preinstalled drumkits for import
                 if (vDrumkits.size() > 0)
                 {
                     // Create menu item
@@ -148,6 +304,18 @@ namespace lsp
                     // Add hydrogen files to menu
                     add_hydrogen_files_to_menu(menu);
                 }
+            }
+
+            // Add more menu items
+            menu                    = tk::widget_cast<tk::Menu>(widgets->find(WUID_EXPORT_MENU));
+            if (menu != NULL)
+            {
+                tk::MenuItem *child = new tk::MenuItem(pDisplay);
+                widgets->add(child);
+                child->init();
+                child->text()->set("actions.sampler.export_bundle");
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_start_export_sampler_bundle, this);
+                menu->add(child);
             }
 
             // Find port names
@@ -468,18 +636,18 @@ namespace lsp
                     {
                         ffi->pattern()->set("*.xml");
                         ffi->title()->set("files.hydrogen.xml");
-                        ffi->extensions()->set("");
+                        ffi->extensions()->set_raw("");
                     }
 
                     if ((ffi = f->add()) != NULL)
                     {
                         ffi->pattern()->set("*");
                         ffi->title()->set("files.all");
-                        ffi->extensions()->set("");
+                        ffi->extensions()->set_raw("");
                     }
                 }
 
-                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_hydrogen_file, ptr);
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_hydrogen_file, _this);
                 dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_hydrogen_path, _this);
                 dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_hydrogen_path, _this);
             }
@@ -637,6 +805,10 @@ namespace lsp
             if ((res = base.remove_last()) != STATUS_OK)
                 return res;
 
+            // Reset settings to default
+            if ((res = pWrapper->reset_settings()) != STATUS_OK)
+                return res;
+
             for (size_t i=0, id=0; i < meta::sampler_metadata::INSTRUMENTS_MAX; ++i)
             {
                 hydrogen::instrument_t *inst = dk.instruments.get(i);
@@ -711,32 +883,12 @@ namespace lsp
                 set_float_value((100.0f * (8 - jd)) / meta::sampler_metadata::SAMPLE_FILES, "vl_%d_%d", id, jd);    // velocity
             }
 
-            set_float_value(1.0f, "on_%d_%d", id, jd);                      // enabled
-            set_float_value(meta::sampler_metadata::SAMPLE_PITCH_DFL, "pi_%d_%d", id, jd);      // sample pitch
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "hc_%d_%d", id, jd);     // head cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "tc_%d_%d", id, jd);     // tail cut
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fi_%d_%d", id, jd);     // fade in
-            set_float_value(meta::sampler_metadata::SAMPLE_LENGTH_DFL, "fo_%d_%d", id, jd);     // fade out
-            set_float_value(meta::sampler_metadata::PREDELAY_DFL, "pd_%d_%d", id, jd);          // pre-delay
-            set_float_value(-100.0f, "pl_%d_%d", id, jd);                   // pan left
-            set_float_value(+100.0f, "pr_%d_%d", id, jd);                   // pan right
-
             return STATUS_OK;
         }
 
         status_t sampler_ui::add_instrument(int id, const hydrogen::instrument_t *inst)
         {
             // Reset to defaults
-            set_float_value(meta::sampler_metadata::CHANNEL_DFL, "chan_%d", id);    // channel
-            set_float_value(meta::sampler_metadata::NOTE_DFL, "note_%d", id);       // note
-            set_float_value(meta::sampler_metadata::OCTAVE_DFL, "oct_%d", id);      // octave
-            set_float_value(0.0f, "mgrp_%d", id);                                   // mute group
-            set_float_value(0.0f, "mtg_%d", id);                                    // mute on stop
-            set_float_value(meta::sampler_metadata::DYNA_DFL, "dyna_%d", id);       // dynamics
-            set_float_value(meta::sampler_metadata::DRIFT_DFL, "drft_%d", id);      // time drifting
-            set_float_value(1.0f, "ion_%d", id);                                    // instrument on
-            set_float_value(0.0f, "ssel_%d", id);                                   // sample selector
-
             if (inst != NULL)
             {
                 set_float_value(inst->volume, "imix_%d", id);                           // instrument mix gain
@@ -801,8 +953,315 @@ namespace lsp
                 }
             }
         }
-    }
-}
+
+        tk::FileDialog *sampler_ui::get_bundle_dialog(bool import)
+        {
+            tk::FileDialog *dlg = wBundleDialog;
+            if (dlg == NULL)
+            {
+                dlg             = new tk::FileDialog(pDisplay);
+                wBundleDialog   = dlg;
+                pWrapper->controller()->widgets()->add(dlg);
+
+                dlg->init();
+
+                tk::FileFilters *f = dlg->filter();
+                {
+                    tk::FileMask *ffi;
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*.lspc");
+                        ffi->title()->set("files.sampler.lspc");
+                        ffi->extensions()->set_raw(".lspc");
+                    }
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*");
+                        ffi->title()->set("files.all");
+                        ffi->extensions()->set_raw("");
+                    }
+                }
+
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_process_sampler_bundle, this);
+                dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_sampler_bundle_path, this);
+                dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_sampler_bundle_path, this);
+            }
+
+            if (import)
+            {
+                dlg->mode()->set(tk::FDM_OPEN_FILE);
+                dlg->title()->set("titles.sampler.import_bundle");
+                dlg->action_text()->set("actions.import");
+            }
+            else
+            {
+                dlg->mode()->set(tk::FDM_SAVE_FILE);
+                dlg->title()->set("titles.sampler.export_bundle");
+                dlg->action_text()->set("actions.export");
+            }
+
+            return wBundleDialog;
+        }
+
+        status_t sampler_ui::slot_start_export_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            tk::FileDialog *dlg = _this->get_bundle_dialog(false);
+            if (dlg != NULL)
+                dlg->show(_this->pWrapper->window());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_start_import_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            tk::FileDialog *dlg = _this->get_bundle_dialog(true);
+            if (dlg != NULL)
+                dlg->show(_this->pWrapper->window());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_fetch_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pBundlePath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            dlg->path()->set_raw(_this->pBundlePath->buffer<char>());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_commit_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pBundlePath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            LSPString path;
+            if ((dlg->path()->format(&path) == STATUS_OK))
+            {
+                const char *upath = path.get_utf8();
+                _this->pBundlePath->write(upath, ::strlen(upath));
+                _this->pBundlePath->notify_all();
+            }
+
+            return STATUS_OK;
+        }
+
+        void sampler_ui::show_message(const char *title, const char *message, const expr::Parameters *params)
+        {
+            tk::MessageBox *dlg = wMessageBox;
+            if (dlg == NULL)
+            {
+                dlg             = new tk::MessageBox(pDisplay);
+                wMessageBox     = dlg;
+                pWrapper->controller()->widgets()->add(dlg);
+
+                dlg->init();
+                dlg->add("actions.ok", slot_close_message_box, dlg);
+            }
+
+            dlg->title()->set(title);
+            dlg->message()->set(message, params);
+            dlg->show(pWrapper->window());
+        }
+
+        status_t sampler_ui::slot_close_message_box(tk::Widget *sender, void *ptr, void *data)
+        {
+            tk::MessageBox *dlg = tk::widget_ptrcast<tk::MessageBox>(data);
+            if (dlg != NULL)
+                dlg->hide();
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::allocate_temp_file(io::Path *dst, const io::Path *src)
+        {
+            const char *spath = src->as_utf8();
+            for (int i=0; ; ++i)
+            {
+                if (dst->fmt("%s.%d", spath) <= 0)
+                    return STATUS_NO_MEM;
+                if (!dst->exists())
+                    break;
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_call_process_sampler_bundle(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if (_this == NULL)
+                return STATUS_BAD_STATE;
+
+            LSPString path;
+            status_t res = _this->wBundleDialog->selected_file()->format(&path);
+            if (res == STATUS_OK)
+            {
+                if (_this->wBundleDialog->mode()->get() == tk::FDM_SAVE_FILE)
+                {
+                    // Export bundle data
+                    io::Path dst, temp;
+                    res = dst.set(&path);
+                    if (res == STATUS_OK)
+                        res = allocate_temp_file(&temp, &dst);
+                    if (res == STATUS_OK)
+                        res = _this->export_sampler_bundle(&temp);
+                    if (res == STATUS_OK)
+                    {
+                        dst.remove();
+                        res = temp.rename(&dst);
+                    }
+                }
+                else
+                {
+                    // Import bundle data
+                    io::Path src;
+                    res = src.set(&path);
+                    if (res == STATUS_OK)
+                        res = _this->import_sampler_bundle(&src);
+                }
+
+                // Analyze result and output message if there were errors
+                if (res != STATUS_OK)
+                {
+                    expr::Parameters params;
+                    tk::prop::String str;
+                    LSPString status_key;
+                    status_key.append_ascii("statuses.std.");
+                    status_key.append_ascii(lsp::get_status_lc_key(res));
+                    str.bind(_this->wBundleDialog->style(), _this->pDisplay->dictionary());
+                    str.set(&status_key);
+
+                    params.set_string("reason", str.formatted());
+                    _this->show_message("titles.sampler.warning", "messages.sampler.failed_to_process_bundle", &params);
+                }
+            }
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::export_sampler_bundle(const io::Path *path)
+        {
+            status_t res;
+
+            // Obtain the parent directory
+            io::Path basedir;
+            io::Path *base = (path->get_parent(&basedir) == STATUS_OK) ? &basedir : NULL;
+
+            // Create LSPC file
+            lspc::File fd;
+            if ((res = fd.create(path)) != STATUS_OK)
+                return res;
+
+            // Write configuration chunk to the file
+            io::IOutStream *os = NULL;
+            if ((res = lspc::write_config(NULL, &fd, &os)) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Create bundle serializer
+            BundleSerializer s(this, &fd);
+            if ((res = s.wrap(os, WRAP_CLOSE | WRAP_DELETE, "UTF-8")) != STATUS_OK)
+            {
+                os->close();
+                delete os;
+                fd.close();
+                return res;
+            }
+
+            // Call wrapper to serialize
+            if ((res = pWrapper->export_settings(&s, base)) != STATUS_OK)
+            {
+                s.close();
+                fd.close();
+                return res;
+            }
+
+            // Close the bundle serializer
+            if ((res = s.close()) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Close the LSPC file and return
+            return fd.close();
+        }
+
+        status_t sampler_ui::import_sampler_bundle(const io::Path *path)
+        {
+            status_t res;
+
+            // Obtain the parent directory
+            io::Path basedir;
+            io::Path *base = (path->get_parent(&basedir) == STATUS_OK) ? &basedir : NULL;
+
+            // Open LSPC file
+            lspc::File fd;
+            if ((res = fd.open(path)) != STATUS_OK)
+                return res;
+
+            // Find LSPC chunk
+            lspc::chunk_id_t *chunk_ids = NULL;
+            ssize_t nchunks     = fd.enumerate_chunks(LSPC_CHUNK_TEXT_CONFIG, &chunk_ids);
+            if (nchunks <= 0)
+            {
+                fd.close();
+                return (nchunks < 0) ? -nchunks : STATUS_NOT_FOUND;
+            }
+            lsp_finally { free(chunk_ids); };
+
+            // Obtain the input stream from the LSPC
+            io::IInStream *is = NULL;
+            if ((res = lspc::read_config(chunk_ids[0], &fd, &is)) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Create deserializer
+            BundleDeserializer d(this, path);
+            if ((res = d.wrap(is, WRAP_CLOSE | WRAP_DELETE, "UTF-8")) != STATUS_OK)
+            {
+                is->close();
+                delete is;
+                fd.close();
+                return res;
+            }
+
+            // Call wrapper to deserialize
+            if ((res = pWrapper->import_settings(&d, ui::IMPORT_FLAG_PRESET, base)) != STATUS_OK)
+            {
+                d.close();
+                fd.close();
+                return res;
+            }
+
+            // Close the bundle serializer
+            if ((res = d.close()) != STATUS_OK)
+            {
+                fd.close();
+                return res;
+            }
+
+            // Close the LSPC file and return
+            return fd.close();
+        }
+
+    } /* namespace plugui */
+} /* namespace lsp */
 
 
 

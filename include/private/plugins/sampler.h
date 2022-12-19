@@ -109,6 +109,7 @@ namespace lsp
                 float              *pBuffer;            // Buffer data used by vChannels
                 float               fDry;               // Dry amount
                 float               fWet;               // Wet amount
+                bool                bMuting;            // Global muting option
 
                 plug::IPort        *pMidiIn;            // MIDI input port
                 plug::IPort        *pMidiOut;           // MIDI output port

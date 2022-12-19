@@ -1,5 +1,11 @@
 {
 	"sampler": {
+		"edit": {
+			"loop": "Loop",
+			"main": "Main",
+			"pitch": "Pitch",
+			"stretch": "Stretch"
+		},
 		"inst": {
 			"0": "Instrument 0",
 			"1": "Instrument 1",
@@ -51,6 +57,20 @@
 			"9": "Instrument 9"
 		},
 		"instruments": "Instruments",
+		"loop": {
+			"ping_pong": {
+				"direct_full": "PP: Full Direct",
+				"direct_half": "PP: Half Direct",
+				"direct_smart": "PP: Smart Direct",
+				"reverse_full": "PP: Full Reverse",
+				"reverse_half": "PP: Half Reverse",
+				"reverse_smart": "PP: Smart Reverse"
+			},
+			"simple": {
+				"direct": "Simple: Direct",
+				"reverse": "Simple: Reverse"
+			}
+		},
 		"mixer": "Mixer",
 		"mixer_0:11": "Mixer 0-11",
 		"mixer_12:23": "Mixer 12-23",

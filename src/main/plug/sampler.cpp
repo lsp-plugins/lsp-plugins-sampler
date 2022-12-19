@@ -22,10 +22,14 @@
 #include <private/plugins/sampler.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
-#define TRACE_PORT(p) lsp_trace("  port id=%s", (p)->metadata()->id);
-
 namespace lsp
 {
+    static plug::IPort *TRACE_PORT(plug::IPort *p)
+    {
+        lsp_trace("  port id=%s", (p)->metadata()->id);
+        return p;
+    }
+
     namespace plugins
     {
         //---------------------------------------------------------------------
@@ -99,6 +103,7 @@ namespace lsp
             pBuffer         = NULL;
             fDry            = 1.0f;
             fWet            = 1.0f;
+            bMuting         = false;
 
             pMidiIn         = NULL;
             pMidiOut        = NULL;
@@ -201,8 +206,7 @@ namespace lsp
             lsp_trace("Binding audio inputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i].pIn        = ports[port_id++];
+                vChannels[i].pIn        = TRACE_PORT(ports[port_id++]);
                 vChannels[i].vIn        = NULL;
             }
 
@@ -210,58 +214,44 @@ namespace lsp
             lsp_trace("Binding audio outputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i].pOut       = ports[port_id++];
+                vChannels[i].pOut       = TRACE_PORT(ports[port_id++]);
                 vChannels[i].vOut       = NULL;
             }
 
             // Bind MIDI ports
             lsp_trace("Binding MIDI ports...");
-            TRACE_PORT(ports[port_id]);
-            pMidiIn     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMidiOut    = ports[port_id++];
+            pMidiIn     = TRACE_PORT(ports[port_id++]);
+            pMidiOut    = TRACE_PORT(ports[port_id++]);
 
             // Bind ports
             lsp_trace("Binding Global ports...");
-            TRACE_PORT(ports[port_id]);
-            pBypass     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMute       = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMuting     = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pNoteOff    = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pFadeout    = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pDry        = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pWet        = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pGain       = ports[port_id++];
+            pBypass     = TRACE_PORT(ports[port_id++]);
+            pMute       = TRACE_PORT(ports[port_id++]);
+            pMuting     = TRACE_PORT(ports[port_id++]);
+            pNoteOff    = TRACE_PORT(ports[port_id++]);
+            pFadeout    = TRACE_PORT(ports[port_id++]);
+            pDry        = TRACE_PORT(ports[port_id++]);
+            pWet        = TRACE_PORT(ports[port_id++]);
+            pGain       = TRACE_PORT(ports[port_id++]);
+            TRACE_PORT(ports[port_id++]); // Skip sample editor tab selector
             if (bDryPorts)
             {
-                TRACE_PORT(ports[port_id]);
-                pDOGain     = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                pDOPan      = ports[port_id++];
+                pDOGain     = TRACE_PORT(ports[port_id++]);
+                pDOPan      = TRACE_PORT(ports[port_id++]);
             }
 
             // If number of samplers <= 2 - skip area selector
             if (nSamplers > 2)
             {
                 lsp_trace("Skipping mixer selector port...");
-                TRACE_PORT(ports[port_id]);
-                port_id++;
+                TRACE_PORT(ports[port_id++]);
             }
 
             // If number of samplers > 0 - skip instrument selector
             if (nSamplers > 1)
             {
                 lsp_trace("Skipping instrument selector...");
-                TRACE_PORT(ports[port_id]);
-                port_id     ++;
+                TRACE_PORT(ports[port_id++]);
             }
 
             // Now process each instrument
@@ -271,23 +261,16 @@ namespace lsp
 
                 // Bind trigger
                 lsp_trace("Binding trigger #%d ports...", int(i));
-                TRACE_PORT(ports[port_id]);
-                s->pChannel     = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                s->pNote        = ports[port_id++];
-                TRACE_PORT(ports[port_id]);
-                s->pOctave      = ports[port_id++];
+                s->pChannel     = TRACE_PORT(ports[port_id++]);
+                s->pNote        = TRACE_PORT(ports[port_id++]);
+                s->pOctave      = TRACE_PORT(ports[port_id++]);
                 if (nSamplers > 1)
                 {
-                    TRACE_PORT(ports[port_id]);
-                    s->pMuteGroup   = ports[port_id++];
-                    TRACE_PORT(ports[port_id]);
-                    s->pMuting      = ports[port_id++];
-                    TRACE_PORT(ports[port_id]);
-                    s->pNoteOff     = ports[port_id++];
+                    s->pMuteGroup   = TRACE_PORT(ports[port_id++]);
+                    s->pMuting      = TRACE_PORT(ports[port_id++]);
+                    s->pNoteOff     = TRACE_PORT(ports[port_id++]);
                 }
-                TRACE_PORT(ports[port_id]);
-                s->pMidiNote    = ports[port_id++];
+                s->pMidiNote    = TRACE_PORT(ports[port_id++]);
 
                 // Bind sampler
                 lsp_trace("Binding sampler #%d ports...", int(i));
@@ -302,40 +285,31 @@ namespace lsp
 
                     // Bind Bypass port
                     lsp_trace("Binding bypass port...");
-                    TRACE_PORT(ports[port_id]);
-                    s->pBypass      = ports[port_id++];
+                    s->pBypass      = TRACE_PORT(ports[port_id++]);
 
                     // Bind mixing gain port
                     lsp_trace("Binding gain port...");
-                    TRACE_PORT(ports[port_id]);
-                    s->pGain    = ports[port_id++];
+                    s->pGain        = TRACE_PORT(ports[port_id++]);
 
                     // Bind panorama port
                     if (nChannels > 1)
                     {
                         lsp_trace("Binding panorama ports...");
                         for (size_t j=0; j<nChannels; ++j)
-                        {
-                            TRACE_PORT(ports[port_id]);
-                            s->vChannels[j].pPan    = ports[port_id++];
-                        }
+                            s->vChannels[j].pPan    = TRACE_PORT(ports[port_id++]);
                     }
 
                     // Bind activity port
-                    s->sSampler.bind_activity(ports[port_id++]);
+                    s->sSampler.bind_activity(TRACE_PORT(ports[port_id++]));
 
                     // Bind dry port if present
                     if (bDryPorts)
                     {
                         lsp_trace("Binding dry ports...");
-                        TRACE_PORT(ports[port_id]);
-                        s->pDryBypass       = ports[port_id++];
+                        s->pDryBypass       = TRACE_PORT(ports[port_id++]);
 
                         for (size_t j=0; j<nChannels; ++j)
-                        {
-                            TRACE_PORT(ports[port_id]);
-                            s->vChannels[j].pDry    = ports[port_id++];
-                        }
+                            s->vChannels[j].pDry    = TRACE_PORT(ports[port_id++]);
                     }
                 }
             }
@@ -417,7 +391,7 @@ namespace lsp
             }
 
             // Update settings on all samplers and triggers
-            bool muting     = pMuting->value() >= 0.5f;
+            bMuting         = pMuting->value() >= 0.5f;
             bool note_off   = pNoteOff->value() >= 0.5f;
             nDOMode         = 0;
             if ((pDOGain != NULL) && (pDOGain->value() >= 0.5f))
@@ -425,7 +399,7 @@ namespace lsp
             if ((pDOPan != NULL) && (pDOPan->value() >= 0.5f))
                 nDOMode        |= DM_APPLY_PAN;
 
-            lsp_trace("muting=%s", (muting) ? "true" : "false");
+            lsp_trace("muting=%s", (bMuting) ? "true" : "false");
             lsp_trace("note_off=%s", (note_off) ? "true" : "false");
             lsp_trace("do_mode=0x%x", int(nDOMode));
 
@@ -437,8 +411,7 @@ namespace lsp
                 s->nNote        = (s->pOctave->value() * 12) + s->pNote->value();
                 s->nChannel     = s->pChannel->value();
                 s->nMuteGroup   = (s->pMuteGroup != NULL) ? s->pMuteGroup->value() : i;
-                s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : false;
-                s->bMuting      = s->bMuting || muting;
+                s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : bMuting;
                 s->bNoteOff     = (s->pNoteOff != NULL) ? s->pNoteOff->value() >= 0.5f : false;
                 s->bNoteOff     = s->bNoteOff || note_off;
 
@@ -521,7 +494,7 @@ namespace lsp
             {
                 // Cancel playback for all samplers
                 for (size_t i=0; i<nSamplers; ++i)
-                    vSamplers[i].sSampler.trigger_stop(0);
+                    vSamplers[i].sSampler.trigger_cancel(0);
                 sMute.commit(true);
             }
 
@@ -586,7 +559,7 @@ namespace lsp
                             if (triggered)
                                 s->sSampler.trigger_on(me->timestamp, gain);
                             else if (muted)
-                                s->sSampler.trigger_off(me->timestamp, gain);
+                                s->sSampler.trigger_cancel(me->timestamp);
                         }
                         break;
                     }
@@ -594,33 +567,38 @@ namespace lsp
                     case midi::MIDI_MSG_NOTE_OFF:
                     {
                         lsp_trace("NOTE_OFF: channel=%d, pitch=%d, velocity=%d",
-                                int(me->channel), int(me->note.pitch), int(me->note.velocity));
-                        float gain = me->note.velocity / 127.0f;
+                            int(me->channel), int(me->note.pitch), int(me->note.velocity));
 
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((!s->bNoteOff) || (s->nNote != me->note.pitch) || (s->nChannel != me->channel))
+                            if ((s->nNote != me->note.pitch) || (s->nChannel != me->channel))
                                 continue;
 
-                            s->sSampler.trigger_off(me->timestamp, gain);
+                            if (s->bMuting)
+                                s->sSampler.trigger_cancel(me->timestamp);
+                            else
+                                s->sSampler.trigger_off(me->timestamp, s->bNoteOff);
                         }
                         break;
                     }
 
                     case midi::MIDI_MSG_NOTE_CONTROLLER:
                         lsp_trace("NOTE_CONTROLLER: channel=%d, control=%02x, value=%d",
-                                int(me->channel), int(me->ctl.control), int(me->ctl.value));
+                            int(me->channel), int(me->ctl.control), int(me->ctl.value));
                         if (me->ctl.control != midi::MIDI_CTL_ALL_NOTES_OFF)
                             break;
 
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((!s->bMuting) || (me->channel != s->nChannel))
+                            if (me->channel != s->nChannel)
+                                continue;
+                            bool muting = s->bMuting || bMuting;
+                            if (!muting)
                                 continue;
 
-                            s->sSampler.trigger_stop(me->timestamp);
+                            s->sSampler.trigger_cancel(me->timestamp);
                         }
                         break;
 
@@ -838,6 +816,7 @@ namespace lsp
             v->write("pBuffer", pBuffer);
             v->write("fDry", fDry);
             v->write("fWet", fWet);
+            v->write("bMuting", bMuting);
 
             v->write("pMidiIn", pMidiIn);
             v->write("pMidiOut", pMidiOut);
