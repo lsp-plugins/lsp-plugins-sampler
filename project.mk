@@ -24,6 +24,7 @@ ARTIFACT_NAME               = lsp-plugins-sampler
 ARTIFACT_TYPE               = plug
 ARTIFACT_DESC               = LSP Sampler Plugin Series
 ARTIFACT_HEADERS            = lsp-plug.in
+ARTIFACT_EXPORT_HEADERS     = 0
 ARTIFACT_VERSION            = 1.0.9-devel
 
 
