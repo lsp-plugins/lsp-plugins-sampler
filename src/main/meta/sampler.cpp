@@ -464,7 +464,9 @@ namespace lsp
             PORTS_END
         };
 
-        static const int sampler_classes[] = { C_INSTRUMENT, -1 };
+        static const int plugin_classes[]           = { C_INSTRUMENT, -1 };
+        static const int clap_features_mono[]       = { CF_INSTRUMENT, CF_SAMPLER, CF_DRUM_MACHINE, CF_MONO, -1 };
+        static const int clap_features_stereo[]     = { CF_INSTRUMENT, CF_SAMPLER, CF_DRUM_MACHINE, CF_STEREO, -1 };
 
         // Define port lists for each plugin
         static const port_t sampler_mono_ports[] =
@@ -756,8 +758,10 @@ namespace lsp
             "ca4r",
             0,
             NULL,
+            LSP_CLAP_URI("sampler_mono"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_mono,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_mono_ports,
             "sampling/single/mono.xml",
@@ -778,8 +782,10 @@ namespace lsp
             "kjw3",
             0,
             NULL,
+            LSP_CLAP_URI("sampler_stereo"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_stereo_ports,
             "sampling/single/stereo.xml",
@@ -800,8 +806,10 @@ namespace lsp
             "clrs",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x12"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_ports,
             "sampling/multiple.xml",
@@ -822,8 +830,10 @@ namespace lsp
             "visl",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x24"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_ports,
             "sampling/multiple.xml",
@@ -844,8 +854,10 @@ namespace lsp
             "hnj4",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x48"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_ports,
             "sampling/multiple.xml",
@@ -866,8 +878,10 @@ namespace lsp
             "7zkj",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x12_do"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_do_ports,
             "sampling/multiple.xml",
@@ -888,8 +902,10 @@ namespace lsp
             "vimj",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x24_do"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_do_ports,
             "sampling/multiple.xml",
@@ -910,8 +926,10 @@ namespace lsp
             "blyi",
             0,
             NULL,
+            LSP_CLAP_URI("multisampler_x48_do"),
             LSP_PLUGINS_SAMPLER_VERSION,
-            sampler_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_do_ports,
             "sampling/multiple.xml",
@@ -920,7 +938,7 @@ namespace lsp
             &multisampler_bundle
         };
 
-    }
-}
+    } /* namespace meta */
+} /* namespace lsp */
 
 
