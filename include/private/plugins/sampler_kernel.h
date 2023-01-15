@@ -118,12 +118,13 @@ namespace lsp
 
                 struct render_params_t
                 {
-                    ssize_t             nLength;
-                    ssize_t             nHeadCut;
-                    ssize_t             nTailCut;
-                    ssize_t             nStretchDelta;
-                    ssize_t             nStretchStart;
-                    ssize_t             nStretchEnd;
+                    ssize_t             nLength;                                        // Length before head & tail cut
+                    ssize_t             nHeadCut;                                       // The amount of head cut
+                    ssize_t             nTailCut;                                       // The amount of tail cut
+                    ssize_t             nCutLength;                                     // Length after head & tail cut
+                    ssize_t             nStretchDelta;                                  // Stretch delta
+                    ssize_t             nStretchStart;                                  // Stretch start position
+                    ssize_t             nStretchEnd;                                    // Stretch end position
                 };
 
                 struct afile_t
@@ -271,9 +272,7 @@ namespace lsp
                 static void                 destroy_afile(afile_t *af);
                 static void                 destroy_samples(dspu::Sample *gc_list);
                 static void                 destroy_sample(dspu::Sample * &sample);
-                static ssize_t              to_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta);
-                static ssize_t              from_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta);
-                static size_t               compute_loop_point(const dspu::Sample *s, size_t position);
+                static ssize_t              compute_loop_point(const dspu::Sample *s, size_t position);
                 static dspu::sample_loop_t  decode_loop_mode(plug::IPort *on, plug::IPort *mode);
                 float                       compute_play_position(const afile_t *f);
                 void                        dump_afile(dspu::IStateDumper *v, const afile_t *f) const;

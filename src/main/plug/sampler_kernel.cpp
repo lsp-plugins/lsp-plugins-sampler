@@ -770,7 +770,6 @@ namespace lsp
             // Copy data of original sample to temporary sample and perform resampling
             dspu::Sample temp;
             size_t channels         = lsp_min(nChannels, src->channels());
-            ssize_t src_samples     = src->length();
             size_t sample_rate_dst  = nSampleRate * dspu::semitones_to_frequency_shift(-af->fPitch);
             if (temp.copy(src) != STATUS_OK)
             {
@@ -790,41 +789,20 @@ namespace lsp
                     dspu::SAMPLE_CROSSFADE_CONST_POWER;
                 float crossfade         = lsp_limit(af->fCompensateFade * 0.01f, 0.0f, 1.0f);
 
-                if ((res = temp.stretch(src_samples, chunk_size, fade_type, crossfade)) != STATUS_OK)
+                if ((res = temp.stretch(src->length(), chunk_size, fade_type, crossfade)) != STATUS_OK)
                     return res;
             }
 
             // Determine the normalizing factor
-            ssize_t samples         = temp.length();
             float abs_max           = 0.0f;
             for (size_t i=0; i<channels; ++i)
             {
                 // Determine the maximum amplitude
-                float a_max             = dsp::abs_max(temp.channel(i), samples);
+                float a_max             = dsp::abs_max(temp.channel(i), temp.length());
                 abs_max                 = lsp_max(abs_max, a_max);
             }
-            float norming       = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
-
-            // Render the thumbnails
-            for (size_t j=0; j<channels; ++j)
-            {
-                const float *src    = temp.channel(j);
-                float *dst          = af->vThumbs[j];
-                for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
-                {
-                    size_t first    = (k * samples) / meta::sampler_metadata::MESH_SIZE;
-                    size_t last     = ((k + 1) * samples) / meta::sampler_metadata::MESH_SIZE;
-                    if (first < last)
-                        dst[k]          = dsp::abs_max(&src[first], last - first);
-                    else
-                        dst[k]          = fabs(src[first]);
-                }
-
-                // Normalize graph if possible
-                if (norming != 1.0f)
-                    dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
-            }
-            af->fLength             = dspu::samples_to_millis(nSampleRate, samples);
+            float norming           = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
+            af->fLength             = dspu::samples_to_millis(nSampleRate, temp.length());
 
             // Allocate target sample
             dspu::Sample *out   = new dspu::Sample();
@@ -838,9 +816,9 @@ namespace lsp
             render_params_t *rp     = new render_params_t;
             if (rp == NULL)
                 return STATUS_NO_MEM;
-            rp->nLength             = samples;
             rp->nHeadCut            = 0;
             rp->nTailCut            = 0;
+            rp->nCutLength          = 0;
             rp->nStretchDelta       = 0;
             rp->nStretchStart       = 0;
             rp->nStretchEnd         = 0;
@@ -852,55 +830,88 @@ namespace lsp
             {
                 rp->nStretchStart       = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchStart), 0, temp.length());
                 rp->nStretchEnd         = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fStretchEnd), 0, temp.length());
-                if (rp->nStretchEnd < rp->nStretchStart)
-                    lsp::swap(rp->nStretchStart, rp->nStretchEnd);
-                ssize_t s_length        = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
-                size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
-                dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
-                    dspu::SAMPLE_CROSSFADE_LINEAR :
-                    dspu::SAMPLE_CROSSFADE_CONST_POWER;
-                float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
-
-                // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
-                res = temp.stretch(s_length, chunk_size, fade_type, crossfade, rp->nStretchStart, rp->nStretchEnd);
-                if (res != STATUS_OK)
+                if (rp->nStretchStart <= rp->nStretchEnd)
                 {
-                    lsp_trace("Failed to stretch sample: %d", int(res));
-                    rp->nStretchDelta       = 0;
+                    ssize_t s_length        = lsp_max(rp->nStretchEnd + rp->nStretchDelta - rp->nStretchStart, 0);
+                    size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fStretchChunk);
+                    dspu::sample_crossfade_t fade_type  = (af->nStretchFadeType == XFADE_LINEAR) ?
+                        dspu::SAMPLE_CROSSFADE_LINEAR :
+                        dspu::SAMPLE_CROSSFADE_CONST_POWER;
+                    float crossfade         = lsp_limit(af->fStretchFade * 0.01f, 0.0f, 1.0f);
+
+                    // Perform stretch only when it is possible, do not report errors if stretch didn't succeed
+                    res = temp.stretch(s_length, chunk_size, fade_type, crossfade, rp->nStretchStart, rp->nStretchEnd);
+                    if (res != STATUS_OK)
+                    {
+                        lsp_trace("Failed to stretch sample: %d", int(res));
+                        rp->nStretchDelta       = 0;
+                    }
                 }
-                samples                 = temp.length();
+                else
+                {
+                    rp->nStretchStart   = -1;
+                    rp->nStretchEnd     = -1;
+                }
+            }
+
+            // Compute the tail and head cut positions
+            rp->nLength         = temp.length();
+            af->fActualLength   = dspu::samples_to_millis(nSampleRate, rp->nLength);
+            rp->nHeadCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fHeadCut), 0, rp->nLength);
+            rp->nTailCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fTailCut), 0, rp->nLength);
+
+            // Apply the fade-in and fade-out
+            ssize_t fade_in     = dspu::millis_to_samples(nSampleRate, af->fFadeIn);
+            ssize_t fade_out    = dspu::millis_to_samples(nSampleRate, af->fFadeOut);
+            for (size_t j=0; j<channels; ++j)
+            {
+                float *dst          = temp.channel(j);
+
+                dspu::fade_in(&dst[rp->nHeadCut], &dst[rp->nHeadCut], fade_in, rp->nLength - rp->nHeadCut);
+                dspu::fade_out(dst, dst, fade_out, rp->nLength - rp->nTailCut);
+            }
+
+            // Render the thumbnails
+            for (size_t j=0; j<channels; ++j)
+            {
+                const float *src    = temp.channel(j);
+                float *dst          = af->vThumbs[j];
+                size_t len          = temp.length();
+
+                for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                {
+                    size_t first    = (k * len) / meta::sampler_metadata::MESH_SIZE;
+                    size_t last     = ((k + 1) * len) / meta::sampler_metadata::MESH_SIZE;
+                    if (first < last)
+                        dst[k]          = dsp::abs_max(&src[first], last - first);
+                    else if (first < len)
+                        dst[k]          = fabs(src[first]);
+                    else
+                        dst[k]          = 0.0f;
+                }
+
+                // Normalize graph if possible
+                if (norming != 1.0f)
+                    dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
             }
 
             // Perform the head and tail cut operations
-            ssize_t head_pos    = dspu::millis_to_samples(nSampleRate, af->fHeadCut);
-            ssize_t tail_pos    = rp->nLength - dspu::millis_to_samples(nSampleRate, af->fTailCut);
-            head_pos            = lsp_limit(head_pos, 0, rp->nLength);
-            tail_pos            = lsp_limit(tail_pos, head_pos, rp->nLength);
-            head_pos            = to_stretched(head_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
-            tail_pos            = to_stretched(tail_pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
-            rp->nHeadCut        = lsp_limit(head_pos, 0, samples);
-            rp->nTailCut        = lsp_limit(samples - tail_pos, 0, samples);
-            samples             = tail_pos - head_pos;
+            rp->nCutLength      = lsp_max(rp->nLength - rp->nTailCut - rp->nHeadCut, 0);
 
             // Initialize target sample
-            if (!out->resize(channels, samples, samples))
+            if (!out->resize(channels, rp->nCutLength, rp->nCutLength))
             {
                 lsp_warn("Error initializing playback sample");
                 return STATUS_NO_MEM;
             }
 
-            // Apply fade-in and fade-out to the buffer
-            ssize_t fade_in     = dspu::millis_to_samples(nSampleRate, af->fFadeIn);
-            ssize_t fade_out    = dspu::millis_to_samples(nSampleRate, af->fFadeOut);
+            // Apply head cut and tail cut
             for (size_t j=0; j<channels; ++j)
             {
                 const float *src    = temp.channel(j);
-                float *dst          = out->getBuffer(j);
-
-                dspu::fade_in(dst, &src[rp->nHeadCut], fade_in, samples);
-                dspu::fade_out(dst, dst, fade_out, samples);
+                float *dst          = out->channel(j);
+                dsp::copy(dst, &src[rp->nHeadCut], rp->nCutLength);
             }
-            af->fActualLength       = dspu::samples_to_millis(nSampleRate, samples);
 
             // Commit the new sample to the processed
             rp  = static_cast<render_params_t *>(out->set_user_data(rp));
@@ -909,14 +920,19 @@ namespace lsp
             return STATUS_OK;
         }
 
-        size_t sampler_kernel::compute_loop_point(const dspu::Sample *s, size_t position)
+        ssize_t sampler_kernel::compute_loop_point(const dspu::Sample *s, size_t position)
         {
             ssize_t pos         = dspu::millis_to_samples(s->sample_rate(), position);
             const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
             if (rp != NULL)
-                pos                 = to_stretched(pos, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
+            {
+                pos                 = lsp_limit(pos, 0, rp->nLength);
+                pos                -= rp->nHeadCut;
+                if (pos >= rp->nLength)
+                    pos                 = -1;
+            }
 
-            return lsp_limit(pos - rp->nHeadCut, 0, ssize_t(s->length()));
+            return pos;
         }
 
         void sampler_kernel::cancel_sample(afile_t *af, size_t delay)
@@ -954,7 +970,8 @@ namespace lsp
                 lsp::swap(loop_end, loop_start);
 
             ps.set_sample_id(af->nID);
-            ps.set_loop_range(af->enLoopMode, loop_start, loop_end);
+            if ((loop_start >= 0) && (loop_end >= 0))
+                ps.set_loop_range(af->enLoopMode, loop_start, loop_end);
             ps.set_loop_xfade(
                 (af->nLoopFadeType == XFADE_LINEAR) ? dspu::SAMPLE_CROSSFADE_LINEAR : dspu::SAMPLE_CROSSFADE_CONST_POWER,
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
@@ -1377,34 +1394,6 @@ namespace lsp
             output_parameters(samples);
         }
 
-        ssize_t sampler_kernel::to_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta)
-        {
-            if ((s_delta == 0) || (pos <= s_start))
-                return pos;
-
-            ssize_t len_after  = lsp_max(s_end - s_start + s_delta, 0);
-            ssize_t len_before = lsp_max(s_end - s_start, 0);
-            if (pos >= s_end)
-                return pos - len_before + len_after;
-
-            float k = float(len_after) / float(len_before);
-            return s_start + (pos - s_start) * k;
-        }
-
-        ssize_t sampler_kernel::from_stretched(ssize_t pos, ssize_t s_start, ssize_t s_end, ssize_t s_delta)
-        {
-            if ((s_delta == 0) || (pos <= s_start))
-                return pos;
-
-            ssize_t len_after  = lsp_max(s_end - s_start + s_delta, 0);
-            ssize_t len_before = lsp_max(s_end - s_start, 0);
-            if (pos >= (s_start + len_after))
-                return pos - len_after + len_before;
-
-            float k = float(len_before) / float(len_after);
-            return s_start + (pos - s_start) * k;
-        }
-
         float sampler_kernel::compute_play_position(const afile_t *f)
         {
             const dspu::Playback *pb = &f->vListen[0];
@@ -1422,11 +1411,10 @@ namespace lsp
             // We need to translate the current play position of the processed sample
             // into the current play position of thumbnail sample
             const dspu::Sample *s = pb->sample();
-            size_t s_srate = s->sample_rate();
             const render_params_t *rp = static_cast<render_params_t *>(s->user_data());
-
-            ssize_t pos     = from_stretched(rp->nHeadCut + position, rp->nStretchStart, rp->nStretchEnd, rp->nStretchDelta);
-            float time      = dspu::samples_to_millis(s_srate, pos);
+            if (rp != NULL)
+                position       += rp->nHeadCut;
+            float time      = dspu::samples_to_millis(s->sample_rate(), position);
 
 //            lsp_trace("play position %d: %d / %d -> %.3f", int(pb->id()), int(position), int(s->length()), time);
 
