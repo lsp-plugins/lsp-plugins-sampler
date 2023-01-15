@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.9 ===
+* Changed the behaviour of Cut/Stretch/Loop controls.
 * Updated build scripts and dependencies.
 
 === 1.0.8 ===
