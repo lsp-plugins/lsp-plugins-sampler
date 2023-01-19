@@ -5,6 +5,7 @@
 === 1.0.9 ===
 * Changed the behaviour of Cut/Stretch/Loop controls.
 * Updated build scripts and dependencies.
+* Fixed bug in temporary file allocation code.
 
 === 1.0.8 ===
 * Fixed broken configuration save and load with relative file paths.

@@ -1089,7 +1089,7 @@ namespace lsp
             const char *spath = src->as_utf8();
             for (int i=0; ; ++i)
             {
-                if (dst->fmt("%s.%d", spath) <= 0)
+                if (dst->fmt("%s.%d", spath, i) <= 0)
                     return STATUS_NO_MEM;
                 if (!dst->exists())
                     break;
