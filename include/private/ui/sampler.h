@@ -32,11 +32,19 @@ namespace lsp
         class sampler_ui: public ui::Module, public ui::IPortListener
         {
             protected:
+                enum h2drumkit_type_t
+                {
+                    H2DRUMKIT_SYSTEM,       // Installed in system paths
+                    H2DRUMKIT_USER,         // Installed in user directory
+                    H2DRUMKIT_CUSTOM,       // Custom defined path
+                };
+
                 typedef struct h2drumkit_t
                 {
                     LSPString           sName;      // Name of the drumkit
-                    io::Path            sPath;      // Location of the drumkit
-                    bool                bSystem;    // System directory
+                    io::Path            sBase;      // Base path
+                    io::Path            sPath;      // Path to the drumkit, contains base path
+                    h2drumkit_type_t    enType;     // System directory
                     tk::MenuItem       *pMenu;      // Corresponding menu item
                 } h2drumkit_t;
 
@@ -85,11 +93,13 @@ namespace lsp
             protected:
                 ui::IPort                  *pHydrogenPath;
                 ui::IPort                  *pBundlePath;
+                ui::IPort                  *pHydrogenCustomPath;    // Custom Hydrogen path
                 ui::IPort                  *pCurrentInstrument;     // Name that holds number of current instrument
                 tk::FileDialog             *wHydrogenImport;
                 tk::FileDialog             *wBundleDialog;
                 tk::MessageBox             *wMessageBox;
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
+                lltl::parray<tk::Widget>    vHydrogenMenus;
                 lltl::parray<h2drumkit_t>   vDrumkits;
                 lltl::darray<inst_name_t>   vInstNames; // Names of instruments
 
@@ -120,10 +130,11 @@ namespace lsp
                 void                set_path_value(const char *path, const char *fmt...);
                 void                set_instrument_name(core::KVTStorage *kvt, int id, const char *name);
 
+                void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();
-                void                add_hydrogen_files_to_menu(tk::Menu *menu);
-                status_t            scan_hydrogen_directory(const io::Path *path, bool system);
-                status_t            add_drumkit(const io::Path *path, const hydrogen::drumkit_t *dk, bool system);
+                void                destroy_hydrogen_menus();
+                status_t            scan_hydrogen_directory(const io::Path *path, h2drumkit_type_t type);
+                status_t            add_drumkit(const io::Path *base, const io::Path *path, const hydrogen::drumkit_t *dk, h2drumkit_type_t type);
 
                 status_t            export_sampler_bundle(const io::Path *path);
                 status_t            import_sampler_bundle(const io::Path *path);
@@ -133,20 +144,20 @@ namespace lsp
 
             public:
                 explicit sampler_ui(const meta::plugin_t *meta);
-                virtual ~sampler_ui();
+                virtual ~sampler_ui() override;
 
-                virtual void        destroy();
+                virtual void        destroy() override;
 
             public:
-                virtual status_t    post_init();
+                virtual status_t    post_init() override;
 
-                virtual void        idle();
+                virtual void        idle() override;
 
-                virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value);
+                virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value) override;
 
-                virtual void        notify(ui::IPort *port);
+                virtual void        notify(ui::IPort *port) override;
 
-                virtual status_t    reset_settings();
+                virtual status_t    reset_settings() override;
         };
     } /* namespace plugui */
 } /* namespace lsp */

@@ -19,6 +19,7 @@
  * along with lsp-plugins-sampler. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <lsp-plug.in/expr/EnvResolver.h>
 #include <lsp-plug.in/fmt/lspc/lspc.h>
 #include <lsp-plug.in/fmt/lspc/util.h>
 #include <lsp-plug.in/io/Dir.h>
@@ -217,6 +218,7 @@ namespace lsp
         {
             pHydrogenPath       = NULL;
             pBundlePath         = NULL;
+            pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
             wBundleDialog       = NULL;
@@ -232,23 +234,13 @@ namespace lsp
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
 
-            // Destroy all information about drumkits
-            for (size_t i=0, n=vDrumkits.size(); i<n; ++i)
-            {
-                h2drumkit_t *dk = vDrumkits.uget(i);
-                if (dk == NULL)
-                    continue;
-                dk->pMenu       = NULL;
-                delete dk;
-            }
-            vDrumkits.flush();
-
             // Destroy instrument descriptors
             vInstNames.flush();
         }
 
         void sampler_ui::destroy()
         {
+            destroy_hydrogen_menus();
             ui::Module::destroy();
         }
 
@@ -258,11 +250,14 @@ namespace lsp
             if (res != STATUS_OK)
                 return res;
 
-            lookup_hydrogen_files();
-
             // Find different paths
-            pHydrogenPath   =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_HYDROGEN_PATH_ID);
-            pBundlePath     =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_LSPC_BUNDLE_PATH_ID);
+            pHydrogenPath           =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_HYDROGEN_PATH_ID);
+            pBundlePath             =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_LSPC_BUNDLE_PATH_ID);
+            pHydrogenCustomPath     =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_USER_HYDROGEN_KIT_PATH_ID);
+
+            // Bind ports
+            if (pHydrogenCustomPath != NULL)
+                pHydrogenCustomPath->bind(this);
 
             // Add subwidgets
             tk::Registry *widgets   = pWrapper->controller()->widgets();
@@ -284,27 +279,10 @@ namespace lsp
                 child->text()->set("actions.sampler.import_bundle");
                 child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_sampler_bundle, this);
                 menu->add(child);
-
-                // List of preinstalled drumkits for import
-                if (vDrumkits.size() > 0)
-                {
-                    // Create menu item
-                    child           = new tk::MenuItem(pDisplay);
-                    widgets->add(child);
-                    child->init();
-                    child->text()->set("actions.import_installed_hydrogen_drumkit");
-                    menu->add(child);
-
-                    // Create submenu
-                    menu            = new tk::Menu(pDisplay);
-                    widgets->add(menu);
-                    menu->init();
-                    child->menu()->set(menu);
-
-                    // Add hydrogen files to menu
-                    add_hydrogen_files_to_menu(menu);
-                }
             }
+
+            // Synchronize list of Hydrogen files
+            sync_hydrogen_files();
 
             // Add more menu items
             menu                    = tk::widget_cast<tk::Menu>(widgets->find(WUID_EXPORT_MENU));
@@ -354,6 +332,85 @@ namespace lsp
                 wCurrentInstrument->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
 
             return STATUS_OK;
+        }
+
+        void sampler_ui::destroy_hydrogen_menus()
+        {
+            // Destroy all information about drumkits
+            for (size_t i=0, n=vDrumkits.size(); i<n; ++i)
+            {
+                h2drumkit_t *dk = vDrumkits.uget(i);
+                if (dk == NULL)
+                    continue;
+                dk->pMenu       = NULL;
+                delete dk;
+            }
+            vDrumkits.flush();
+
+            // Destroy all menu widgets
+            for (size_t i=0, n=vHydrogenMenus.size(); i<n; ++i)
+            {
+                tk::Widget *w = vHydrogenMenus.uget(i);
+                if (w == NULL)
+                    continue;
+                w->destroy();
+                delete w;
+            }
+            vHydrogenMenus.flush();
+        }
+
+        void sampler_ui::sync_hydrogen_files()
+        {
+            // Destroy previous data and lookup for hydrogen drumkits
+            destroy_hydrogen_menus();
+            lookup_hydrogen_files();
+            if (vDrumkits.is_empty())
+                return;
+
+            tk::Registry *widgets   = pWrapper->controller()->widgets();
+            tk::Menu *menu          = tk::widget_cast<tk::Menu>(widgets->find(WUID_IMPORT_MENU));
+            if (menu == NULL)
+                return;
+
+            // Create menu item
+            tk::MenuItem *child     = new tk::MenuItem(pDisplay);
+            vHydrogenMenus.add(child);
+            child->init();
+            child->text()->set("actions.import_installed_hydrogen_drumkit");
+            menu->add(child);
+
+            // Create submenu
+            menu            = new tk::Menu(pDisplay);
+            vHydrogenMenus.add(menu);
+            menu->init();
+            child->menu()->set(menu);
+
+            // Add hydrogen files to menu
+            LSPString tmp;
+
+            for (size_t i=0, n=vDrumkits.size(); i<n; ++i)
+            {
+                h2drumkit_t *h2 = vDrumkits.uget(i);
+
+                child   = new tk::MenuItem(pDisplay);
+                vHydrogenMenus.add(child);
+                child->init();
+                child->text()->set(
+                    (h2->enType == H2DRUMKIT_SYSTEM) ? "labels.file_display.system" :
+                    (h2->enType == H2DRUMKIT_USER) ? "labels.file_display.user" :
+                    "labels.file_display.custom");
+                child->text()->params()->set_string("file", h2->sPath.as_string());
+                if (h2->sPath.get_parent(&tmp) == STATUS_OK)
+                    child->text()->params()->set_string("parent", &tmp);
+                if (h2->sPath.get_last(&tmp) == STATUS_OK)
+                    child->text()->params()->set_string("name", &tmp);
+                child->text()->params()->set_string("title", &h2->sName);
+
+                // Bind
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_import_hydrogen_file, this);
+                menu->add(child);
+                h2->pMenu       = child;
+            }
         }
 
         void sampler_ui::idle()
@@ -454,37 +511,36 @@ namespace lsp
             return a->sName.compare_to_nocase(&b->sName);
         }
 
-        status_t sampler_ui::add_drumkit(const io::Path *path, const hydrogen::drumkit_t *dk, bool system)
+        status_t sampler_ui::add_drumkit(const io::Path *base, const io::Path *path, const hydrogen::drumkit_t *dk, h2drumkit_type_t type)
         {
             h2drumkit_t *drumkit = new h2drumkit_t();
             if (drumkit == NULL)
                 return STATUS_NO_MEM;
+            lsp_finally {
+                if (drumkit != NULL)
+                    delete drumkit;
+            };
 
             if (!drumkit->sName.set(&dk->name))
-            {
-                delete drumkit;
                 return STATUS_NO_MEM;
-            }
-
+            if (drumkit->sBase.set(base) != STATUS_OK)
+                return STATUS_NO_MEM;
             if (drumkit->sPath.set(path) != STATUS_OK)
-            {
-                delete drumkit;
                 return STATUS_NO_MEM;
-            }
 
-            drumkit->bSystem        = system;
+            drumkit->enType         = type;
             drumkit->pMenu          = NULL;
 
-            if (!vDrumkits.add(drumkit))
+            if (vDrumkits.add(drumkit))
             {
-                delete drumkit;
-                return STATUS_NO_MEM;
+                drumkit = NULL;
+                return STATUS_OK;
             }
 
-            return STATUS_OK;
+            return STATUS_NO_MEM;
         }
 
-        status_t sampler_ui::scan_hydrogen_directory(const io::Path *path, bool system)
+        status_t sampler_ui::scan_hydrogen_directory(const io::Path *path, h2drumkit_type_t type)
         {
             status_t res;
             io::Path dir, subdir;
@@ -493,8 +549,11 @@ namespace lsp
             // Open the directory
             if ((res = dir.set(path)) != STATUS_OK)
                 return res;
-            if ((res = dir.append_child("data/drumkits")) != STATUS_OK)
-                return res;
+            if (type != H2DRUMKIT_CUSTOM)
+            {
+                if ((res = dir.append_child("data" FILE_SEPARATOR_S "drumkits")) != STATUS_OK)
+                    return res;
+            }
 
             io::Dir fd;
             if ((res = fd.open(&dir)) != STATUS_OK)
@@ -522,7 +581,7 @@ namespace lsp
                     continue;
 
                 // If all is OK, add drumkit metadata
-                if ((res = add_drumkit(&subdir, &dk, system)) != STATUS_OK)
+                if ((res = add_drumkit(&dir, &subdir, &dk, type)) != STATUS_OK)
                 {
                     fd.close();
                     return STATUS_NO_MEM;
@@ -544,52 +603,59 @@ namespace lsp
                 if (dir.set(*path) != STATUS_OK)
                     continue;
 
-                scan_hydrogen_directory(&dir, true);
+                scan_hydrogen_directory(&dir, H2DRUMKIT_SYSTEM);
             }
 
             // Lookup in user's home directory
-            if (system::get_home_directory(&dir) != STATUS_OK)
-                return;
-
-            for (const char **path = h2_user_paths; (path != NULL) && (*path != NULL); ++path)
+            if (system::get_home_directory(&dir) == STATUS_OK)
             {
-                if (subdir.set(&dir) != STATUS_OK)
-                    continue;
-                if (subdir.append_child(*path) != STATUS_OK)
-                    continue;
+                for (const char **path = h2_user_paths; (path != NULL) && (*path != NULL); ++path)
+                {
+                    if (subdir.set(&dir) != STATUS_OK)
+                        continue;
+                    if (subdir.append_child(*path) != STATUS_OK)
+                        continue;
 
-                scan_hydrogen_directory(&subdir, false);
+                    scan_hydrogen_directory(&subdir, H2DRUMKIT_USER);
+                }
+            }
+
+            // Lookup custom user path
+            if ((pHydrogenCustomPath != NULL) && (meta::is_path_port(pHydrogenCustomPath->metadata())))
+            {
+                expr::Expression expr;
+                const char *path = pHydrogenCustomPath->buffer<const char>();
+
+                if ((path != NULL) && (strlen(path) > 0))
+                {
+                    status_t res = STATUS_OK;
+
+                    if (expr.parse(path, expr::Expression::FLAG_STRING) == STATUS_OK)
+                    {
+                        expr::EnvResolver resolver;
+                        expr::value_t v;
+
+                        expr.set_resolver(&resolver);
+                        expr::init_value(&v);
+                        lsp_finally { expr::destroy_value(&v); };
+
+                        res = expr.evaluate(&v);
+                        if (res == STATUS_OK)
+                            res = expr::cast_string(&v);
+
+                        res = (res == STATUS_OK) ? dir.set(v.v_str) : dir.set(path);
+                    }
+                    else
+                        res = dir.set(path);
+
+                    if (res == STATUS_OK)
+                        scan_hydrogen_directory(&dir, H2DRUMKIT_CUSTOM);
+                }
             }
 
             // Sort the result
             if (vDrumkits.size() >= 2)
                 vDrumkits.qsort(cmp_drumkit_files);
-        }
-
-        void sampler_ui::add_hydrogen_files_to_menu(tk::Menu *menu)
-        {
-            LSPString tmp;
-
-            for (size_t i=0, n=vDrumkits.size(); i<n; ++i)
-            {
-                h2drumkit_t *h2 = vDrumkits.uget(i);
-
-                tk::MenuItem *child = new tk::MenuItem(pDisplay);
-                pWrapper->controller()->widgets()->add(child);
-                child->init();
-                child->text()->set((h2->bSystem) ? "labels.file_display.system" : "labels.file_display.user");
-                child->text()->params()->set_string("file", h2->sPath.as_string());
-                if (h2->sPath.get_parent(&tmp) == STATUS_OK)
-                    child->text()->params()->set_string("parent", &tmp);
-                if (h2->sPath.get_last(&tmp) == STATUS_OK)
-                    child->text()->params()->set_string("name", &tmp);
-                child->text()->params()->set_string("title", &h2->sName);
-
-                // Bind
-                child->slots()->bind(tk::SLOT_SUBMIT, slot_import_hydrogen_file, this);
-                menu->add(child);
-                h2->pMenu       = child;
-            }
         }
 
         status_t sampler_ui::slot_import_hydrogen_file(tk::Widget *sender, void *ptr, void *data)
@@ -937,7 +1003,10 @@ namespace lsp
 
         void sampler_ui::notify(ui::IPort *port)
         {
-            if ((port != NULL) && (port == pCurrentInstrument) && (wCurrentInstrument != NULL))
+            if (port == NULL)
+                return;
+
+            if (port == pCurrentInstrument)
             {
                 core::KVTStorage *kvt = wrapper()->kvt_lock();
                 if (kvt != NULL)
@@ -952,6 +1021,9 @@ namespace lsp
                     wrapper()->kvt_release();
                 }
             }
+
+            if (port == pHydrogenCustomPath)
+                sync_hydrogen_files();
         }
 
         tk::FileDialog *sampler_ui::get_bundle_dialog(bool import)
