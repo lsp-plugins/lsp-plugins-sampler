@@ -597,6 +597,7 @@ namespace lsp
         void sampler_ui::lookup_hydrogen_files()
         {
             // Lookup in system directories
+            status_t res;
             io::Path dir, subdir;
             for (const char **path = h2_system_paths; (path != NULL) && (*path != NULL); ++path)
             {
@@ -621,37 +622,8 @@ namespace lsp
             }
 
             // Lookup custom user path
-            if ((pHydrogenCustomPath != NULL) && (meta::is_path_port(pHydrogenCustomPath->metadata())))
-            {
-                expr::Expression expr;
-                const char *path = pHydrogenCustomPath->buffer<const char>();
-
-                if ((path != NULL) && (strlen(path) > 0))
-                {
-                    status_t res = STATUS_OK;
-
-                    if (expr.parse(path, expr::Expression::FLAG_STRING) == STATUS_OK)
-                    {
-                        expr::EnvResolver resolver;
-                        expr::value_t v;
-
-                        expr.set_resolver(&resolver);
-                        expr::init_value(&v);
-                        lsp_finally { expr::destroy_value(&v); };
-
-                        res = expr.evaluate(&v);
-                        if (res == STATUS_OK)
-                            res = expr::cast_string(&v);
-
-                        res = (res == STATUS_OK) ? dir.set(v.v_str) : dir.set(path);
-                    }
-                    else
-                        res = dir.set(path);
-
-                    if (res == STATUS_OK)
-                        scan_hydrogen_directory(&dir, H2DRUMKIT_CUSTOM);
-                }
-            }
+            if ((res = read_path(&dir, UI_USER_HYDROGEN_KIT_PATH_PORT)) == STATUS_OK)
+                scan_hydrogen_directory(&dir, H2DRUMKIT_CUSTOM);
 
             // Sort the result
             if (vDrumkits.size() >= 2)
@@ -669,8 +641,7 @@ namespace lsp
                 h2drumkit_t *h2 = _this->vDrumkits.uget(i);
                 if (h2->pMenu == sender)
                 {
-                    lsp_trace("Importing Hydrogen file from %s", h2->sPath.as_utf8());
-                    _this->import_hydrogen_file(h2->sPath.as_string());
+                    _this->import_drumkit_file(&h2->sBase, h2->sPath.as_string());
                     break;
                 }
             }
@@ -728,7 +699,7 @@ namespace lsp
             LSPString path;
             status_t res = _this->wHydrogenImport->selected_file()->format(&path);
             if (res == STATUS_OK)
-                res = _this->import_hydrogen_file(&path);
+                res = _this->import_drumkit_file(NULL, &path);
             return STATUS_OK;
         }
 
@@ -858,6 +829,8 @@ namespace lsp
 
         status_t sampler_ui::import_hydrogen_file(const LSPString *path)
         {
+            lsp_trace("Importing Hydrogen file from %s", path->get_utf8());
+
             // Load settings
             hydrogen::drumkit_t dk;
             status_t res = hydrogen::load(path, &dk);
@@ -921,6 +894,115 @@ namespace lsp
                 if ((res = add_instrument(id, inst)) != STATUS_OK)
                     return res;
                 ++id;
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::read_path(io::Path *dst, const char *port_id)
+        {
+            // Try to get path
+            ui::IPort *port = pWrapper->port(port_id);
+            if ((port == NULL) || (!meta::is_path_port(port->metadata())))
+                return STATUS_NOT_FOUND;
+
+            const char *path = port->buffer<const char>();
+            if ((path == NULL) && (strlen(path) <= 0))
+                return STATUS_NOT_FOUND;
+
+            // Try to parse path as an expression with environment variables
+            status_t res = STATUS_OK;
+            expr::Expression expr;
+
+            if (expr.parse(path, expr::Expression::FLAG_STRING) != STATUS_OK)
+                return dst->set(path);
+
+            expr::EnvResolver resolver;
+            expr::value_t v;
+
+            expr.set_resolver(&resolver);
+            expr::init_value(&v);
+            lsp_finally { expr::destroy_value(&v); };
+
+            res = expr.evaluate(&v);
+            if (res == STATUS_OK)
+                res = expr::cast_string(&v);
+
+            return (res == STATUS_OK) ? dst->set(v.v_str) : dst->set(path);
+        }
+
+        status_t sampler_ui::import_drumkit_file(const io::Path *base, const LSPString *path)
+        {
+            status_t res;
+            io::Path file, config, kit_path, override_kit_path;
+            LSPString file_ext;
+
+            // Check that hydrogen override it turned on
+            ui::IPort *flag = pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
+            if ((flag == NULL) || (!meta::is_control_port(flag->metadata())))
+                return import_hydrogen_file(path);
+            if (flag->value() <= 0.5f)
+                return import_hydrogen_file(path);
+
+            // Check extension and skip override if configuration file is used
+            if ((res = file.set(path)) != STATUS_OK)
+                return res;
+            if (file.get_ext(&file_ext) != STATUS_OK)
+                return import_hydrogen_file(path);
+            if (file_ext.equals_ascii_nocase("cfg"))
+                return pWrapper->import_settings(path, ui::IMPORT_FLAG_NONE);
+
+            // Replace file extension with '.cfg'
+            if ((res = file.get_noext(&config)) != STATUS_OK)
+                return res;
+            if ((res = config.append(".cfg")) != STATUS_OK)
+                return res;
+
+            // Remove base directory, exit if it is not possible
+            bool removed = false;
+            read_path(&kit_path, UI_USER_HYDROGEN_KIT_PATH_PORT);
+            read_path(&override_kit_path, UI_OVERRIDE_HYDROGEN_KIT_PATH_PORT);
+
+            if ((base != NULL) && (config.remove_base(base) == STATUS_OK))
+                removed = true;
+            if ((!removed) && (!kit_path.is_empty()))
+            {
+                if (config.remove_base(&kit_path) == STATUS_OK)
+                    removed = true;
+            }
+            if ((!removed) && (!override_kit_path.is_empty()))
+            {
+                if (config.remove_base(&override_kit_path) == STATUS_OK)
+                    removed = true;
+            }
+            if (!removed)
+                return import_hydrogen_file(path);
+
+            // Try to load files from overridden paths
+            if ((res = try_override_hydrogen_file(&override_kit_path, &config)) == STATUS_OK)
+                return res;
+            if ((res = try_override_hydrogen_file(&kit_path, &config)) == STATUS_OK)
+                return res;
+            return import_hydrogen_file(path);
+        }
+
+        status_t sampler_ui::try_override_hydrogen_file(const io::Path *base, const io::Path *relative)
+        {
+            io::Path file;
+            status_t res;
+
+            if (base->is_empty())
+                return STATUS_NOT_FOUND;
+            if ((res = file.set(base, relative)) != STATUS_OK)
+                return res;
+            if (!file.is_reg())
+                return STATUS_NOT_FOUND;
+
+            lsp_trace("Overriding Hydrogen file from %s...", file.as_utf8());
+            if ((res = pWrapper->import_settings(&file, ui::IMPORT_FLAG_NONE)) != STATUS_OK)
+            {
+                lsp_trace("Failed to override Hydrogen file from %s: error %d", file.as_utf8(), int(res));
+                return res;
             }
 
             return STATUS_OK;

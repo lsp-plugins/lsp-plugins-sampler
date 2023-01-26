@@ -123,7 +123,10 @@ namespace lsp
                 static status_t     slot_close_message_box(tk::Widget *sender, void *ptr, void *data);
 
             protected:
+                status_t            read_path(io::Path *dst, const char *port_id);
                 status_t            import_hydrogen_file(const LSPString *path);
+                status_t            try_override_hydrogen_file(const io::Path *base, const io::Path *relative);
+                status_t            import_drumkit_file(const io::Path *base, const LSPString *path);
                 status_t            add_sample(const io::Path *base, int id, int jd, const hydrogen::layer_t *layer);
                 status_t            add_instrument(int id, const hydrogen::instrument_t *inst);
                 void                set_float_value(float value, const char *fmt...);
