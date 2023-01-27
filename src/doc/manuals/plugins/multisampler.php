@@ -24,7 +24,7 @@ All found drumkits will be available in the 'Import' &rarr; 'Installed Hydrogen 
 will override the original Hydrogen drumkits.<p>
 <p>If the 'Override Hydrogen kits' option is set, the behaviour of the plugin is the following.<p>
 <p>When loading hydrogen drumkit via the 'Import' &rarr; 'Hydrogen drumkit file...' menu item or selecting one of
-the drumkits listed in the Import' &rarr; 'Installed Hydrogen drumkits' menu, the plugin removes the base path of the
+the drumkits listed in the 'Import' &rarr; 'Installed Hydrogen drumkits' menu, the plugin removes the base path of the
 selected file if it matches one of the following paths:</p>
 <ul>
 	<li>Typical hydrogen drumkit system installation paths (only when importing from the list of installed drumkits):</li>
