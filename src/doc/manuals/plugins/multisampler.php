@@ -52,7 +52,7 @@ but the different extension ('*.cfg') in the following directories:<p>
 </ul>
 <p>If the corresponding configuration file was found, the plugin uses this file for loading drumkit settings instead of
 the original Hydrogen drumkit file.</p>
-<p>Also note that 'User Hydrogen kits path' and 'Override user Hydrogen kits path' allow to use environment variables
+<p>Also note that 'User Hydrogen kits path' and 'Override user Hydrogen kits path' allow to use system environment variables
 for path substitutions. For example, the following value:</p>
 <pre>
 /path/to/kit/${KIT_NAME}
@@ -61,7 +61,7 @@ for path substitutions. For example, the following value:</p>
 <pre>
 /path/to/kit/my_drumkit
 </pre>
-<p>If the environment variable 'KIT_NAME' is set to 'my_drumkit'.</p>
+<p>If the system environment variable 'KIT_NAME' is set to 'my_drumkit'.</p>
 
 
 <p><b>Controls:</b></p>
