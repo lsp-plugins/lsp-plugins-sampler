@@ -176,10 +176,10 @@
 							</ui:with>
 
 							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-								<knob id="hc${idx}"/>
-								<knob id="tc${idx}"/>
-								<knob id="fi${idx}" scolor="fade_in"/>
-								<knob id="fo${idx}" scolor="fade_out"/>
+								<knob id="hc${idx}" max=":al${idx}" />
+								<knob id="tc${idx}" max=":al${idx}" />
+								<knob id="fi${idx}" max=":al${idx}" scolor="fade_in"/>
+								<knob id="fo${idx}" max=":al${idx}" scolor="fade_out"/>
 								<knob id="mk${idx}"/>
 								<knob id="pd${idx}"/>
 							</ui:with>
@@ -268,11 +268,10 @@
 
 								<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
 									<knob id="st${idx}"/>
-									<knob id="ss${idx}"/>
-									<knob id="se${idx}"/>
+									<knob id="ss${idx}" max=":fl${idx}"/>
+									<knob id="se${idx}" max=":fl${idx}"/>
 									<knob id="sx${idx}"/>
 									<knob id="sc${idx}"/>
-
 								</ui:with>
 
 								<value id="st${idx}" bg.color="bg_schema" pad.b="6"/>
@@ -280,7 +279,6 @@
 								<value id="se${idx}" bg.color="bg_schema" pad.b="6"/>
 								<value id="sx${idx}" bg.color="bg_schema" pad.b="6"/>
 								<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
-
 							</ui:with>
 
 						</grid>
@@ -312,8 +310,8 @@
 								</ui:with>
 
 								<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-									<knob id="lb${idx}"/>
-									<knob id="le${idx}"/>
+									<knob id="lb${idx}" max=":al${idx}" />
+									<knob id="le${idx}" max=":al${idx}" />
 									<knob id="ll${idx}"/>
 								</ui:with>
 

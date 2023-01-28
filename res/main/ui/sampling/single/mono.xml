@@ -140,10 +140,10 @@
 						</ui:with>
 
 						<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-							<knob id="hc[ssel]"/>
-							<knob id="tc[ssel]"/>
-							<knob id="fi[ssel]" scolor="fade_in"/>
-							<knob id="fo[ssel]" scolor="fade_out"/>
+							<knob id="hc[ssel]" max=":al[ssel]" />
+							<knob id="tc[ssel]" max=":al[ssel]"/>
+							<knob id="fi[ssel]" max=":al[ssel]" scolor="fade_in"/>
+							<knob id="fo[ssel]" max=":al[ssel]" scolor="fade_out"/>
 							<knob id="mk[ssel]"/>
 							<knob id="pd[ssel]"/>
 						</ui:with>
@@ -232,8 +232,8 @@
 
 							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
 								<knob id="st[ssel]"/>
-								<knob id="ss[ssel]"/>
-								<knob id="se[ssel]"/>
+								<knob id="ss[ssel]" max=":fl[ssel]"/>
+								<knob id="se[ssel]" max=":fl[ssel]"/>
 								<knob id="sx[ssel]"/>
 								<knob id="sc[ssel]"/>
 
@@ -276,8 +276,8 @@
 							</ui:with>
 
 							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-								<knob id="lb[ssel]"/>
-								<knob id="le[ssel]"/>
+								<knob id="lb[ssel]" max=":al[ssel]"/>
+								<knob id="le[ssel]" max=":al[ssel]"/>
 								<knob id="ll[ssel]"/>
 							</ui:with>
 

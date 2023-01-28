@@ -14,6 +14,56 @@ Also each instrument has it's own stereo output that makes possible to record in
 <?php } ?>
 </p>
 
+<p>Additional feature <b>Override Hydrogen kits</b> is also provided and can be enabled via the 'User paths...' menu item
+or the 'UI behavior' &rarr; 'Override Hydrogen kits' menu item.</p>
+<p>The main idea of the feature is following.</p>
+<p>Additionally to the usual Hydrogen drumkit installation paths, user can specify additional drumkit installation path
+in the 'User paths' dialog. This will trigger automatic rescan of Hydrogen drumkits on each change of this parameter.
+All found drumkits will be available in the 'Import' &rarr; 'Installed Hydrogen drumkits' menu.</p>
+<p>User also can specify the 'Hydrogen drumkit override path' that will be used to search for configuration files that
+will override the original Hydrogen drumkits.<p>
+<p>If the 'Override Hydrogen kits' option is set, the behaviour of the plugin is the following.<p>
+<p>When loading hydrogen drumkit via the 'Import' &rarr; 'Hydrogen drumkit file...' menu item or selecting one of
+the drumkits listed in the 'Import' &rarr; 'Installed Hydrogen drumkits' menu, the plugin removes the base path of the
+selected file if it matches one of the following paths:</p>
+<ul>
+	<li>Typical hydrogen drumkit system installation paths (only when importing from the list of installed drumkits):</li>
+	<ul>
+		<li>/usr/share/hydrogen</li>
+		<li>/usr/local/share/hydrogen</li>
+		<li>/opt/hydrogen</li>
+		<li>/share/hydrogen</li>
+	</ul>
+	<li>Typical hydrogen drumkit user paths in user's home directory (only when importing from the list of installed drumkits):</li>
+	<ul>
+		<li>.hydrogen</li>
+		<li>.h2</li>
+		<li>.config/hydrogen</li>
+		<li>.config/h2</li>
+	</ul>
+	<li>The 'User Hydrogen kits path' if it is specified.</li>
+	<li>The 'Override user Hydrogen kits path' if it is specified.</li>
+</ul>
+<p>If the base path has been successfully removed, the plugin tries to search the file with the same relative path
+but the different extension ('*.cfg') in the following directories:<p>
+<ul>
+	<li>The 'Override user Hydrogen kits' path if it is specified.</li>
+	<li>The 'User Hydrogen kits' path if it is specified.</li>
+</ul>
+<p>If the corresponding configuration file was found, the plugin uses this file for loading drumkit settings instead of
+the original Hydrogen drumkit file.</p>
+<p>Also note that 'User Hydrogen kits path' and 'Override user Hydrogen kits path' allow to use system environment variables
+for path substitutions. For example, the following value:</p>
+<pre>
+/path/to/kit/${KIT_NAME}
+</pre>
+<p>Will be interpreted as:</p>
+<pre>
+/path/to/kit/my_drumkit
+</pre>
+<p>If the system environment variable 'KIT_NAME' is set to 'my_drumkit'.</p>
+
+
 <p><b>Controls:</b></p>
 <ul>
 	<li><b>Bypass</b> - hot bypass switch, when turned on (led indicator is shining), the plugin does not affect the input signal.</li>
