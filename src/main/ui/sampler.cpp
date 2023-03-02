@@ -1024,12 +1024,14 @@ namespace lsp
                 set_path_value(path.as_native(), "sf_%d_%d", id, jd);       // sample file
                 set_float_value(layer->gain, "mk_%d_%d", id, jd);           // makeup gain
                 set_float_value(layer->max * 100.0f, "vl_%d_%d", id, jd);   // velocity
+                set_float_value(layer->pitch, "pi_%d_%d", id, jd);          // pitch
             }
             else
             {
                 set_path_value("", "sf_%d_%d", id, jd);                     // sample file
                 set_float_value(GAIN_AMP_0_DB, "mk_%d_%d", id, jd);         // makeup gain
                 set_float_value((100.0f * (8 - jd)) / meta::sampler_metadata::SAMPLE_FILES, "vl_%d_%d", id, jd);    // velocity
+                set_float_value(0.0f, "pi_%d_%d", id, jd);                  // pitch
             }
 
             return STATUS_OK;
