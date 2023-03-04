@@ -26,13 +26,6 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler_kernel.o: \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/status.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/midi.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/runtime/version.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/types.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/forge.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/parse.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/pattern.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/debug.h \
- $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/string.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/IPort.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvas.h \
@@ -41,6 +34,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler_kernel.o: \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/types.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/version.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/spec.h \
+ $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/new.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvasFactory.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/IWrapper.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/core/KVTStorage.h \
@@ -78,6 +72,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler_kernel.o: \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/stdlib.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/atomic.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/arch/x86/atomic.h \
+ $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/units.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/math.h \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/misc/fade.h \
@@ -113,6 +108,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler_kernel.o: \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_kx.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_vv.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/log.h \
+ $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/lramp.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/minmax.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/normalize.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/op_kx.h \
@@ -139,13 +135,6 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler.o: main/plug/sampler.cpp \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/status.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/midi.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/runtime/version.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/types.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/forge.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/parse.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/pattern.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/debug.h \
- $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/string.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/IPort.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvas.h \
@@ -154,6 +143,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler.o: main/plug/sampler.cpp \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/types.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/version.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/spec.h \
+ $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/new.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvasFactory.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/IWrapper.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/core/KVTStorage.h \
@@ -188,6 +178,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler.o: main/plug/sampler.cpp \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/sampling/PlaySettings.h \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/sampling/Playback.h \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/util/Randomizer.h \
+ $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/dsp.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/version.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/types.h \
@@ -220,6 +211,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler.o: main/plug/sampler.cpp \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_kx.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_vv.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/log.h \
+ $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/lramp.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/minmax.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/normalize.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/op_kx.h \
@@ -233,20 +225,25 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/plug/sampler.o: main/plug/sampler.cpp \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/interpolation.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/interpolation/linear.h
 $(LSP_PLUGINS_SAMPLER_BIN)/main/ui/sampler.o: main/ui/sampler.cpp \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/lspc.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/runtime/version.h \
- $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/types.h \
+ $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/version.h \
+ $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/types.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/finally.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/util.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/util/audio.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/EnvResolver.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/runtime/version.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/Resolver.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/types.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/status.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/File.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/runtime/LSPString.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/string.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/types.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/version.h \
  $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/spec.h \
+ $(LSP_LLTL_LIB_INC)/lsp-plug.in/lltl/new.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/lspc.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/util.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/util/audio.h \
+ $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/File.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/ChunkReader.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/fmt/lspc/ChunkAccessor.h \
  $(LSP_COMMON_LIB_INC)/lsp-plug.in/stdlib/stdio.h \
@@ -341,8 +338,6 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/ui/sampler.o: main/ui/sampler.cpp \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/io/PathPattern.h \
  $(LSP_TK_LIB_INC)/lsp-plug.in/tk/prop/simple/String.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/Parameters.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/Resolver.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/expr/types.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/i18n/IDictionary.h \
  $(LSP_TK_LIB_INC)/lsp-plug.in/tk/prop/multi/Color.h \
  $(LSP_TK_LIB_INC)/lsp-plug.in/tk/prop/multi/ColorRange.h \
@@ -462,13 +457,6 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/ui/sampler.o: main/ui/sampler.cpp \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/const.h \
  $(LSP_DSP_UNITS_INC)/lsp-plug.in/dsp-units/const.h \
  $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/midi.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/types.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/forge.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/parse.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/pattern.h \
- $(LSP_RUNTIME_LIB_INC)/lsp-plug.in/protocol/osc/debug.h \
- $(LSP_COMMON_LIB_INC)/lsp-plug.in/common/debug.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/IPort.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvas.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/plug/ICanvasFactory.h \
@@ -538,6 +526,7 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/ui/sampler.o: main/ui/sampler.cpp \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_kx.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/fmop_vv.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/log.h \
+ $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/lramp.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/minmax.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/normalize.h \
  $(LSP_DSP_LIB_INC)/lsp-plug.in/dsp/common/pmath/op_kx.h \
@@ -554,6 +543,8 @@ $(LSP_PLUGINS_SAMPLER_BIN)/main/ui/sampler.o: main/ui/sampler.cpp \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/util/Padding.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/util/Enum.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/util/Direction.h \
+ $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/util/Layout.h \
+ $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/util/TextLayout.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/Widget.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/Registry.h \
  $(LSP_PLUGIN_FW_INC)/lsp-plug.in/plug-fw/ctl/Factory.h \
