@@ -219,9 +219,11 @@ namespace lsp
         {
             pHydrogenPath       = NULL;
             pBundlePath         = NULL;
+            pSfzPath            = NULL;
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
+            wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
@@ -231,6 +233,7 @@ namespace lsp
         {
             // Will be automatically destroyed from list of widgets
             wHydrogenImport     = NULL;
+            wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
@@ -252,9 +255,10 @@ namespace lsp
                 return res;
 
             // Find different paths
-            pHydrogenPath           =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_HYDROGEN_PATH_ID);
-            pBundlePath             =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_LSPC_BUNDLE_PATH_ID);
-            pHydrogenCustomPath     =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_USER_HYDROGEN_KIT_PATH_ID);
+            pHydrogenPath           =  pWrapper->port(HYDROGEN_PATH_PORT);
+            pBundlePath             =  pWrapper->port(LSPC_BUNDLE_PATH_PORT);
+            pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
+            pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
 
             // Bind ports
             if (pHydrogenCustomPath != NULL)
@@ -267,6 +271,14 @@ namespace lsp
             {
                 // Hydrogen drumkit import
                 tk::MenuItem *child = new tk::MenuItem(pDisplay);
+                widgets->add(child);
+                child->init();
+                child->text()->set("actions.import_sfz_file");
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_sfz_file, this);
+                menu->add(child);
+
+                // SFZ import
+                child = new tk::MenuItem(pDisplay);
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.import_hydrogen_drumkit_file");
@@ -1417,6 +1429,100 @@ namespace lsp
             return fd.close();
         }
 
+        status_t sampler_ui::slot_start_import_sfz_file(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+
+            tk::FileDialog *dlg = _this->wSfzImport;
+            if (dlg == NULL)
+            {
+                dlg = new tk::FileDialog(_this->pDisplay);
+                _this->pWrapper->controller()->widgets()->add(dlg);
+                _this->wSfzImport   = dlg;
+
+                dlg->init();
+                dlg->mode()->set(tk::FDM_OPEN_FILE);
+                dlg->title()->set("titles.import_sfz");
+                dlg->action_text()->set("actions.import");
+
+                tk::FileFilters *f = dlg->filter();
+                {
+                    tk::FileMask *ffi;
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*.sfz");
+                        ffi->title()->set("files.sfz");
+                        ffi->extensions()->set_raw("");
+                    }
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*");
+                        ffi->title()->set("files.all");
+                        ffi->extensions()->set_raw("");
+                    }
+                }
+
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_sfz_file, _this);
+                dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_sfz_path, _this);
+                dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_sfz_path, _this);
+            }
+
+            dlg->show(_this->pWrapper->window());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_call_import_sfz_file(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            LSPString path;
+            status_t res = _this->wSfzImport->selected_file()->format(&path);
+            if (res == STATUS_OK)
+                res = _this->import_sfz_file(NULL, &path);
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_fetch_sfz_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pSfzPath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            dlg->path()->set_raw(_this->pSfzPath->buffer<char>());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_commit_sfz_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pSfzPath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            LSPString path;
+            if ((dlg->path()->format(&path) == STATUS_OK))
+            {
+                const char *upath = path.get_utf8();
+                _this->pSfzPath->write(upath, ::strlen(upath));
+                _this->pSfzPath->notify_all();
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::import_sfz_file(const io::Path *base, const LSPString *path)
+        {
+            // TODO
+            return STATUS_OK;
+        }
     } /* namespace plugui */
 } /* namespace lsp */
 
