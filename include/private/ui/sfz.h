@@ -39,9 +39,12 @@ namespace lsp
             SFZ_PITCH_KEYCENTER = 1 << 4,
             SFZ_LOVEL           = 1 << 5,
             SFZ_HIVEL           = 1 << 6,
-            SFZ_TUNE            = 1 << 7,
-            SFZ_VOLUME          = 1 << 8,
-            SFZ_GROUP_LABEL     = 1 << 9,
+            SFZ_LORAND          = 1 << 7,
+            SFZ_HIRAND          = 1 << 8,
+            SFZ_TUNE            = 1 << 9,
+            SFZ_VOLUME          = 1 << 10,
+            SFZ_GROUP_LABEL     = 1 << 11,
+            SFZ_PAN             = 1 << 12,
         };
 
         // A single region that is read from SFZ
@@ -56,8 +59,13 @@ namespace lsp
             ssize_t             pitch_keycenter;    // The default MIDI note in the range the region is assigned to
             ssize_t             lovel;              // The lowest velocity value
             ssize_t             hivel;              // The highest velocity value
+            float               lorand;             // The lower bound for random value
+            float               hirand;             // The higher bound for random value
             ssize_t             tune;               // The fine tune for the sample in cents (-100..100)
             float               volume;             // The volume for the region in dB
+            float               pan;                // Pan settings
+            ssize_t             note_offset;        // The note offset
+            ssize_t             octave_offset;      // The octave offset
         } sfz_region_t;
 
         /**

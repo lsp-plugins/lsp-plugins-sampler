@@ -144,8 +144,13 @@ namespace lsp
                     sr->pitch_keycenter = 0;
                     sr->lovel           = 0;
                     sr->hivel           = 0;
+                    sr->lorand          = 0.0f;
+                    sr->hirand          = 0.0f;
                     sr->tune            = 0;
                     sr->volume          = 1.0f;
+                    sr->pan             = 0.0f;
+                    sr->note_offset     = nNoteOffset;
+                    sr->octave_offset   = nOctaveOffset;
 
                     // Allocate region
                     region_t *r         = new region_t;
@@ -213,11 +218,29 @@ namespace lsp
                                 return res;
                             sr->flags      |= SFZ_HIVEL;
                         }
+                        else if (!strcmp(opcode, "lorand"))
+                        {
+                            if ((res = sfz::parse_float(&sr->lorand, value)) != STATUS_OK)
+                                return res;
+                            sr->flags      |= SFZ_LORAND;
+                        }
+                        else if (!strcmp(opcode, "hirand"))
+                        {
+                            if ((res = sfz::parse_float(&sr->hirand, value)) != STATUS_OK)
+                                return res;
+                            sr->flags      |= SFZ_HIRAND;
+                        }
                         else if (!strcmp(opcode, "tune"))
                         {
                             if ((res = sfz::parse_int(&sr->tune, value)) != STATUS_OK)
                                 return res;
                             sr->flags      |= SFZ_TUNE;
+                        }
+                        else if (!strcmp(opcode, "pan"))
+                        {
+                            if ((res = sfz::parse_float(&sr->pan, value)) != STATUS_OK)
+                                return res;
+                            sr->flags      |= SFZ_PAN;
                         }
                         else if (!strcmp(opcode, "volume"))
                         {
@@ -284,18 +307,21 @@ namespace lsp
                             continue;
 
                         // Compute the full path to the sample
-                        if (sSamples.contains(sr->sample.get_utf8()))
+                        if (sr->flags & SFZ_SAMPLE)
                         {
-                            io::Path p;
-                            if ((res = p.set(&sFileName, &sr->sample)) != STATUS_OK)
-                                return res;
-                            if ((res = p.get(&sr->sample)) != STATUS_OK)
-                                return res;
-                        }
-                        else
-                        {
-                            if (!sr->sample.prepend(&r->basedir))
-                                return STATUS_NO_MEM;
+                            if (sSamples.contains(sr->sample.get_utf8()))
+                            {
+                                io::Path p;
+                                if ((res = p.set(&sFileName, &sr->sample)) != STATUS_OK)
+                                    return res;
+                                if ((res = p.get(&sr->sample)) != STATUS_OK)
+                                    return res;
+                            }
+                            else
+                            {
+                                if (!sr->sample.prepend(&r->basedir))
+                                    return STATUS_NO_MEM;
+                            }
                         }
 
                         // Cleanup region reference

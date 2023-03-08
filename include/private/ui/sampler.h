@@ -25,6 +25,8 @@
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/fmt/Hydrogen.h>
 
+#include <private/ui/sfz.h>
+
 namespace lsp
 {
     namespace plugui
@@ -125,6 +127,7 @@ namespace lsp
                 static status_t     slot_call_process_sampler_bundle(tk::Widget *sender, void *ptr, void *data);
 
                 static ssize_t      cmp_drumkit_files(const h2drumkit_t *a, const h2drumkit_t *b);
+                static ssize_t      cmp_sfz_regions(const sfz_region_t *a, const sfz_region_t *b);
 
                 static status_t     allocate_temp_file(io::Path *dst, const io::Path *src);
                 static status_t     slot_close_message_box(tk::Widget *sender, void *ptr, void *data);
@@ -134,7 +137,7 @@ namespace lsp
                 status_t            import_hydrogen_file(const LSPString *path);
                 status_t            try_override_hydrogen_file(const io::Path *base, const io::Path *relative);
                 status_t            import_drumkit_file(const io::Path *base, const LSPString *path);
-                status_t            import_sfz_file(const io::Path *base, const LSPString *path);
+                status_t            import_sfz_file(const io::Path *base, const io::Path *path);
                 status_t            add_sample(const io::Path *base, int id, int jd, const hydrogen::layer_t *layer);
                 status_t            add_instrument(int id, const hydrogen::instrument_t *inst);
                 void                set_float_value(float value, const char *fmt...);
