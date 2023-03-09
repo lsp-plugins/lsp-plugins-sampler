@@ -1624,10 +1624,14 @@ namespace lsp
                             break;
                         sample  = 0;
                     }
+                }
+                prev        = r;
 
-                    // Set instrument settings
+                // Set instrument settings
+                if (sample == 0)
+                {
                     int note    = r->key;
-                    int octave  = note / 12;
+                    int octave  = (note / 12);
                     note       %= 12;
 
                     set_float_value(GAIN_AMP_0_DB, "imix_%d", id);      // instrument mix gain
@@ -1643,8 +1647,6 @@ namespace lsp
                         set_instrument_name(kvt, id, r->group_label.get_utf8());
                     }
                 }
-                else
-                    prev        = r;
 
                 // Apply the changes to the sample
                 if (sample < int(meta::sampler_metadata::SAMPLE_FILES))
@@ -1658,6 +1660,7 @@ namespace lsp
                     set_float_value(pan_l, "pl_%d_%d", id, sample);                 // sample pan left
                     set_float_value(pan_r, "pr_%d_%d", id, sample);                 // sample pan right
                     set_path_value(r->sample.get_utf8(), "sf_%d_%d", id, sample);   // sample file
+                    lsp_trace("sf_%d_%d = %s", id, sample, r->sample.get_utf8());
                     set_float_value(gain, "mk_%d_%d", id, sample);                  // makeup gain
                     set_float_value(vel, "vl_%d_%d", id, sample);                   // velocity
                     set_float_value(pitch, "pi_%d_%d", id, sample);                 // pitch

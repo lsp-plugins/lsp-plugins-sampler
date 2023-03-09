@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.12 ===
+* Added basic SFZ import support.
 * Updated build scripts and dependencies.
 
 === 1.0.11 ===

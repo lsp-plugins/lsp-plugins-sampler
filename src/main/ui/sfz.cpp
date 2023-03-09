@@ -20,6 +20,7 @@
  */
 
 #include <private/ui/sfz.h>
+#include <lsp-plug.in/common/debug.h>
 #include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/fmt/sfz/IDocumentHandler.h>
 #include <lsp-plug.in/fmt/sfz/parse.h>
@@ -90,6 +91,11 @@ namespace lsp
                         return res;
                     if ((res = sBaseDir.get(&sDefaultPath)) != STATUS_OK)
                         return res;
+                    if (!sDefaultPath.ends_with(FILE_SEPARATOR_C))
+                    {
+                        if (!sDefaultPath.append(FILE_SEPARATOR_C))
+                            return STATUS_NO_MEM;
+                    }
 
                     return STATUS_OK;
                 }
@@ -106,7 +112,19 @@ namespace lsp
 
                         if (!strcmp(opcode, "default_path"))
                         {
-                            if (!sDefaultPath.set_utf8(value))
+                            io::Path tmp;
+                            if ((res = tmp.set(value)) != STATUS_OK)
+                                return res;
+                            if (tmp.is_relative())
+                            {
+                                if ((res = sBaseDir.get(&sDefaultPath)) != STATUS_OK)
+                                    return res;
+                                if (!sDefaultPath.append(FILE_SEPARATOR_C))
+                                    return STATUS_NO_MEM;
+                                if (!sDefaultPath.append_utf8(value))
+                                    return STATUS_NO_MEM;
+                            }
+                            else if (!sDefaultPath.set_utf8(value))
                                 return STATUS_NO_MEM;
                         }
                         else if (!strcmp(opcode, "note_offset"))
@@ -175,10 +193,12 @@ namespace lsp
                             if (!sr->sample.set_utf8(value))
                                 return STATUS_NO_MEM;
                             sr->flags      |= SFZ_SAMPLE;
+
+                            lsp_trace("sample=%s", value);
                         }
                         else if (!strcmp(opcode, "group_label"))
                         {
-                            if (!sr->sample.set_utf8(value))
+                            if (!sr->group_label.set_utf8(value))
                                 return STATUS_NO_MEM;
                             sr->flags      |= SFZ_GROUP_LABEL;
                         }
@@ -202,7 +222,7 @@ namespace lsp
                         }
                         else if (!strcmp(opcode, "pitch_keycenter"))
                         {
-                            if ((res = sfz::parse_int(&sr->pitch_keycenter, value)) != STATUS_OK)
+                            if ((res = sfz::parse_note(&sr->pitch_keycenter, value)) != STATUS_OK)
                                 return res;
                             sr->flags      |= SFZ_PITCH_KEYCENTER;
                         }
@@ -282,6 +302,9 @@ namespace lsp
                     status_t res = child.set(&sBaseDir, name);
                     if (res != STATUS_OK)
                         return res;
+
+                    lsp_trace("Processing file '%s'...", child.as_utf8());
+
                     return parser->open(&child);
                 }
 
@@ -290,11 +313,10 @@ namespace lsp
                     return sFileName.get_utf8();
                 }
 
-                virtual status_t end(status_t result) override
+                virtual status_t end(status_t res) override
                 {
-                    status_t res;
-                    if (result != STATUS_OK)
-                        return STATUS_OK;
+                    if (res != STATUS_OK)
+                        return res;
 
                     // Do sample post-processing
                     for (size_t i=0, n=vRegions.size(); i<n; ++i)
@@ -302,26 +324,32 @@ namespace lsp
                         region_t *r = vRegions.uget(i);
                         if (r == NULL)
                             continue;
-                        sfz_region_t *sr = pRegions->uget(i);
+                        sfz_region_t *sr = r->region;
                         if (sr == NULL)
                             continue;
 
                         // Compute the full path to the sample
                         if (sr->flags & SFZ_SAMPLE)
                         {
+                            io::Path p;
                             if (sSamples.contains(sr->sample.get_utf8()))
                             {
-                                io::Path p;
                                 if ((res = p.set(&sFileName, &sr->sample)) != STATUS_OK)
-                                    return res;
-                                if ((res = p.get(&sr->sample)) != STATUS_OK)
                                     return res;
                             }
                             else
                             {
                                 if (!sr->sample.prepend(&r->basedir))
                                     return STATUS_NO_MEM;
+                                if ((res = p.set(&sr->sample)) != STATUS_OK)
+                                    return res;
+                                if ((res = p.canonicalize()) != STATUS_OK)
+                                    return res;
                             }
+
+                            // Apply final path to the sample
+                            if ((res = p.get(&sr->sample)) != STATUS_OK)
+                                return res;
                         }
 
                         // Cleanup region reference
