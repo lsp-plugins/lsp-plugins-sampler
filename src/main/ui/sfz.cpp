@@ -334,7 +334,9 @@ namespace lsp
                             io::Path p;
                             if (sSamples.contains(sr->sample.get_utf8()))
                             {
-                                if ((res = p.set(&sFileName, &sr->sample)) != STATUS_OK)
+                                if ((res = p.set(&sBaseDir, &sFileName)) != STATUS_OK)
+                                    return res;
+                                if ((res = p.append_child(&sr->sample)) != STATUS_OK)
                                     return res;
                             }
                             else
