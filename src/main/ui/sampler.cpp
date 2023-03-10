@@ -20,6 +20,7 @@
  */
 
 #include <lsp-plug.in/common/debug.h>
+#include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/expr/EnvResolver.h>
 #include <lsp-plug.in/fmt/lspc/lspc.h>
 #include <lsp-plug.in/fmt/lspc/util.h>
@@ -27,8 +28,10 @@
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/plug-fw/meta/func.h>
 #include <lsp-plug.in/runtime/system.h>
+
 #include <private/plugins/sampler.h>
 #include <private/ui/sampler.h>
+#include <private/ui/sfz.h>
 
 namespace lsp
 {
@@ -219,9 +222,11 @@ namespace lsp
         {
             pHydrogenPath       = NULL;
             pBundlePath         = NULL;
+            pSfzPath            = NULL;
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
+            wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
@@ -231,6 +236,7 @@ namespace lsp
         {
             // Will be automatically destroyed from list of widgets
             wHydrogenImport     = NULL;
+            wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
@@ -252,9 +258,10 @@ namespace lsp
                 return res;
 
             // Find different paths
-            pHydrogenPath           =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_HYDROGEN_PATH_ID);
-            pBundlePath             =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_DLG_LSPC_BUNDLE_PATH_ID);
-            pHydrogenCustomPath     =  pWrapper->port(UI_CONFIG_PORT_PREFIX UI_USER_HYDROGEN_KIT_PATH_ID);
+            pHydrogenPath           =  pWrapper->port(HYDROGEN_PATH_PORT);
+            pBundlePath             =  pWrapper->port(LSPC_BUNDLE_PATH_PORT);
+            pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
+            pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
 
             // Bind ports
             if (pHydrogenCustomPath != NULL)
@@ -267,6 +274,14 @@ namespace lsp
             {
                 // Hydrogen drumkit import
                 tk::MenuItem *child = new tk::MenuItem(pDisplay);
+                widgets->add(child);
+                child->init();
+                child->text()->set("actions.import_sfz_file");
+                child->slots()->bind(tk::SLOT_SUBMIT, slot_start_import_sfz_file, this);
+                menu->add(child);
+
+                // SFZ import
+                child = new tk::MenuItem(pDisplay);
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.import_hydrogen_drumkit_file");
@@ -431,6 +446,8 @@ namespace lsp
                 core::KVTStorage *kvt = wrapper()->kvt_lock();
                 if (kvt != NULL)
                 {
+                    lsp_finally { wrapper()->kvt_release(); };
+
                     LSPString value;
 
                     for (size_t i=0, n=vInstNames.size(); i<n; ++i)
@@ -446,8 +463,6 @@ namespace lsp
                         // Submit new value to KVT
                         set_instrument_name(kvt, name->nIndex, value.get_utf8());
                     }
-
-                    wrapper()->kvt_release();
                 }
             }
         }
@@ -457,6 +472,8 @@ namespace lsp
             core::KVTStorage *kvt = wrapper()->kvt_lock();
             if (kvt != NULL)
             {
+                lsp_finally { wrapper()->kvt_release(); };
+
                 // Reset all names for all instruments
                 for (size_t i=0, n=vInstNames.size(); i<n; ++i)
                 {
@@ -466,8 +483,6 @@ namespace lsp
                     set_instrument_name(kvt, name->nIndex, "");
                     name->bChanged  = false;
                 }
-
-                wrapper()->kvt_release();
             }
 
             return STATUS_OK;
@@ -1024,12 +1039,14 @@ namespace lsp
                 set_path_value(path.as_native(), "sf_%d_%d", id, jd);       // sample file
                 set_float_value(layer->gain, "mk_%d_%d", id, jd);           // makeup gain
                 set_float_value(layer->max * 100.0f, "vl_%d_%d", id, jd);   // velocity
+                set_float_value(layer->pitch, "pi_%d_%d", id, jd);          // pitch
             }
             else
             {
                 set_path_value("", "sf_%d_%d", id, jd);                     // sample file
                 set_float_value(GAIN_AMP_0_DB, "mk_%d_%d", id, jd);         // makeup gain
                 set_float_value((100.0f * (8 - jd)) / meta::sampler_metadata::SAMPLE_FILES, "vl_%d_%d", id, jd);    // velocity
+                set_float_value(0.0f, "pi_%d_%d", id, jd);                  // pitch
             }
 
             return STATUS_OK;
@@ -1077,8 +1094,8 @@ namespace lsp
             core::KVTStorage *kvt = wrapper()->kvt_lock();
             if (kvt != NULL)
             {
+                lsp_finally { wrapper()->kvt_release(); };
                 set_instrument_name(kvt, id, (inst != NULL) ? inst->name.get_utf8() : "");
-                wrapper()->kvt_release();
             }
 
             return STATUS_OK;
@@ -1094,14 +1111,14 @@ namespace lsp
                 core::KVTStorage *kvt = wrapper()->kvt_lock();
                 if (kvt != NULL)
                 {
+                    lsp_finally { wrapper()->kvt_release(); };
+
                     const char *param = "";
                     char buf[0x40];
                     snprintf(buf, sizeof(buf), "/instrument/%d/name", int(pCurrentInstrument->value()));
                     if (kvt->get(buf, &param) != STATUS_OK)
                         param = "";
                     wCurrentInstrument->text()->set_raw(param);
-
-                    wrapper()->kvt_release();
                 }
             }
 
@@ -1413,6 +1430,278 @@ namespace lsp
 
             // Close the LSPC file and return
             return fd.close();
+        }
+
+        status_t sampler_ui::slot_start_import_sfz_file(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+
+            tk::FileDialog *dlg = _this->wSfzImport;
+            if (dlg == NULL)
+            {
+                dlg = new tk::FileDialog(_this->pDisplay);
+                _this->pWrapper->controller()->widgets()->add(dlg);
+                _this->wSfzImport   = dlg;
+
+                dlg->init();
+                dlg->mode()->set(tk::FDM_OPEN_FILE);
+                dlg->title()->set("titles.import_sfz");
+                dlg->action_text()->set("actions.import");
+
+                tk::FileFilters *f = dlg->filter();
+                {
+                    tk::FileMask *ffi;
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*.sfz");
+                        ffi->title()->set("files.sfz");
+                        ffi->extensions()->set_raw("");
+                    }
+
+                    if ((ffi = f->add()) != NULL)
+                    {
+                        ffi->pattern()->set("*");
+                        ffi->title()->set("files.all");
+                        ffi->extensions()->set_raw("");
+                    }
+                }
+
+                dlg->slots()->bind(tk::SLOT_SUBMIT, slot_call_import_sfz_file, _this);
+                dlg->slots()->bind(tk::SLOT_SHOW, slot_fetch_sfz_path, _this);
+                dlg->slots()->bind(tk::SLOT_HIDE, slot_commit_sfz_path, _this);
+            }
+
+            dlg->show(_this->pWrapper->window());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_call_import_sfz_file(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            LSPString path;
+            status_t res = _this->wSfzImport->selected_file()->format(&path);
+            if (res == STATUS_OK)
+            {
+                io::Path xpath;
+                if ((res = xpath.set(&path)) != STATUS_OK)
+                    return res;
+                res = _this->import_sfz_file(NULL, &xpath);
+            }
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_fetch_sfz_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pSfzPath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            dlg->path()->set_raw(_this->pSfzPath->buffer<char>());
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_commit_sfz_path(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            if ((_this == NULL) || (_this->pSfzPath == NULL))
+                return STATUS_BAD_STATE;
+
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return STATUS_OK;
+
+            LSPString path;
+            if ((dlg->path()->format(&path) == STATUS_OK))
+            {
+                const char *upath = path.get_utf8();
+                _this->pSfzPath->write(upath, ::strlen(upath));
+                _this->pSfzPath->notify_all();
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::import_sfz_file(const io::Path *base, const io::Path *path)
+        {
+            status_t res;
+            lltl::parray<sfz_region_t> regions, processed;
+
+            // Read regions from the SFZ file
+            if ((res = read_regions(&regions, path)) != STATUS_OK)
+                return res;
+            lsp_finally { destroy_regions(&regions); };
+
+            // Process each region
+            for (size_t i=0, n=regions.size(); i<n; ++i)
+            {
+                sfz_region_t *r = regions.uget(i);
+                if (r == NULL)
+                    continue;
+
+                // Skip record if no sample is defined
+                if (!(r->flags & SFZ_SAMPLE))
+                    continue;
+
+                // Find out the key note
+                if (!(r->flags & SFZ_KEY))
+                {
+                    if (r->flags & SFZ_PITCH_KEYCENTER)
+                        r->key      = r->pitch_keycenter;
+                    else if (r->flags & SFZ_LOKEY)
+                        r->key      = (r->flags & SFZ_HIKEY) ? (r->lokey + r->hikey) / 2 : r->lokey;
+                    else if (r->flags & SFZ_HIKEY)
+                        r->key      = r->hikey;
+                    else
+                        continue; // No key defined, skip instrument
+                }
+
+                // Update the key according to the note_offset and octave_offset values
+                r->key      = lsp_limit(r->key + r->note_offset + r->octave_offset * 12, 0, 127);
+
+                // Check for 'lorand' and 'hirand' parameters
+                if (!(r->flags & (SFZ_LOVEL | SFZ_HIVEL)))
+                {
+                    if (r->flags & (SFZ_LORAND | SFZ_HIRAND))
+                    {
+                        if (r->flags & SFZ_LORAND)
+                        {
+                            r->lovel    = lsp_limit(ssize_t(127 * r->lorand), 0, 127);
+                            r->flags   |= SFZ_LOVEL;
+                        }
+                        if (r->flags & SFZ_HIRAND)
+                        {
+                            r->hivel    = lsp_limit(ssize_t(127 * r->hirand), 0, 127);
+                            r->flags   |= SFZ_HIVEL;
+                        }
+                    }
+                }
+
+                // Set default values if not present
+                if (!(r->flags & SFZ_LOVEL))
+                    r->lovel    = 0;
+                if (!(r->flags & SFZ_HIVEL))
+                    r->hivel    = 127;
+                if (!(r->flags & SFZ_TUNE))
+                    r->tune     = 0;
+                if (!(r->flags & SFZ_VOLUME))
+                    r->volume   = 0.0f; // 0.0f dB
+
+                // Add region to processed
+                if (!processed.add(r))
+                    return STATUS_NO_MEM;
+            }
+
+            // Sort processed regions according to the specified criteria
+            processed.qsort(cmp_sfz_regions);
+
+            // Reset settings to default
+            if ((res = pWrapper->reset_settings()) != STATUS_OK)
+                return res;
+
+            // Apply the changes
+            sfz_region_t *prev = NULL;
+            int id = 0, sample = 0;
+
+            for (size_t i=0, n=processed.size(); i<n; ++i)
+            {
+                sfz_region_t *r = processed.uget(i);
+                if (r == NULL)
+                    continue;
+
+                // Switch to the next instrument/sample
+                if (prev != NULL)
+                {
+                    if ((!r->group_label.equals(&prev->group_label)) ||
+                        (r->key != prev->key))
+                    {
+                        // Number of instruments exceeded?
+                        if ((++id) >= int(meta::sampler_metadata::INSTRUMENTS_MAX))
+                            break;
+                        sample  = 0;
+                    }
+                }
+                prev        = r;
+
+                // Set instrument settings
+                if (sample == 0)
+                {
+                    int note    = r->key;
+                    int octave  = (note / 12);
+                    note       %= 12;
+
+                    set_float_value(GAIN_AMP_0_DB, "imix_%d", id);      // instrument mix gain
+                    set_float_value(0, "chan_%d", id);                  // MIDI channel
+                    set_float_value(note, "note_%d", id);               // MIDI note
+                    set_float_value(octave, "oct_%d", id);              // MIDI octave
+
+                    // Set instrument name
+                    core::KVTStorage *kvt = wrapper()->kvt_lock();
+                    if (kvt != NULL)
+                    {
+                        lsp_finally { wrapper()->kvt_release(); };
+                        set_instrument_name(kvt, id, r->group_label.get_utf8());
+                    }
+                }
+
+                // Apply the changes to the sample
+                if (sample < int(meta::sampler_metadata::SAMPLE_FILES))
+                {
+                    float pan_l = lsp_limit(-100.0f + r->pan, -100.0f, 100.0f);
+                    float pan_r = lsp_limit(1100.0f + r->pan, -100.0f, 100.0f);
+                    float gain  = dspu::db_to_gain(r->volume);
+                    float pitch = 0.01f * r->tune;
+                    float vel   = (r->hivel * 100.0f) / 127.0f;
+
+                    set_float_value(pan_l, "pl_%d_%d", id, sample);                 // sample pan left
+                    set_float_value(pan_r, "pr_%d_%d", id, sample);                 // sample pan right
+                    set_path_value(r->sample.get_utf8(), "sf_%d_%d", id, sample);   // sample file
+                    lsp_trace("sf_%d_%d = %s", id, sample, r->sample.get_utf8());
+                    set_float_value(gain, "mk_%d_%d", id, sample);                  // makeup gain
+                    set_float_value(vel, "vl_%d_%d", id, sample);                   // velocity
+                    set_float_value(pitch, "pi_%d_%d", id, sample);                 // pitch
+                }
+
+                // Increment sample number
+                ++sample;
+            }
+
+            return STATUS_OK;
+        }
+
+        ssize_t sampler_ui::cmp_sfz_regions(const sfz_region_t *a, const sfz_region_t *b)
+        {
+            // Take named instruments first
+            if (a->group_label.is_empty())
+            {
+                if (!b->group_label.is_empty())
+                    return -1;
+            }
+            else if (b->group_label.is_empty())
+                return 1;
+
+            ssize_t cmp = a->group_label.compare_to(&b->group_label);
+            if (cmp != 0)
+                return cmp;
+
+            // Compare keys
+            if (a->key < b->key)
+                return -1;
+            else if (a->key > b->key)
+                return 1;
+
+            // Compare velocity
+            if (a->hivel < b->hivel)
+                return -1;
+            else if (a->hivel > b->hivel)
+                return 1;
+
+            // Compare associated file names
+            return a->sample.compare_to(&b->sample);
         }
 
     } /* namespace plugui */
