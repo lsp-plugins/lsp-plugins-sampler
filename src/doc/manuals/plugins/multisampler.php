@@ -14,7 +14,18 @@ Also each instrument has it's own stereo output that makes possible to record in
 <?php } ?>
 </p>
 
-<p>Additional feature <b>Override Hydrogen kits</b> is also provided and can be enabled via the 'User paths...' menu item
+<h2>Import SFZ files feature</h2>
+
+<p>The plugin allows to import the limited <a href="https://sfzformat.com/" target="_blank">SFZ files.</a>.
+<p>All regions are sorted and grouped by the group label and the note number taken from the SFZ file as a single instrument.
+If the number of instruments is more than <?= $nc ?> then all instruments above this count are ignored.</p>
+<p>The import of embedded into SFZ audio files is also supported.</p> 
+
+<h2>Import Hydrogen kits feature</h2>
+
+<p>The plugin allows to import Hydrogen drumkit files by selecting 'Import' &rarr; 'Hydrogen drumkit file...' menu item.
+The file dialog allows to select the desired Hydrogen kit and import.</p>
+<p>Additional to this feature, the <b>Override Hydrogen kits</b> feature is also provided and can be enabled via the 'User paths...' menu item
 or the 'UI behavior' &rarr; 'Override Hydrogen kits' menu item.</p>
 <p>The main idea of the feature is following.</p>
 <p>Additionally to the usual Hydrogen drumkit installation paths, user can specify additional drumkit installation path
@@ -63,6 +74,7 @@ for path substitutions. For example, the following value:</p>
 </pre>
 <p>If the system environment variable 'KIT_NAME' is set to 'my_drumkit'.</p>
 
+<h2>Configuration</h2>
 
 <p><b>Controls:</b></p>
 <ul>

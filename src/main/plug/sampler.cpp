@@ -20,6 +20,7 @@
  */
 
 #include <private/plugins/sampler.h>
+#include <lsp-plug.in/common/debug.h>
 #include <lsp-plug.in/dsp/dsp.h>
 
 namespace lsp
