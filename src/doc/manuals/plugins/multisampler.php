@@ -19,7 +19,24 @@ Also each instrument has it's own stereo output that makes possible to record in
 <p>The plugin allows to import the limited <a href="https://sfzformat.com/" target="_blank">SFZ files.</a>.
 <p>All regions are sorted and grouped by the group label and the note number taken from the SFZ file as a single instrument.
 If the number of instruments is more than <?= $nc ?> then all instruments above this count are ignored.</p>
-<p>The import of embedded into SFZ audio files is also supported.</p> 
+<p>The import of embedded into SFZ audio files is also supported.</p>
+
+<p>The supported list of opcodes:</p>
+<ul>
+<li><b>#define</b> - variable definitions;</li>
+<li><b>#include</b> - file includes;</li>
+<li><b>default_path</b> - the default path the samples are located;</li>
+<li><b>note_offset</b>, <b>octave_offset</b>;</li>
+<li><b>sample</b>, including the built-in samples specified with &lt;sample&gt; command;</li>
+<li><b>group_label</b> - can be used to group instruments into a single instrument;</li>
+<li><b>key</b> - specifies the MIDI note assigned to the instrument;</li>
+<li><b>lokey</b>, <b>hikey</b>, <b>pitch_keycenter</b> - used to determine the MIDI note if the 'key' is not specified;</li>
+<li><b>lovel</b>, <b>hivel</b> - for velocity;</li>
+<li><b>lorand</b>, <b>hirand</b> - used as a velocity if lovel and hivel is not specified;</li>
+<li><b>tune</b> - fine tuning;</li>
+<li><b>pan</b> - panning;</li>
+<li><b>volume</b> - volume correction.</li>
+</ul>
 
 <h2>Import Hydrogen kits feature</h2>
 
