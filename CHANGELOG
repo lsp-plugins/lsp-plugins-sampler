@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.15 ===
+* Fixed missing audio preview for single-channel samplers.
 * Updated build scripts and dependencies.
 
 === 1.0.14 ===
