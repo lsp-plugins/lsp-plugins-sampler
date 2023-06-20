@@ -342,8 +342,8 @@ namespace lsp
         // Define Direct-output port groups
         const port_group_t sampler_x12_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),
@@ -361,8 +361,8 @@ namespace lsp
 
         const port_group_t sampler_x24_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),
@@ -392,8 +392,8 @@ namespace lsp
 
         const port_group_t sampler_x48_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),
