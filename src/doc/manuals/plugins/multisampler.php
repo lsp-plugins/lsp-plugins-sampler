@@ -115,7 +115,7 @@ for path substitutions. For example, the following value:</p>
 
 <p><b>'Instrument' section:</b></p>
 <ul>
-	<li><b>Channel</b> - the MIDI channel to trigger notes by the selected instrument.</li>
+	<li><b>Channel</b> - the MIDI channel to trigger notes by the selected instrument or all channels.</li>
 	<li><b>Note</b> - the note and the octave of the note to trigger for the selected instrument.</li>
 	<li><b>MIDI #</b> - the MIDI number of the note for the selected instrument.</li>
 	<li><b>Group</b> - The group assigned to the instrument. The sample playback will be stopped for all

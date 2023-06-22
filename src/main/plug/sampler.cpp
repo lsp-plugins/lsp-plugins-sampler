@@ -154,7 +154,7 @@ namespace lsp
                     return;
 
                 s->nNote        = meta::sampler_metadata::NOTE_DFL + meta::sampler_metadata::OCTAVE_DFL * 12;
-                s->nChannel     = meta::sampler_metadata::CHANNEL_DFL;
+                s->nChannelMap  = select_channels(meta::sampler_metadata::CHANNEL_DFL);
                 s->nMuteGroup   = i;
                 s->bMuting      = false;
                 s->bNoteOff     = false;
@@ -320,6 +320,13 @@ namespace lsp
             update_settings();
         }
 
+        uint32_t sampler::select_channels(size_t index)
+        {
+            if (index == meta::sampler_metadata::CHANNEL_ALL)
+                return 0xffff;
+            return 1 << index;
+        }
+
         void sampler::destroy()
         {
             if (vSamplers != NULL)
@@ -410,13 +417,13 @@ namespace lsp
 
                 // MIDI note and channel
                 s->nNote        = (s->pOctave->value() * 12) + s->pNote->value();
-                s->nChannel     = s->pChannel->value();
+                s->nChannelMap  = select_channels(s->pChannel->value());
                 s->nMuteGroup   = (s->pMuteGroup != NULL) ? s->pMuteGroup->value() : i;
                 s->bMuting      = (s->pMuting != NULL) ? s->pMuting->value() >= 0.5f : bMuting;
                 s->bNoteOff     = (s->pNoteOff != NULL) ? s->pNoteOff->value() >= 0.5f : false;
                 s->bNoteOff     = s->bNoteOff || note_off;
 
-                lsp_trace("Sampler %d channel=%d, note=%d", int(i), int(s->nChannel), int(s->nNote));
+                lsp_trace("Sampler %d channels=0x%04x, note=%d", int(i), int(s->nChannelMap), int(s->nNote));
                 if (s->pMidiNote != NULL)
                     s->pMidiNote->set_value(s->nNote);
 
@@ -541,7 +548,7 @@ namespace lsp
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((s->nNote != me->note.pitch) || (s->nChannel != me->channel))
+                            if ((me->note.pitch != s->nNote) || (!(s->nChannelMap & (1 << me->channel))))
                                 continue;
 
                             size_t g    = s->nMuteGroup;
@@ -573,7 +580,7 @@ namespace lsp
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if ((s->nNote != me->note.pitch) || (s->nChannel != me->channel))
+                            if ((me->note.pitch != s->nNote) || (!(s->nChannelMap & (1 << me->channel))))
                                 continue;
 
                             if (s->bMuting)
@@ -593,7 +600,7 @@ namespace lsp
                         for (size_t j=0; j<nSamplers; ++j)
                         {
                             sampler_t *s = &vSamplers[j];
-                            if (me->channel != s->nChannel)
+                            if (!(s->nChannelMap & (1 << me->channel)))
                                 continue;
                             bool muting = s->bMuting || bMuting;
                             if (!muting)
@@ -734,7 +741,7 @@ namespace lsp
 
             v->write("fGain", s->fGain);
             v->write("nNote", s->nNote);
-            v->write("nChannel", s->nChannel);
+            v->write("nChannelMap", s->nChannelMap);
             v->write("nMuteGroup", s->nMuteGroup);
             v->write("bMuting", s->bMuting);
             v->write("bNoteOff", s->bNoteOff);
