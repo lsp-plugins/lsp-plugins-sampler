@@ -169,7 +169,7 @@ namespace lsp
 
                 virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value) override;
 
-                virtual void        notify(ui::IPort *port) override;
+                virtual void        notify(ui::IPort *port, size_t flags) override;
 
                 virtual status_t    reset_settings() override;
         };
