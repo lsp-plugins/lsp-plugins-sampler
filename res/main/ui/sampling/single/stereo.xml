@@ -75,6 +75,7 @@
 					sample.full="true"
 					width.min="320"
 					height.min="160"
+					load.preview="true"
 					clipboard.pitch="pi[ssel]"
 					clipboard.stretch_on="so[ssel]"
 					clipboard.stretch="st[ssel]"

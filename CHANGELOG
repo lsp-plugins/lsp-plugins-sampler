@@ -2,6 +2,11 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.15 ===
+* Added 'All' MIDI channel selection, made by default.
+* Fixed missing audio preview for single-channel samplers.
+* Updated build scripts and dependencies.
+
 === 1.0.14 ===
 * Updated build scripts and dependencies.
 

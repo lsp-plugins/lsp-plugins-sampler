@@ -748,7 +748,7 @@ namespace lsp
             {
                 const char *upath = path.get_utf8();
                 _this->pHydrogenPath->write(upath, ::strlen(upath));
-                _this->pHydrogenPath->notify_all();
+                _this->pHydrogenPath->notify_all(ui::PORT_USER_EDIT);
             }
 
             return STATUS_OK;
@@ -806,7 +806,7 @@ namespace lsp
             if (p != NULL)
             {
                 p->set_value(value);
-                p->notify_all();
+                p->notify_all(ui::PORT_USER_EDIT);
             }
 
             va_end(v);
@@ -823,7 +823,7 @@ namespace lsp
             if ((p != NULL) && (meta::is_path_port(p->metadata())))
             {
                 p->write(path, strlen(path));
-                p->notify_all();
+                p->notify_all(ui::PORT_USER_EDIT);
             }
 
             va_end(v);
@@ -1101,7 +1101,7 @@ namespace lsp
             return STATUS_OK;
         }
 
-        void sampler_ui::notify(ui::IPort *port)
+        void sampler_ui::notify(ui::IPort *port, size_t flags)
         {
             if (port == NULL)
                 return;
@@ -1224,7 +1224,7 @@ namespace lsp
             {
                 const char *upath = path.get_utf8();
                 _this->pBundlePath->write(upath, ::strlen(upath));
-                _this->pBundlePath->notify_all();
+                _this->pBundlePath->notify_all(ui::PORT_USER_EDIT);
             }
 
             return STATUS_OK;
@@ -1520,7 +1520,7 @@ namespace lsp
             {
                 const char *upath = path.get_utf8();
                 _this->pSfzPath->write(upath, ::strlen(upath));
-                _this->pSfzPath->notify_all();
+                _this->pSfzPath->notify_all(ui::PORT_USER_EDIT);
             }
 
             return STATUS_OK;

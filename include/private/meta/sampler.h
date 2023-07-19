@@ -92,7 +92,8 @@ namespace lsp
             static constexpr size_t TRACKS_MAX                  = 2;            // Maximum tracks per mesh/sample
             static constexpr float ACTIVITY_LIGHTING            = 0.1f;         // Activity lighting (seconds)
 
-            static constexpr size_t CHANNEL_DFL                 = 0;            // Default channel
+            static constexpr size_t CHANNEL_ALL                 = 16;           // All channels selected
+            static constexpr size_t CHANNEL_DFL                 = CHANNEL_ALL;  // Default channel
             static constexpr size_t NOTE_DFL                    = 9;            // A
             static constexpr size_t OCTAVE_DFL                  = 4;            // 4th octave
 

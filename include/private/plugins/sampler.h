@@ -78,7 +78,7 @@ namespace lsp
                     sampler_kernel      sSampler;                                               // Sampler
                     float               fGain;                                                  // Overall gain
                     size_t              nNote;                                                  // Trigger note
-                    size_t              nChannel;                                               // Channel
+                    uint32_t            nChannelMap;                                            // Channel mapping
                     size_t              nMuteGroup;                                             // Mute group
                     bool                bMuting;                                                // Muting flag
                     bool                bNoteOff;                                               // Handle note-off event
@@ -130,6 +130,9 @@ namespace lsp
 
                 void            dump_sampler(dspu::IStateDumper *v, const sampler_t *s) const;
                 void            dump_channel(dspu::IStateDumper *v, const channel_t *s) const;
+
+            protected:
+                static uint32_t select_channels(size_t index);
 
             public:
                 explicit        sampler(const meta::plugin_t *metadata, size_t samplers, size_t channels, bool dry_ports);

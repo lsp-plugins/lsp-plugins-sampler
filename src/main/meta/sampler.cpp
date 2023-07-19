@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   14
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   15
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -178,6 +178,28 @@ namespace lsp
             { NULL, NULL }
         };
 
+        const port_item_t sampler_midi_channels[] =
+        {
+            { "01",             "sampler.midi_channels.1" },
+            { "02",             "sampler.midi_channels.2" },
+            { "03",             "sampler.midi_channels.3" },
+            { "04",             "sampler.midi_channels.4" },
+            { "05",             "sampler.midi_channels.5" },
+            { "06",             "sampler.midi_channels.6" },
+            { "07",             "sampler.midi_channels.7" },
+            { "08",             "sampler.midi_channels.8" },
+            { "09",             "sampler.midi_channels.9" },
+            { "10",             "sampler.midi_channels.10" },
+            { "11",             "sampler.midi_channels.11" },
+            { "12",             "sampler.midi_channels.12" },
+            { "13",             "sampler.midi_channels.13" },
+            { "14",             "sampler.midi_channels.14" },
+            { "15",             "sampler.midi_channels.15" },
+            { "16",             "sampler.midi_channels.16" },
+            { "All",            "sampler.midi_channels.all" },
+            { NULL,             NULL }
+        };
+
         #define S_DO_GROUP_PORTS(i) \
             STEREO_PORT_GROUP_PORTS(dout_ ## i, "dol_" #i, "dor_" #i)
 
@@ -248,7 +270,7 @@ namespace lsp
             MESH("fd", "Sample file contents", sampler_metadata::TRACKS_MAX, sampler_metadata::MESH_SIZE)
 
         #define S_INSTRUMENT(sample)    \
-            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, midi_channels), \
+            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
             COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
             COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
             { "mn", "MIDI Note #", U_NONE, R_METER, F_OUT | F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
@@ -258,7 +280,7 @@ namespace lsp
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_MG_INSTRUMENT(sample)    \
-            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, midi_channels), \
+            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
             COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
             COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
             COMBO("mgrp", "Mute Group", 0, mute_groups), \
@@ -342,8 +364,8 @@ namespace lsp
         // Define Direct-output port groups
         const port_group_t sampler_x12_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),
@@ -361,8 +383,8 @@ namespace lsp
 
         const port_group_t sampler_x24_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),
@@ -392,8 +414,8 @@ namespace lsp
 
         const port_group_t sampler_x48_port_groups[] =
         {
-            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN,     stereo_in_group_ports       },
-            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT,    stereo_out_group_ports      },
+            { "stereo_in",  "Stereo Input",     GRP_STEREO,     PGF_IN | PGF_MAIN,  stereo_in_group_ports       },
+            { "stereo_out", "Stereo Output",    GRP_STEREO,     PGF_OUT | PGF_MAIN, stereo_out_group_ports      },
             S_DO_GROUP(0),
             S_DO_GROUP(1),
             S_DO_GROUP(2),

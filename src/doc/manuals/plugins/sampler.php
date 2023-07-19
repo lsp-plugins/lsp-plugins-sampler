@@ -15,7 +15,7 @@ There are up to eight samples available to play for different note velocities.</
 
 <p><b>'MIDI Setup' section:</b></p>
 <ul>
-	<li><b>Channel</b> - the MIDI channel to trigger notes.</li>
+	<li><b>Channel</b> - the MIDI channel to trigger notes or all channels.</li>
 	<li><b>Note</b> - the note and the octave of the note to trigger.</li>
 	<li><b>Muting</b> - when enabled, turns off any playback when the Channel Control MIDI message is received.</li>
 	<li><b>Note off</b> - when enabled, turns off sample playback for selected channel when the Note Off
