@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -131,24 +131,26 @@ namespace lsp
                 void            dump_sampler(dspu::IStateDumper *v, const sampler_t *s) const;
                 void            dump_channel(dspu::IStateDumper *v, const channel_t *s) const;
 
+                void            do_destroy();
+
             protected:
                 static uint32_t select_channels(size_t index);
 
             public:
                 explicit        sampler(const meta::plugin_t *metadata, size_t samplers, size_t channels, bool dry_ports);
-                virtual        ~sampler();
+                virtual        ~sampler() override;
 
             public:
-                virtual void    init(plug::IWrapper *wrapper, plug::IPort **ports);
-                virtual void    destroy();
+                virtual void    init(plug::IWrapper *wrapper, plug::IPort **ports) override;
+                virtual void    destroy() override;
 
-                virtual void    update_settings();
-                virtual void    update_sample_rate(long sr);
-                virtual void    ui_activated();
+                virtual void    update_settings() override;
+                virtual void    update_sample_rate(long sr) override;
+                virtual void    ui_activated() override;
 
-                virtual void    process(size_t samples);
+                virtual void    process(size_t samples) override;
 
-                virtual void    dump(dspu::IStateDumper *v) const;
+                virtual void    dump(dspu::IStateDumper *v) const override;
         };
 
     } /* namespace plugins */
