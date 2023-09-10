@@ -759,9 +759,7 @@ namespace lsp
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
 
             // Pass the changed value to the corresponding widget
-            ssize_t selected =
-                ((_this->pCurrentInstrument != NULL) && (_this->pCurrentInstrument != NULL)) ?
-                    ssize_t(_this->pCurrentInstrument->value()) : -1;
+            ssize_t selected = ((_this->pCurrentInstrument != NULL)) ? ssize_t(_this->pCurrentInstrument->value()) : -1;
 
             if ((sender != NULL) && (sender == _this->wCurrentInstrument))
             {
@@ -923,7 +921,7 @@ namespace lsp
                 return STATUS_NOT_FOUND;
 
             const char *path = port->buffer<const char>();
-            if ((path == NULL) && (strlen(path) <= 0))
+            if ((path == NULL) || (strlen(path) <= 0))
                 return STATUS_NOT_FOUND;
 
             // Try to parse path as an expression with environment variables
