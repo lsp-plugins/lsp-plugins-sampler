@@ -772,6 +772,7 @@ namespace lsp
         {
             "Klangerzeuger Mono",
             "Sampler Mono",
+            "Sampler Mono",
             "KZ1M",
             &developers::v_sadovnikov,
             "sampler_mono",
@@ -795,6 +796,7 @@ namespace lsp
         const plugin_t sampler_stereo =
         {
             "Klangerzeuger Stereo",
+            "Sampler Stereo",
             "Sampler Stereo",
             "KZ1S",
             &developers::v_sadovnikov,
@@ -820,6 +822,7 @@ namespace lsp
         {
             "Schlagzeug x12 Stereo",
             "Multi-Sampler x12 Stereo",
+            "Multi-Sampler x12 Stereo",
             "SZ12",
             &developers::v_sadovnikov,
             "multisampler_x12",
@@ -843,6 +846,7 @@ namespace lsp
         const plugin_t multisampler_x24 =
         {
             "Schlagzeug x24 Stereo",
+            "Multi-Sampler x24 Stereo",
             "Multi-Sampler x24 Stereo",
             "SZ24",
             &developers::v_sadovnikov,
@@ -868,6 +872,7 @@ namespace lsp
         {
             "Schlagzeug x48 Stereo",
             "Multi-Sampler x48 Stereo",
+            "Multi-Sampler x48 Stereo",
             "SZ48",
             &developers::v_sadovnikov,
             "multisampler_x48",
@@ -891,6 +896,7 @@ namespace lsp
         const plugin_t multisampler_x12_do =
         {
             "Schlagzeug x12 Direktausgabe",
+            "Multi-Sampler x12 DirectOut",
             "Multi-Sampler x12 DirectOut",
             "SZ12D",
             &developers::v_sadovnikov,
@@ -916,6 +922,7 @@ namespace lsp
         {
             "Schlagzeug x24 Direktausgabe",
             "Multi-Sampler x24 DirectOut",
+            "Multi-Sampler x24 DirectOut",
             "SZ24D",
             &developers::v_sadovnikov,
             "multisampler_x24_do",
@@ -939,6 +946,7 @@ namespace lsp
         const plugin_t multisampler_x48_do =
         {
             "Schlagzeug x48 Direktausgabe",
+            "Multi-Sampler x48 DirectOut",
             "Multi-Sampler x48 DirectOut",
             "SZ48D",
             &developers::v_sadovnikov,
