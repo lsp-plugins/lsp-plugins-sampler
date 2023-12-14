@@ -94,8 +94,11 @@ namespace lsp
 
             protected:
                 ui::IPort                  *pHydrogenPath;
+                ui::IPort                  *pHydrogenFileType;
                 ui::IPort                  *pBundlePath;
+                ui::IPort                  *pBundleFileType;
                 ui::IPort                  *pSfzPath;
+                ui::IPort                  *pSfzFileType;
                 ui::IPort                  *pHydrogenCustomPath;    // Custom Hydrogen path
                 ui::IPort                  *pCurrentInstrument;     // Name that holds number of current instrument
                 tk::FileDialog             *wHydrogenImport;        // Hyrdogen file import dialog
@@ -147,6 +150,8 @@ namespace lsp
                 void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();
                 void                destroy_hydrogen_menus();
+                void                init_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type);
+                void                commit_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type);
                 status_t            scan_hydrogen_directory(const io::Path *path, h2drumkit_type_t type);
                 status_t            add_drumkit(const io::Path *base, const io::Path *path, const hydrogen::drumkit_t *dk, h2drumkit_type_t type);
 
