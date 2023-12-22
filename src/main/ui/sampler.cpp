@@ -221,8 +221,11 @@ namespace lsp
             ui::Module(meta)
         {
             pHydrogenPath       = NULL;
+            pHydrogenFileType   = NULL;
             pBundlePath         = NULL;
+            pBundleFileType     = NULL;
             pSfzPath            = NULL;
+            pSfzFileType        = NULL;
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
             wHydrogenImport     = NULL;
@@ -259,8 +262,11 @@ namespace lsp
 
             // Find different paths
             pHydrogenPath           =  pWrapper->port(HYDROGEN_PATH_PORT);
+            pHydrogenFileType       =  pWrapper->port(HYDROGEN_FTYPE_PORT);
             pBundlePath             =  pWrapper->port(LSPC_BUNDLE_PATH_PORT);
+            pBundleFileType         =  pWrapper->port(LSPC_BUNDLE_FTYPE_PORT);
             pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
+            pSfzFileType            =  pWrapper->port(SFZ_FTYPE_PORT);
             pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
 
             // Bind ports
@@ -486,6 +492,42 @@ namespace lsp
             }
 
             return STATUS_OK;
+        }
+
+        void sampler_ui::init_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type)
+        {
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return;
+
+            if (path != NULL)
+                dlg->path()->set_raw(path->buffer<char>());
+            if (file_type != NULL)
+                dlg->selected_filter()->set(size_t(file_type->value()));
+        }
+
+        void sampler_ui::commit_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type)
+        {
+            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
+            if (dlg == NULL)
+                return;
+
+            if (path != NULL)
+            {
+                LSPString fpath;
+                if ((dlg->path()->format(&fpath) == STATUS_OK))
+                {
+                    const char *upath = fpath.get_utf8();
+                    path->write(upath, ::strlen(upath));
+                    path->notify_all(ui::PORT_USER_EDIT);
+                }
+            }
+            if (file_type != NULL)
+            {
+                LSPString fpath;
+                file_type->set_value(dlg->selected_filter()->get());
+                file_type->notify_all(ui::PORT_USER_EDIT);
+            }
         }
 
         void sampler_ui::kvt_changed(core::KVTStorage *kvt, const char *id, const core::kvt_param_t *value)
@@ -722,34 +764,19 @@ namespace lsp
         status_t sampler_ui::slot_fetch_hydrogen_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pHydrogenPath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
 
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            dlg->path()->set_raw(_this->pHydrogenPath->buffer<char>());
+            _this->init_path(sender, _this->pHydrogenPath, _this->pHydrogenFileType);
             return STATUS_OK;
         }
 
         status_t sampler_ui::slot_commit_hydrogen_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pHydrogenPath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
-
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            LSPString path;
-            if ((dlg->path()->format(&path) == STATUS_OK))
-            {
-                const char *upath = path.get_utf8();
-                _this->pHydrogenPath->write(upath, ::strlen(upath));
-                _this->pHydrogenPath->notify_all(ui::PORT_USER_EDIT);
-            }
+            _this->commit_path(sender, _this->pHydrogenPath, _this->pHydrogenFileType);
 
             return STATUS_OK;
         }
@@ -1196,35 +1223,20 @@ namespace lsp
         status_t sampler_ui::slot_fetch_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pBundlePath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
 
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            dlg->path()->set_raw(_this->pBundlePath->buffer<char>());
+            _this->init_path(sender, _this->pBundlePath, _this->pBundleFileType);
             return STATUS_OK;
         }
 
         status_t sampler_ui::slot_commit_sampler_bundle_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pBundlePath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
 
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            LSPString path;
-            if ((dlg->path()->format(&path) == STATUS_OK))
-            {
-                const char *upath = path.get_utf8();
-                _this->pBundlePath->write(upath, ::strlen(upath));
-                _this->pBundlePath->notify_all(ui::PORT_USER_EDIT);
-            }
-
+            _this->commit_path(sender, _this->pBundlePath, _this->pBundleFileType);
             return STATUS_OK;
         }
 
@@ -1492,35 +1504,20 @@ namespace lsp
         status_t sampler_ui::slot_fetch_sfz_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pSfzPath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
 
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            dlg->path()->set_raw(_this->pSfzPath->buffer<char>());
+            _this->init_path(sender, _this->pSfzPath, _this->pSfzFileType);
             return STATUS_OK;
         }
 
         status_t sampler_ui::slot_commit_sfz_path(tk::Widget *sender, void *ptr, void *data)
         {
             sampler_ui *_this = static_cast<sampler_ui *>(ptr);
-            if ((_this == NULL) || (_this->pSfzPath == NULL))
+            if (_this == NULL)
                 return STATUS_BAD_STATE;
 
-            tk::FileDialog *dlg = tk::widget_cast<tk::FileDialog>(sender);
-            if (dlg == NULL)
-                return STATUS_OK;
-
-            LSPString path;
-            if ((dlg->path()->format(&path) == STATUS_OK))
-            {
-                const char *upath = path.get_utf8();
-                _this->pSfzPath->write(upath, ::strlen(upath));
-                _this->pSfzPath->notify_all(ui::PORT_USER_EDIT);
-            }
-
+            _this->commit_path(sender, _this->pSfzPath, _this->pSfzFileType);
             return STATUS_OK;
         }
 
