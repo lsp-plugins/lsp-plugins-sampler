@@ -248,8 +248,8 @@ namespace lsp
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fo", "Sample fade out", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             AMP_GAIN10("mk", "Sample makeup gain", 1.0f), \
-            { "vl", "Sample velocity max",  U_PERCENT, R_CONTROL, F_IN | F_LOWER | F_UPPER | F_STEP | F_LOWERING, 0.0f, 100.0f, 0.0f, 0.05, NULL }, \
-            { "pd", "Sample pre-delay",  U_MSEC, R_CONTROL, F_IN | F_LOWER | F_UPPER | F_STEP, \
+            { "vl", "Sample velocity max",  U_PERCENT, R_CONTROL, F_LOWER | F_UPPER | F_STEP | F_LOWERING, 0.0f, 100.0f, 0.0f, 0.05, NULL }, \
+            { "pd", "Sample pre-delay",  U_MSEC, R_CONTROL, F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::PREDELAY_MIN, sampler_metadata::PREDELAY_MAX, 0, sampler_metadata::PREDELAY_STEP, NULL }, \
             SWITCH("on", "Sample enabled", 1.0f), \
             TRIGGER("ls", "Sample listen"), \
@@ -262,9 +262,9 @@ namespace lsp
             BLINK("ac", "Sample activity"), \
             METER("pp", "Sample play position", U_MSEC, sampler_metadata::SAMPLE_PLAYBACK), \
             BLINK("no", "Sample note on event"), \
-            { "fl", "Length of loaded sample", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+            { "fl", "Length of loaded sample", U_MSEC, R_METER, F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \
-            { "al", "Actual length of loaded sample", U_MSEC, R_METER, F_OUT | F_LOWER | F_UPPER | F_STEP, \
+            { "al", "Actual length of loaded sample", U_MSEC, R_METER, F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::SAMPLE_LENGTH_MIN, sampler_metadata::SAMPLE_LENGTH_MAX, 0, sampler_metadata::SAMPLE_LENGTH_STEP, NULL }, \
             STATUS("fs", "Sample load status"), \
             MESH("fd", "Sample file contents", sampler_metadata::TRACKS_MAX, sampler_metadata::MESH_SIZE)
@@ -273,7 +273,7 @@ namespace lsp
             COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
             COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
             COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
-            { "mn", "MIDI Note #", U_NONE, R_METER, F_OUT | F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
+            { "mn", "MIDI Note #", U_NONE, R_METER, F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
             TRIGGER("trg", "Instrument listen"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
@@ -286,7 +286,7 @@ namespace lsp
             COMBO("mgrp", "Mute Group", 0, mute_groups), \
             SWITCH("mtg", "Mute on stop", 0.0f), \
             SWITCH("nto", "Note-off handling", 0.0f), \
-            { "mn", "MIDI Note #", U_NONE, R_METER, F_OUT | F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
+            { "mn", "MIDI Note #", U_NONE, R_METER, F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
             TRIGGER("trg", "Instrument listen"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
