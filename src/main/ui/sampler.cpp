@@ -30,8 +30,8 @@
 #include <lsp-plug.in/runtime/system.h>
 
 #include <private/plugins/sampler.h>
-#include <private/ui/midicode.h>
 #include <private/ui/sampler.h>
+#include <private/ui/sampler_midi.h>
 #include <private/ui/sfz.h>
 
 namespace lsp
@@ -280,7 +280,7 @@ namespace lsp
                     continue;
 
                 // Create proxy port
-                sampler::MidiVelocityPort *velocity = new sampler::MidiVelocityPort();
+                sampler_midi::MidiVelocityPort *velocity = new sampler_midi::MidiVelocityPort();
                 if (velocity == NULL)
                     return STATUS_NO_MEM;
                 if ((res = velocity->init("midivel", port)) != STATUS_OK)

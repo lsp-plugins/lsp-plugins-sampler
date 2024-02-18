@@ -19,8 +19,8 @@
  * along with lsp-plugins-sampler. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef PRIVATE_UI_MIDICODE_H_
-#define PRIVATE_UI_MIDICODE_H_
+#ifndef PRIVATE_UI_SAMPLER_MIDI_H_
+#define PRIVATE_UI_SAMPLER_MIDI_H_
 
 #include <lsp-plug.in/plug-fw/ui.h>
 
@@ -28,7 +28,7 @@ namespace lsp
 {
     namespace plugui
     {
-        namespace sampler
+        namespace sampler_midi
         {
             class MidiVelocityPort: public ui::ProxyPort
             {
@@ -48,6 +48,5 @@ namespace lsp
     } /* namespace plugui */
 } /* namespace lsp */
 
+#endif /* PRIVATE_UI_SAMPLER_MIDI_H_ */
 
-
-#endif /* PRIVATE_UI_MIDICODE_H_ */

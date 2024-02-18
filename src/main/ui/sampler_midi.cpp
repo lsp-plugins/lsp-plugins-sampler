@@ -22,13 +22,13 @@
 #include <lsp-plug.in/plug-fw/meta/ports.h>
 #include <lsp-plug.in/stdlib/string.h>
 
-#include <private/ui/midicode.h>
+#include <private/ui/sampler_midi.h>
 
 namespace lsp
 {
     namespace plugui
     {
-        namespace sampler
+        namespace sampler_midi
         {
             static constexpr float midi_velocity_min = 0.0f;
             static constexpr float midi_velocity_max = 127.0f;
