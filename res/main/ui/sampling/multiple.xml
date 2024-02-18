@@ -395,7 +395,7 @@
 							<knob id="vl${idx}" size="20" scolor="velocity"/>
 							<vbox vfill="false" pad.b="6">
 								<value id="midivel${idx}" detailed="false"/>
-								<value id="vl${idx}" detailed="false"/>
+								<value id="vl${idx}" detailed="true" sline="true"/>
 							</vbox>
 							<knob id="pl${idx}" size="20" balance="0.5" scolor="balance_l"/>
 							<value id="pl${idx}" detailed="false" pad.b="6"/>
