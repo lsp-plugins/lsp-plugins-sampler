@@ -30,6 +30,7 @@
 #include <lsp-plug.in/runtime/system.h>
 
 #include <private/plugins/sampler.h>
+#include <private/ui/midicode.h>
 #include <private/ui/sampler.h>
 #include <private/ui/sfz.h>
 
@@ -55,13 +56,18 @@ namespace lsp
             &meta::multisampler_x48_do
         };
 
+        static ui::Module *sampler_factory_func(const meta::plugin_t *meta)
+        {
+            return new sampler_ui(meta, true);
+        }
+
         static ui::Module *multisampler_factory_func(const meta::plugin_t *meta)
         {
-            return new sampler_ui(meta);
+            return new sampler_ui(meta, true);
         }
 
         // Use different factories for Mono/Stereo sampler and multisampler plugins
-        static ui::Factory sampler_factory(sampler_uis, 2);
+        static ui::Factory sampler_factory(sampler_factory_func, sampler_uis, 2);
         static ui::Factory multisampler_factory(multisampler_factory_func, multisampler_uis, 6);
 
         //---------------------------------------------------------------------
@@ -217,9 +223,10 @@ namespace lsp
         }
 
         //---------------------------------------------------------------------
-        sampler_ui::sampler_ui(const meta::plugin_t *meta):
+        sampler_ui::sampler_ui(const meta::plugin_t *meta, bool multiple):
             ui::Module(meta)
         {
+            bMultiple           = multiple;
             pHydrogenPath       = NULL;
             pHydrogenFileType   = NULL;
             pBundlePath         = NULL;
@@ -254,11 +261,49 @@ namespace lsp
             ui::Module::destroy();
         }
 
+        status_t sampler_ui::init(ui::IWrapper *wrapper, tk::Display *dpy)
+        {
+            status_t res = ui::Module::init(wrapper, dpy);
+            if (res != STATUS_OK)
+                return res;
+
+            // Seek for all velocity ports and create proxy ports
+            for (size_t i=0, n=wrapper->ports(); i<n; ++i)
+            {
+                ui::IPort *port = wrapper->port(i);
+                if (port == NULL)
+                    continue;
+                const meta::port_t *meta = port->metadata();
+                if ((meta == NULL) || (meta->id == NULL))
+                    continue;
+                if (strstr(meta->id, "vl_") != meta->id)
+                    continue;
+
+                // Create proxy port
+                sampler::MidiVelocityPort *velocity = new sampler::MidiVelocityPort();
+                if (velocity == NULL)
+                    return STATUS_NO_MEM;
+                if ((res = velocity->init("midivel", port)) != STATUS_OK)
+                    return res;
+                if ((res = pWrapper->bind_custom_port(velocity)) != STATUS_OK)
+                {
+                    delete velocity;
+                    return res;
+                }
+            }
+
+            return STATUS_OK;
+        }
+
         status_t sampler_ui::post_init()
         {
             status_t res = ui::Module::post_init();
             if (res != STATUS_OK)
                 return res;
+
+            // Do not perform other initialization since it is a very simple single-instrument sampler
+            if (!bMultiple)
+                return STATUS_OK;
 
             // Find different paths
             pHydrogenPath           =  pWrapper->port(HYDROGEN_PATH_PORT);
@@ -437,6 +482,10 @@ namespace lsp
 
         void sampler_ui::idle()
         {
+            // Single instrument sample does not require to do anything
+            if (!bMultiple)
+                return;
+
             // Scan the list of instrument names for changes
             size_t changes = 0;
             for (size_t i=0, n=vInstNames.size(); i<n; ++i)
@@ -475,6 +524,10 @@ namespace lsp
 
         status_t sampler_ui::reset_settings()
         {
+            // Single instrument sample does not require to do anything
+            if (!bMultiple)
+                return STATUS_OK;
+
             core::KVTStorage *kvt = wrapper()->kvt_lock();
             if (kvt != NULL)
             {
@@ -532,6 +585,10 @@ namespace lsp
 
         void sampler_ui::kvt_changed(core::KVTStorage *kvt, const char *id, const core::kvt_param_t *value)
         {
+            // Single instrument sample does not require to do anything
+            if (!bMultiple)
+                return;
+
             if ((value->type == core::KVT_STRING) && (::strstr(id, "/instrument/") == id))
             {
                 id += ::strlen("/instrument/");

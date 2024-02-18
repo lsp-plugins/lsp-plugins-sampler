@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
- * This file is part of lsp-plugin-fw
+ * This file is part of lsp-plugins-sampler
  * Created on: 16 июл. 2021 г.
  *
- * lsp-plugin-fw is free software: you can redistribute it and/or modify
+ * lsp-plugins-sampler is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
  *
- * lsp-plugin-fw is distributed in the hope that it will be useful,
+ * lsp-plugins-sampler is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with lsp-plugin-fw. If not, see <https://www.gnu.org/licenses/>.
+ * along with lsp-plugins-sampler. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef LSP_PLUGINS_SAMPLER_INCLUDE_PRIVATE_UI_SAMPLER_H_
-#define LSP_PLUGINS_SAMPLER_INCLUDE_PRIVATE_UI_SAMPLER_H_
+#ifndef PRIVATE_UI_SAMPLER_H_
+#define PRIVATE_UI_SAMPLER_H_
 
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/fmt/Hydrogen.h>
@@ -93,6 +93,7 @@ namespace lsp
                 };
 
             protected:
+                bool                        bMultiple;              // Multiple instruments
                 ui::IPort                  *pHydrogenPath;
                 ui::IPort                  *pHydrogenFileType;
                 ui::IPort                  *pBundlePath;
@@ -162,24 +163,21 @@ namespace lsp
                 void                show_message(const char *title, const char *message, const expr::Parameters *params);
 
             public:
-                explicit sampler_ui(const meta::plugin_t *meta);
+                explicit sampler_ui(const meta::plugin_t *meta, bool multiple);
                 virtual ~sampler_ui() override;
 
+                virtual status_t    init(ui::IWrapper *wrapper, tk::Display *dpy) override;
                 virtual void        destroy() override;
 
             public:
                 virtual status_t    post_init() override;
-
                 virtual void        idle() override;
-
                 virtual void        kvt_changed(core::KVTStorage *storage, const char *id, const core::kvt_param_t *value) override;
-
                 virtual void        notify(ui::IPort *port, size_t flags) override;
-
                 virtual status_t    reset_settings() override;
         };
     } /* namespace plugui */
 } /* namespace lsp */
 
 
-#endif /* LSP_PLUGINS_SAMPLER_INCLUDE_PRIVATE_UI_SAMPLER_H_ */
+#endif /* PRIVATE_UI_SAMPLER_H_ */

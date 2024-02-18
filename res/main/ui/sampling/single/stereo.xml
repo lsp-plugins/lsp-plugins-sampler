@@ -340,7 +340,7 @@
 					<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
 					<label text="labels.sedit.enabled" fill="true" halign="0"/>
 					<label text="labels.midi.velocity" fill="true" halign="0"/>
-					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
+					<label text="labels.midi.code" fill="true" halign="0"/>
 					<label text="labels.signal.pan_left" fill="true" halign="0"/>
 					<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 					<label text="labels.signal.pan_right" fill="true" halign="0"/>
@@ -357,7 +357,10 @@
 						<label text="${i}"/>
 						<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="vl_${i}" size="20" scolor="velocity"/>
-						<value id="vl_${i}" detailed="false" pad.b="6"/>
+						<vbox vfill="false" pad.b="6">
+							<value id="midivel_${i}" detailed="false" />
+							<value id="vl_${i}" detailed="true" sline="true" />
+						</vbox>
 						<knob id="pl_${i}" size="20" balance="0.5" scolor="balance_l"/>
 						<value id="pl_${i}" detailed="false" pad.b="6"/>
 						<knob id="pr_${i}" size="20" balance="0.5" scolor="balance_r"/>
