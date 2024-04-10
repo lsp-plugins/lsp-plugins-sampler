@@ -383,11 +383,9 @@ namespace lsp
             const float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
             const float drywet= (pDryWet != NULL) ? pDryWet->value() * 0.01f : 1.0f;
             const float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
-            const float g_dry = dry * gain;
-            const float g_wet = wet * gain;
 
-            fDry        = g_dry * drywet + 1.0f - drywet;
-            fWet        = g_wet * drywet;
+            fDry        = (dry * drywet + 1.0f - drywet) * gain;
+            fWet        = (wet * drywet) * gain;
 
             lsp_trace("dry = %f, wet=%f, gain=%f", dry, wet, gain);
 
