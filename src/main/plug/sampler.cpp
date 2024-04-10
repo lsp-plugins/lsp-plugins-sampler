@@ -112,6 +112,7 @@ namespace lsp
             pFadeout        = NULL;
             pDry            = NULL;
             pWet            = NULL;
+            pDryWet         = NULL;
             pGain           = NULL;
             pDOGain         = NULL;
             pDOPan          = NULL;
@@ -227,6 +228,7 @@ namespace lsp
             BIND_PORT(pFadeout);
             BIND_PORT(pDry);
             BIND_PORT(pWet);
+            BIND_PORT(pDryWet);
             BIND_PORT(pGain);
             SKIP_PORT("Sample editor tab selector"); // Skip sample editor tab selector
             if (bDryPorts)
@@ -377,11 +379,15 @@ namespace lsp
         void sampler::update_settings()
         {
             // Update dry & wet parameters
-            float dry   = (pDry != NULL)    ? pDry->value()  : 1.0f;
-            float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
-            float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
-            fDry        = dry * gain;
-            fWet        = wet * gain;
+            const float dry   = (pDry != NULL)    ? pDry->value()  : 1.0f;
+            const float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
+            const float drywet= (pDryWet != NULL) ? pDryWet->value() * 0.01f : 1.0f;
+            const float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
+            const float g_dry = dry * gain;
+            const float g_wet = wet * gain;
+
+            fDry        = g_dry * drywet + 1.0f - drywet;
+            fWet        = g_wet * drywet;
 
             lsp_trace("dry = %f, wet=%f, gain=%f", dry, wet, gain);
 
@@ -835,6 +841,7 @@ namespace lsp
             v->write("pFadeout", pFadeout);
             v->write("pDry", pDry);
             v->write("pWet", pWet);
+            v->write("pDryWet", pDryWet);
             v->write("pGain", pGain);
             v->write("pDOGain", pDOGain);
             v->write("pDOPan", pDOPan);

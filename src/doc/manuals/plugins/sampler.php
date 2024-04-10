@@ -107,5 +107,6 @@ There are up to eight samples available to play for different note velocities.</
 	<li><b>Time drifting</b> - allows to randomize the time delay between the MIDI Note On event and the start of the sample's playback.</li>
 	<li><b>Dry amount</b> - the gain of the input signal passed to the audio inputs of the plugin.</li>
 	<li><b>Wet amount</b> - the gain of the processed signal.</li>
+	<li><b>Dry/Wet</b> - the balance between unprocessed (Dry) signal and mixed signal (see Dry and Wet controls).</li>
 	<li><b>Output gain</b> - the overall output gain of the plugin.</li>
 </ul>

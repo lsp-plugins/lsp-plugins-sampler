@@ -316,18 +316,21 @@
 				<cell rows="3">
 					<vsep/>
 				</cell>
-				<grid rows="3" cols="3" bg.color="bg_schema" padding="6">
+				<grid rows="3" cols="4" bg.color="bg_schema" padding="6">
 
 					<label text="labels.signal.dry" pad.b="6"/>
 					<label text="labels.signal.wet" pad.b="6"/>
+					<label text="labels.signal.drywet" pad.b="6"/>
 					<label text="labels.output" pad.b="6"/>
 
 					<knob id="dry" pad.b="6" scolor="dry"/>
 					<knob id="wet" pad.b="6" scolor="wet"/>
+					<knob id="drywet" pad.b="6" scolor="drywet"/>
 					<knob id="g_out" pad.b="6"/>
 
 					<value id="dry" width.min="54" sline="true"/>
 					<value id="wet" width.min="54" sline="true"/>
+					<value id="drywet" width.min="54" sline="true"/>
 					<value id="g_out" width.min="54" sline="true"/>
 				</grid>
 			</grid>

@@ -121,6 +121,7 @@ namespace lsp
                 plug::IPort        *pFadeout;           // Note-off fadeout
                 plug::IPort        *pDry;               // Dry amount port
                 plug::IPort        *pWet;               // Wet amount port
+                plug::IPort        *pDryWet;            // Dry/Wet balance
                 plug::IPort        *pGain;              // Output gain port
                 plug::IPort        *pDOGain;            // Direct output gain flag
                 plug::IPort        *pDOPan;             // Direct output panning flag

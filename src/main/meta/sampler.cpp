@@ -220,6 +220,7 @@ namespace lsp
             CONTROL("fout", "Note-off fadeout", U_MSEC, sampler_metadata::FADEOUT), \
             DRY_GAIN(1.0f),         \
             WET_GAIN(1.0f),         \
+            DRYWET(100.0f),         \
             OUT_GAIN, \
             COMBO("sets", "Sample Editor Tab Selection", 0, sampler_sample_editor_tabs)
 

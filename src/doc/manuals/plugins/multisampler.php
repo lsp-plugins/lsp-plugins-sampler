@@ -208,6 +208,7 @@ for path substitutions. For example, the following value:</p>
 	The sample fade-out time can be controlled by the corresponding knob.</li>
 	<li><b>Dry amount</b> - the gain of the input signal passed to the audio inputs of the plugin.</li>
 	<li><b>Wet amount</b> - the gain of the processed signal.</li>
+	<li><b>Dry/Wet</b> - the balance between unprocessed (Dry) signal and mixed signal (see Dry and Wet controls).</li>
 	<li><b>Output gain</b> - the overall output gain of the plugin.</li>
 	<li><b>Mute</b> - the button that forces any sample playback to turn off.</li>
 </ul>
