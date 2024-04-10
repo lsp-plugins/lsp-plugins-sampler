@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -280,7 +280,12 @@ namespace lsp
 
             public:
                 explicit sampler_kernel();
+                sampler_kernel(const sampler_kernel &) = delete;
+                sampler_kernel(sampler_kernel &&) = delete;
                 virtual ~sampler_kernel();
+
+                sampler_kernel & operator = (const sampler_kernel &) = delete;
+                sampler_kernel & operator = (sampler_kernel &&) = delete;
 
             public:
                 void        trigger_on(size_t timestamp, float level);
@@ -292,8 +297,8 @@ namespace lsp
 
             public:
                 bool        init(ipc::IExecutor *executor, size_t files, size_t channels);
-                size_t      bind(plug::IPort **ports, size_t port_id, bool dynamics);
-                void        bind_activity(plug::IPort *activity);
+                void        bind(plug::IPort **ports, size_t & port_id, bool dynamics);
+                void        bind_activity(plug::IPort **ports, size_t & port_id);
                 void        destroy();
 
                 void        update_settings();

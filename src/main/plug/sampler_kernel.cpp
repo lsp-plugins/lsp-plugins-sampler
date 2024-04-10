@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -19,7 +19,6 @@
  * along with lsp-plugins-sampler. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <private/plugins/sampler_kernel.h>
 #include <lsp-plug.in/common/alloc.h>
 #include <lsp-plug.in/common/atomic.h>
 #include <lsp-plug.in/common/debug.h>
@@ -27,15 +26,12 @@
 #include <lsp-plug.in/dsp-units/misc/fade.h>
 #include <lsp-plug.in/dsp-units/sampling/PlaySettings.h>
 #include <lsp-plug.in/dsp/dsp.h>
+#include <lsp-plug.in/shared/debug.h>
+
+#include <private/plugins/sampler_kernel.h>
 
 namespace lsp
 {
-    static plug::IPort *TRACE_PORT(plug::IPort *p)
-    {
-        lsp_trace("  port id=%s", (p)->metadata()->id);
-        return p;
-    }
-
     namespace plugins
     {
         //-------------------------------------------------------------------------
@@ -173,12 +169,9 @@ namespace lsp
             );
 
             // Allocate files
-            vFiles                      = reinterpret_cast<afile_t *>(ptr);
-            ptr                        += afile_szof;
-            vActive                     = reinterpret_cast<afile_t **>(ptr);
-            ptr                        += vactive_szof;
-            vBuffer                     = reinterpret_cast<float *>(ptr);
-            ptr                        += vbuffer_szof;
+            vFiles                      = advance_ptr_bytes<afile_t>(ptr, afile_szof);
+            vActive                     = advance_ptr_bytes<afile_t *>(ptr, vactive_szof);
+            vBuffer                     = advance_ptr_bytes<float>(ptr, vbuffer_szof);
 
             for (size_t i=0; i<files; ++i)
             {
@@ -324,21 +317,20 @@ namespace lsp
             return true;
         }
 
-        size_t sampler_kernel::bind(plug::IPort **ports, size_t port_id, bool dynamics)
+        void sampler_kernel::bind(plug::IPort **ports, size_t & port_id, bool dynamics)
         {
             lsp_trace("Binding listen toggle...");
-            pListen             = TRACE_PORT(ports[port_id++]);
+            BIND_PORT(pListen);
 
             if (dynamics)
             {
                 lsp_trace("Binding dynamics and drifting...");
-                pDynamics           = TRACE_PORT(ports[port_id++]);
-                pDrift              = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(pDynamics);
+                BIND_PORT(pDrift);
             }
 
             lsp_trace("Skipping sample selector port...");
-            TRACE_PORT(ports[port_id]);
-            port_id++;
+            SKIP_PORT("Sample selector");
 
             // Iterate each file
             for (size_t i=0; i<nFiles; ++i)
@@ -347,60 +339,58 @@ namespace lsp
 
                 afile_t *af             = &vFiles[i];
                 // Allocate files
-                af->pFile               = TRACE_PORT(ports[port_id++]);
-                af->pPitch              = TRACE_PORT(ports[port_id++]);
-                af->pStretchOn          = TRACE_PORT(ports[port_id++]);
-                af->pStretch            = TRACE_PORT(ports[port_id++]);
-                af->pStretchStart       = TRACE_PORT(ports[port_id++]);
-                af->pStretchEnd         = TRACE_PORT(ports[port_id++]);
-                af->pStretchChunk       = TRACE_PORT(ports[port_id++]);
-                af->pStretchFade        = TRACE_PORT(ports[port_id++]);
-                af->pStretchFadeType    = TRACE_PORT(ports[port_id++]);
-                af->pLoopOn             = TRACE_PORT(ports[port_id++]);
-                af->pLoopMode           = TRACE_PORT(ports[port_id++]);
-                af->pLoopStart          = TRACE_PORT(ports[port_id++]);
-                af->pLoopEnd            = TRACE_PORT(ports[port_id++]);
-                af->pLoopFade           = TRACE_PORT(ports[port_id++]);
-                af->pLoopFadeType       = TRACE_PORT(ports[port_id++]);
-                af->pHeadCut            = TRACE_PORT(ports[port_id++]);
-                af->pTailCut            = TRACE_PORT(ports[port_id++]);
-                af->pFadeIn             = TRACE_PORT(ports[port_id++]);
-                af->pFadeOut            = TRACE_PORT(ports[port_id++]);
-                af->pMakeup             = TRACE_PORT(ports[port_id++]);
-                af->pVelocity           = TRACE_PORT(ports[port_id++]);
-                af->pPreDelay           = TRACE_PORT(ports[port_id++]);
-                af->pOn                 = TRACE_PORT(ports[port_id++]);
-                af->pListen             = TRACE_PORT(ports[port_id++]);
-                af->pReverse            = TRACE_PORT(ports[port_id++]);
-                af->pCompensate         = TRACE_PORT(ports[port_id++]);
-                af->pCompensateFade     = TRACE_PORT(ports[port_id++]);
-                af->pCompensateChunk    = TRACE_PORT(ports[port_id++]);
-                af->pCompensateFadeType = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(af->pFile);
+                BIND_PORT(af->pPitch);
+                BIND_PORT(af->pStretchOn);
+                BIND_PORT(af->pStretch);
+                BIND_PORT(af->pStretchStart);
+                BIND_PORT(af->pStretchEnd);
+                BIND_PORT(af->pStretchChunk);
+                BIND_PORT(af->pStretchFade);
+                BIND_PORT(af->pStretchFadeType);
+                BIND_PORT(af->pLoopOn);
+                BIND_PORT(af->pLoopMode);
+                BIND_PORT(af->pLoopStart);
+                BIND_PORT(af->pLoopEnd);
+                BIND_PORT(af->pLoopFade);
+                BIND_PORT(af->pLoopFadeType);
+                BIND_PORT(af->pHeadCut);
+                BIND_PORT(af->pTailCut);
+                BIND_PORT(af->pFadeIn);
+                BIND_PORT(af->pFadeOut);
+                BIND_PORT(af->pMakeup);
+                BIND_PORT(af->pVelocity);
+                BIND_PORT(af->pPreDelay);
+                BIND_PORT(af->pOn);
+                BIND_PORT(af->pListen);
+                BIND_PORT(af->pReverse);
+                BIND_PORT(af->pCompensate);
+                BIND_PORT(af->pCompensateFade);
+                BIND_PORT(af->pCompensateChunk);
+                BIND_PORT(af->pCompensateFadeType);
 
                 for (size_t j=0; j<nChannels; ++j)
-                    af->pGains[j]           = TRACE_PORT(ports[port_id++]);
+                    BIND_PORT(af->pGains[j]);
 
-                af->pActive             = TRACE_PORT(ports[port_id++]);
-                af->pPlayPosition       = TRACE_PORT(ports[port_id++]);
-                af->pNoteOn             = TRACE_PORT(ports[port_id++]);
-                af->pLength             = TRACE_PORT(ports[port_id++]);
-                af->pActualLength       = TRACE_PORT(ports[port_id++]);
-                af->pStatus             = TRACE_PORT(ports[port_id++]);
-                af->pMesh               = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(af->pActive);
+                BIND_PORT(af->pPlayPosition);
+                BIND_PORT(af->pNoteOn);
+                BIND_PORT(af->pLength);
+                BIND_PORT(af->pActualLength);
+                BIND_PORT(af->pStatus);
+                BIND_PORT(af->pMesh);
             }
 
             // Initialize randomizer
             sRandom.init();
 
             lsp_trace("Init OK");
-
-            return port_id;
         }
 
-        void sampler_kernel::bind_activity(plug::IPort *activity)
+        void sampler_kernel::bind_activity(plug::IPort **ports, size_t & port_id)
         {
             lsp_trace("Binding activity...");
-            pActivity       = TRACE_PORT(activity);
+            BIND_PORT(pActivity);
         }
 
         void sampler_kernel::destroy_sample(dspu::Sample * &sample)
