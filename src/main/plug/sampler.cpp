@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -20,17 +20,13 @@
  */
 
 #include <private/plugins/sampler.h>
+#include <lsp-plug.in/common/alloc.h>
 #include <lsp-plug.in/common/debug.h>
 #include <lsp-plug.in/dsp/dsp.h>
+#include <lsp-plug.in/shared/debug.h>
 
 namespace lsp
 {
-    static plug::IPort *TRACE_PORT(plug::IPort *p)
-    {
-        lsp_trace("  port id=%s", (p)->metadata()->id);
-        return p;
-    }
-
     namespace plugins
     {
         //---------------------------------------------------------------------
@@ -116,6 +112,7 @@ namespace lsp
             pFadeout        = NULL;
             pDry            = NULL;
             pWet            = NULL;
+            pDryWet         = NULL;
             pGain           = NULL;
             pDOGain         = NULL;
             pDOPan          = NULL;
@@ -194,10 +191,8 @@ namespace lsp
             float *fptr             = pBuffer;
             for (size_t i=0; i<nChannels; ++i)
             {
-                vChannels[i].vTmpIn     = fptr;
-                fptr                   += meta::sampler_metadata::BUFFER_SIZE;
-                vChannels[i].vTmpOut    = fptr;
-                fptr                   += meta::sampler_metadata::BUFFER_SIZE;
+                vChannels[i].vTmpIn     = advance_ptr<float>(fptr, meta::sampler_metadata::BUFFER_SIZE);
+                vChannels[i].vTmpOut    = advance_ptr<float>(fptr, meta::sampler_metadata::BUFFER_SIZE);
             }
 
             // Initialize metadata
@@ -207,7 +202,7 @@ namespace lsp
             lsp_trace("Binding audio inputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                vChannels[i].pIn        = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(vChannels[i].pIn);
                 vChannels[i].vIn        = NULL;
             }
 
@@ -215,44 +210,45 @@ namespace lsp
             lsp_trace("Binding audio outputs...");
             for (size_t i=0; i<nChannels; ++i)
             {
-                vChannels[i].pOut       = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(vChannels[i].pOut);
                 vChannels[i].vOut       = NULL;
             }
 
             // Bind MIDI ports
             lsp_trace("Binding MIDI ports...");
-            pMidiIn     = TRACE_PORT(ports[port_id++]);
-            pMidiOut    = TRACE_PORT(ports[port_id++]);
+            BIND_PORT(pMidiIn);
+            BIND_PORT(pMidiOut);
 
             // Bind ports
             lsp_trace("Binding Global ports...");
-            pBypass     = TRACE_PORT(ports[port_id++]);
-            pMute       = TRACE_PORT(ports[port_id++]);
-            pMuting     = TRACE_PORT(ports[port_id++]);
-            pNoteOff    = TRACE_PORT(ports[port_id++]);
-            pFadeout    = TRACE_PORT(ports[port_id++]);
-            pDry        = TRACE_PORT(ports[port_id++]);
-            pWet        = TRACE_PORT(ports[port_id++]);
-            pGain       = TRACE_PORT(ports[port_id++]);
-            TRACE_PORT(ports[port_id++]); // Skip sample editor tab selector
+            BIND_PORT(pBypass);
+            BIND_PORT(pMute);
+            BIND_PORT(pMuting);
+            BIND_PORT(pNoteOff);
+            BIND_PORT(pFadeout);
+            BIND_PORT(pDry);
+            BIND_PORT(pWet);
+            BIND_PORT(pDryWet);
+            BIND_PORT(pGain);
+            SKIP_PORT("Sample editor tab selector"); // Skip sample editor tab selector
             if (bDryPorts)
             {
-                pDOGain     = TRACE_PORT(ports[port_id++]);
-                pDOPan      = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(pDOGain);
+                BIND_PORT(pDOPan);
             }
 
             // If number of samplers <= 2 - skip area selector
             if (nSamplers > 2)
             {
                 lsp_trace("Skipping mixer selector port...");
-                TRACE_PORT(ports[port_id++]);
+                SKIP_PORT("Mixer selector");
             }
 
             // If number of samplers > 0 - skip instrument selector
             if (nSamplers > 1)
             {
                 lsp_trace("Skipping instrument selector...");
-                TRACE_PORT(ports[port_id++]);
+                SKIP_PORT("Instrument selector");
             }
 
             // Now process each instrument
@@ -262,20 +258,20 @@ namespace lsp
 
                 // Bind trigger
                 lsp_trace("Binding trigger #%d ports...", int(i));
-                s->pChannel     = TRACE_PORT(ports[port_id++]);
-                s->pNote        = TRACE_PORT(ports[port_id++]);
-                s->pOctave      = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(s->pChannel);
+                BIND_PORT(s->pNote);
+                BIND_PORT(s->pOctave);
                 if (nSamplers > 1)
                 {
-                    s->pMuteGroup   = TRACE_PORT(ports[port_id++]);
-                    s->pMuting      = TRACE_PORT(ports[port_id++]);
-                    s->pNoteOff     = TRACE_PORT(ports[port_id++]);
+                    BIND_PORT(s->pMuteGroup);
+                    BIND_PORT(s->pMuting);
+                    BIND_PORT(s->pNoteOff);
                 }
-                s->pMidiNote    = TRACE_PORT(ports[port_id++]);
+                BIND_PORT(s->pMidiNote);
 
                 // Bind sampler
                 lsp_trace("Binding sampler #%d ports...", int(i));
-                port_id         = s->sSampler.bind(ports, port_id, true);
+                s->sSampler.bind(ports, port_id, true);
             }
 
             if (nSamplers > 1)
@@ -286,31 +282,31 @@ namespace lsp
 
                     // Bind Bypass port
                     lsp_trace("Binding bypass port...");
-                    s->pBypass      = TRACE_PORT(ports[port_id++]);
+                    BIND_PORT(s->pBypass);
 
                     // Bind mixing gain port
                     lsp_trace("Binding gain port...");
-                    s->pGain        = TRACE_PORT(ports[port_id++]);
+                    BIND_PORT(s->pGain);
 
                     // Bind panorama port
                     if (nChannels > 1)
                     {
                         lsp_trace("Binding panorama ports...");
                         for (size_t j=0; j<nChannels; ++j)
-                            s->vChannels[j].pPan    = TRACE_PORT(ports[port_id++]);
+                            BIND_PORT(s->vChannels[j].pPan);
                     }
 
                     // Bind activity port
-                    s->sSampler.bind_activity(TRACE_PORT(ports[port_id++]));
+                    s->sSampler.bind_activity(ports, port_id);
 
                     // Bind dry port if present
                     if (bDryPorts)
                     {
                         lsp_trace("Binding dry ports...");
-                        s->pDryBypass       = TRACE_PORT(ports[port_id++]);
+                        BIND_PORT(s->pDryBypass);
 
                         for (size_t j=0; j<nChannels; ++j)
-                            s->vChannels[j].pDry    = TRACE_PORT(ports[port_id++]);
+                            BIND_PORT(s->vChannels[j].pDry);
                     }
                 }
             }
@@ -383,11 +379,13 @@ namespace lsp
         void sampler::update_settings()
         {
             // Update dry & wet parameters
-            float dry   = (pDry != NULL)    ? pDry->value()  : 1.0f;
-            float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
-            float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
-            fDry        = dry * gain;
-            fWet        = wet * gain;
+            const float dry   = (pDry != NULL)    ? pDry->value()  : 1.0f;
+            const float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
+            const float drywet= (pDryWet != NULL) ? pDryWet->value() * 0.01f : 1.0f;
+            const float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
+
+            fDry        = (dry * drywet + 1.0f - drywet) * gain;
+            fWet        = (wet * drywet) * gain;
 
             lsp_trace("dry = %f, wet=%f, gain=%f", dry, wet, gain);
 
@@ -841,6 +839,7 @@ namespace lsp
             v->write("pFadeout", pFadeout);
             v->write("pDry", pDry);
             v->write("pWet", pWet);
+            v->write("pDryWet", pDryWet);
             v->write("pGain", pGain);
             v->write("pDOGain", pDOGain);
             v->write("pDOPan", pDOPan);

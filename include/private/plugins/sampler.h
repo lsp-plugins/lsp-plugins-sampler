@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -121,6 +121,7 @@ namespace lsp
                 plug::IPort        *pFadeout;           // Note-off fadeout
                 plug::IPort        *pDry;               // Dry amount port
                 plug::IPort        *pWet;               // Wet amount port
+                plug::IPort        *pDryWet;            // Dry/Wet balance
                 plug::IPort        *pGain;              // Output gain port
                 plug::IPort        *pDOGain;            // Direct output gain flag
                 plug::IPort        *pDOPan;             // Direct output panning flag
@@ -138,7 +139,12 @@ namespace lsp
 
             public:
                 explicit        sampler(const meta::plugin_t *metadata, size_t samplers, size_t channels, bool dry_ports);
+                sampler(const sampler &) = delete;
+                sampler(sampler &&) = delete;
                 virtual        ~sampler() override;
+
+                sampler & operator = (const sampler &) = delete;
+                sampler & operator = (sampler &&) = delete;
 
             public:
                 virtual void    init(plug::IWrapper *wrapper, plug::IPort **ports) override;
