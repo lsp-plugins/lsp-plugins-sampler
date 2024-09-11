@@ -391,7 +391,7 @@
 							<vsep/>
 						</cell>
 						<ui:with bg.color="bg_schema">
-							<label text="${i}"/>
+							<label text="${:i+1}"/>
 							<ui:set id="idx" value="[inst]_${i}"/>
 
 							<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
@@ -435,7 +435,7 @@
 						<cell rows="14">
 							<vsep pad.l="4"/>
 						</cell>
-						<label text="${i}" padding="6"/>
+						<label text="${:i+1}" padding="6"/>
 						<edit ui:id="iname_${i}" bg.inherit="true" pad.h="6"/>
 						<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="imix_${i}" size="20"/>

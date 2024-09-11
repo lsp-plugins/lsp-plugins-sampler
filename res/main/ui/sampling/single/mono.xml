@@ -354,7 +354,7 @@
 						<vsep/>
 					</cell>
 					<ui:with bg.color="bg_schema">
-						<label text="${i}"/>
+						<label text="${:i+1}"/>
 						<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="vl_${i}" size="20" scolor="velocity"/>
 						<vbox vfill="false" pad.b="6">
