@@ -555,7 +555,7 @@ namespace lsp
                 sListen.submit(pListen->value());
 
             // Update note and octave
-            lsp_trace("Initializing samples...");
+//            lsp_trace("Initializing samples...");
 
             // Iterate all samples
             for (size_t i=0; i<nFiles; ++i)

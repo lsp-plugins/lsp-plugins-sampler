@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.25 ===
+* Added instrument names to the drop-down ComboBox and ComboGroup.
 * Updated build scripts and dependencies.
 
 === 1.0.24 ===

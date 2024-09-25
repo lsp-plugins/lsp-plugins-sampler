@@ -54,7 +54,9 @@
       "6": "Instrument 7",
       "7": "Instrument 8",
       "8": "Instrument 9",
-      "9": "Instrument 10"
+      "9": "Instrument 10",
+      "id": "Instrument {@id}",
+      "id_name": "Instrument {@id}: {@name}"
     },
     "instruments": "Instruments",
     "loop": {

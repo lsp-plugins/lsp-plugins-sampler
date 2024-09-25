@@ -18,7 +18,7 @@
 		<!-- Instrument editor -->
 		<grid rows="2" cols="2" visibility=":msel ieq 0" spacing="4" transpose="true" expand="true">
 			<!-- Midi settings -->
-			<cgroup id="inst" active="0" bg.color="bg" spacing="4" ipadding="0">
+			<cgroup id="inst" ui:id="inst_cgroup" active="0" bg.color="bg" spacing="4" ipadding="0">
 				<grid rows="1" cols="5" hspacing="2">
 					<!-- first block -->
 					<vbox spacing="2">

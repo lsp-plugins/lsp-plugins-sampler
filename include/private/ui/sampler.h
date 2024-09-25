@@ -52,7 +52,8 @@ namespace lsp
 
                 typedef struct inst_name_t
                 {
-                    tk::Edit           *pWidget;    // Pointer to the widget
+                    tk::Edit           *wEdit;      // Pointer to the widget
+                    tk::ListBoxItem    *wListItem;  // Instrument name in the list
                     size_t              nIndex;     // Instrument number
                     bool                bChanged;   // Change flag
                 } inst_name_t;
@@ -107,6 +108,7 @@ namespace lsp
                 tk::FileDialog             *wBundleDialog;
                 tk::MessageBox             *wMessageBox;
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
+                tk::ComboGroup             *wInstrumentsGroup;      // Instruments group
                 lltl::parray<tk::Widget>    vHydrogenMenus;
                 lltl::parray<h2drumkit_t>   vDrumkits;
                 lltl::darray<inst_name_t>   vInstNames; // Names of instruments
@@ -146,7 +148,8 @@ namespace lsp
                 status_t            add_instrument(int id, const hydrogen::instrument_t *inst);
                 void                set_float_value(float value, const char *fmt...);
                 void                set_path_value(const char *path, const char *fmt...);
-                void                set_instrument_name(core::KVTStorage *kvt, int id, const char *name);
+                void                set_kvt_instrument_name(core::KVTStorage *kvt, int id, const char *name);
+                void                set_ui_instrument_name(inst_name_t *inst, const LSPString *name);
 
                 void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();
