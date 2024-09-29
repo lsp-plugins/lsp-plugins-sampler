@@ -505,7 +505,7 @@ namespace lsp
         }
 
         template <class T>
-        void sampler_kernel::commit_value(size_t & counter, T & field, plug::IPort *port)
+        void sampler_kernel::commit_value(uint32_t & counter, T & field, plug::IPort *port)
         {
             const T temp = port->value();
             if (temp != field)
@@ -515,7 +515,7 @@ namespace lsp
             }
         }
 
-        void sampler_kernel::commit_value(size_t & counter, bool & field, plug::IPort *port)
+        void sampler_kernel::commit_value(uint32_t & counter, bool & field, plug::IPort *port)
         {
             const bool temp = port->value() >= 0.5f;
             if (temp != field)
@@ -626,7 +626,7 @@ namespace lsp
                 commit_value(af->nUpdateReq, af->nCompensateFadeType, af->pCompensateFadeType);
 
                 // Update loop parameters
-                size_t loop_update = 0;
+                uint32_t loop_update = 0;
                 dspu::sample_loop_t loop_mode = decode_loop_mode(af->pLoopOn, af->pLoopMode);
                 if (af->enLoopMode != loop_mode)
                 {
@@ -719,7 +719,7 @@ namespace lsp
                 lsp_trace("load failed: status=%d (%s)", status, get_status(status));
                 return status;
             }
-            size_t channels         = lsp_min(nChannels, source->channels());
+            const size_t channels   = lsp_min(nChannels, source->channels());
             if (!source->set_channels(channels))
             {
                 lsp_trace("failed to resize source sample to %d channels", int(channels));
@@ -988,7 +988,7 @@ namespace lsp
                 for (size_t i=0; i<2; ++i)
                 {
                     size_t j=i^1; // j = (i + 1) % 2
-                    ps.set_sample_channel(i);
+                    ps.set_sample_channel(i % s->channels());
 
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(i), int(af->nID), int(i), gain * af->fGains[i], int(delay));
                     ps.set_volume(gain * af->fGains[i]);
@@ -1355,7 +1355,7 @@ namespace lsp
 
                 // Store file thumbnails to mesh
                 plug::mesh_t *mesh  = reinterpret_cast<plug::mesh_t *>(af->pMesh->buffer());
-                if ((mesh == NULL) || (!mesh->isEmpty()) || (!af->bSync) || (!af->pLoader->idle()))
+                if ((mesh == NULL) || (!mesh->isEmpty()) || (!af->bSync) || (!af->pLoader->idle()) || (!af->pRenderer->idle()))
                     continue;
 
                 if ((channels > 0) && (af->vThumbs[0] != NULL))
