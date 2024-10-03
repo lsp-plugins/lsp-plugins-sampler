@@ -198,7 +198,8 @@
 
 								<cell rows="2">
 									<vbox bg.color="bg_schema">
-										<button id="rs${idx}" size="32"/>
+										<button id="rr${idx}" text="labels.processing.pre" width="64" />
+										<button id="rs${idx}" text="labels.processing.post" width="64" />
 										<label pad.b="6"/>
 										<label pad.b="6"/>
 									</vbox>

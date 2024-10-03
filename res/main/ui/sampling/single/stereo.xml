@@ -164,7 +164,8 @@
 
 							<cell rows="2">
 								<vbox bg.color="bg_schema">
-									<button id="rs[ssel]" size="32"/>
+									<button id="rr[ssel]" text="labels.processing.pre" width="64" />
+									<button id="rs[ssel]" text="labels.processing.post" width="64" />
 									<label pad.b="6"/>
 									<label pad.b="6"/>
 								</vbox>

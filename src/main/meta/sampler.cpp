@@ -254,7 +254,8 @@ namespace lsp
                     sampler_metadata::PREDELAY_MIN, sampler_metadata::PREDELAY_MAX, 0, sampler_metadata::PREDELAY_STEP, NULL }, \
             SWITCH("on", "Sample enabled", 1.0f), \
             TRIGGER("ls", "Sample listen"), \
-            SWITCH("rs", "Sample reverse", 0.0f), \
+            SWITCH("rr", "Sample pre-reverse", 0.0f), \
+            SWITCH("rs", "Sample post-reverse", 0.0f), \
             SWITCH("pc", "Sample auto-compensate", 0.0f), \
             CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
             CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \

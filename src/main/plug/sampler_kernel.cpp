@@ -214,7 +214,8 @@ namespace lsp
                 af->fTailCut                = 0.0f;
                 af->fFadeIn                 = 0.0f;
                 af->fFadeOut                = 0.0f;
-                af->bReverse                = false;
+                af->bPreReverse             = false;
+                af->bPostReverse            = false;
                 af->bCompensate             = false;
                 af->fCompensateFade         = 0.0f;
                 af->fCompensateChunk        = 0.0f;
@@ -252,7 +253,8 @@ namespace lsp
                 af->pPreDelay               = NULL;
                 af->pOn                     = NULL;
                 af->pListen                 = NULL;
-                af->pReverse                = NULL;
+                af->pPreReverse             = NULL;
+                af->pPostReverse            = NULL;
                 af->pCompensate             = NULL;
                 af->pCompensateFade         = NULL;
                 af->pCompensateChunk        = NULL;
@@ -363,7 +365,8 @@ namespace lsp
                 BIND_PORT(af->pPreDelay);
                 BIND_PORT(af->pOn);
                 BIND_PORT(af->pListen);
-                BIND_PORT(af->pReverse);
+                BIND_PORT(af->pPreReverse);
+                BIND_PORT(af->pPostReverse);
                 BIND_PORT(af->pCompensate);
                 BIND_PORT(af->pCompensateFade);
                 BIND_PORT(af->pCompensateChunk);
@@ -619,7 +622,8 @@ namespace lsp
                 commit_value(af->nUpdateReq, af->fTailCut, af->pTailCut);
                 commit_value(af->nUpdateReq, af->fFadeIn, af->pFadeIn);
                 commit_value(af->nUpdateReq, af->fFadeOut, af->pFadeOut);
-                commit_value(af->nUpdateReq, af->bReverse, af->pReverse);
+                commit_value(af->nUpdateReq, af->bPreReverse, af->pPreReverse);
+                commit_value(af->nUpdateReq, af->bPostReverse, af->pPostReverse);
                 commit_value(af->nUpdateReq, af->bCompensate, af->pCompensate);
                 commit_value(af->nUpdateReq, af->fCompensateFade, af->pCompensateFade);
                 commit_value(af->nUpdateReq, af->fCompensateChunk, af->pCompensateChunk);
@@ -771,6 +775,9 @@ namespace lsp
                 lsp_warn("Error resampling source sample");
                 return STATUS_NO_MEM;
             }
+            if (af->bPreReverse)
+                temp.reverse();
+
             if (af->bCompensate)
             {
                 size_t chunk_size       = dspu::millis_to_samples(nSampleRate, af->fCompensateChunk);
@@ -966,7 +973,7 @@ namespace lsp
                 (af->nLoopFadeType == XFADE_LINEAR) ? dspu::SAMPLE_CROSSFADE_LINEAR : dspu::SAMPLE_CROSSFADE_CONST_POWER,
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
             ps.set_delay(delay);
-            ps.set_start((af->bReverse) ? s->length() : 0, af->bReverse);
+            ps.set_start((af->bPostReverse) ? s->length() : 0, af->bPostReverse);
 
             dspu::Playback *vpb = (mode == PLAY_FILE) ? af->vListen :
                                   (mode == PLAY_INSTRUMENT) ? vListen :
@@ -1445,7 +1452,8 @@ namespace lsp
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
             v->write("fFadeOut", f->fFadeOut);
-            v->write("bReverse", f->bReverse);
+            v->write("bPreReverse", f->bPreReverse);
+            v->write("bPostReverse", f->bPostReverse);
             v->write("bCompensate", f->bCompensate);
             v->write("fCompensateFade", f->fCompensateFade);
             v->write("fCompensateChunk", f->fCompensateChunk);
@@ -1482,7 +1490,8 @@ namespace lsp
             v->write("pPreDelay", f->pPreDelay);
             v->write("pOn", f->pOn);
             v->write("pListen", f->pListen);
-            v->write("pReverse", f->pReverse);
+            v->write("pPreReverse", f->pPreReverse);
+            v->write("pPostReverse", f->pPostReverse);
             v->write("pCompensate", f->pCompensate);
             v->write("pCompensateFade", f->pCompensateFade);
             v->write("pCompensateChunk", f->pCompensateChunk);

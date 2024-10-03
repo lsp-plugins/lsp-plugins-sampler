@@ -161,7 +161,8 @@ namespace lsp
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
                     float               fFadeOut;                                       // Fade Out (ms)
-                    bool                bReverse;                                       // Reverse sample
+                    bool                bPreReverse;                                    // Pre-reverse sample
+                    bool                bPostReverse;                                   // Post-reverse sample
                     bool                bCompensate;                                    // Compensate time
                     float               fCompensateFade;                                // Compensate fade
                     float               fCompensateChunk;                               // Compensate chunk
@@ -198,7 +199,8 @@ namespace lsp
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pOn;                                            // Sample on outputflag
                     plug::IPort        *pListen;                                        // Listen trigger
-                    plug::IPort        *pReverse;                                       // Reverse sample
+                    plug::IPort        *pPreReverse;                                    // Pre-reverse sample
+                    plug::IPort        *pPostReverse;                                   // Post-reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
                     plug::IPort        *pCompensateFade;                                // Compensate fade
                     plug::IPort        *pCompensateChunk;                               // Compensate chunk
