@@ -197,10 +197,9 @@
 								<label text="labels.sedit.predelay" bg.color="bg_schema" padding="6"/>
 
 								<cell rows="2">
-									<vbox bg.color="bg_schema">
-										<button id="rr${idx}" text="labels.processing.pre" width="64" />
-										<button id="rs${idx}" text="labels.processing.post" width="64" />
-										<label pad.b="6"/>
+									<vbox bg.color="bg_schema" fill="false">
+										<button id="rr${idx}" text="labels.processing.pre" width="48" pad.b="4" />
+										<button id="rs${idx}" text="labels.processing.post" width="48" />
 										<label pad.b="6"/>
 									</vbox>
 								</cell>
