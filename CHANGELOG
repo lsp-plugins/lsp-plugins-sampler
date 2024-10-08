@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.26 ===
+
+
 === 1.0.25 ===
 * Added pre-reverse of the loaded sample before cuts, stretches and fades applied.
 * Added directory contents view and navigation of currently loaded sample.
