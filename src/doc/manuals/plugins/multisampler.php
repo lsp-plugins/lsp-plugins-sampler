@@ -135,7 +135,11 @@ for path substitutions. For example, the following value:</p>
 	<li><b>Listen</b> - the button that forces the playback of the selected sample for the selected instrument</li>
 	<li><b>Main tab</b> - the main control of the sample</li>
 	<ul>
-		<li><b>Reverse</b> - reverse the playback order of the sample (play sample from the end up to the beginning).</li>
+		<li><b>Reverse</b> - apply reverse to the sample at different stages:</li>
+		<ul>
+			<li><b>Pre</b> - reverse the sample contents just after loading and before applying cuts, stretches and fades;
+			<li><b>Post</b> - reverse the playback order of the sample after all edits (play sample from the end up to the beginning).</li>
+		</ul>
 		<li><b>Head cut</b> - the time to be cut from the beginning of the current sample for the selected instrument.</li>
 		<li><b>Tail cut</b> - the time to be cut from the end of the current sample for the selected instrument.</li>
 		<li><b>Fade in</b> - the time to be faded from the beginning of the current sample for the selected instrument.</li>

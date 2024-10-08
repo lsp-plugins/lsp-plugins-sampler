@@ -129,7 +129,7 @@ namespace lsp
 
                 struct afile_t
                 {
-                    size_t              nID;                                            // ID of sample
+                    uint32_t            nID;                                            // ID of sample
                     AFLoader           *pLoader;                                        // Audio file loader task
                     AFRenderer         *pRenderer;                                      // Audio file renderer task
                     dspu::Toggle        sListen;                                        // Listen toggle
@@ -140,8 +140,8 @@ namespace lsp
                     dspu::Sample       *pProcessed;                                     // Processed sample
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
 
-                    size_t              nUpdateReq;                                     // Update request
-                    size_t              nUpdateResp;                                    // Update response
+                    uint32_t            nUpdateReq;                                     // Update request
+                    uint32_t            nUpdateResp;                                    // Update response
                     bool                bSync;                                          // Sync flag
                     float               fVelocity;                                      // Velocity
                     float               fPitch;                                         // Pitch (st)
@@ -151,21 +151,22 @@ namespace lsp
                     float               fStretchEnd;                                    // Stretch end (ms)
                     float               fStretchChunk;                                  // Stretch chunk (bar)
                     float               fStretchFade;                                   // Stretch cross-fade length
-                    size_t              nStretchFadeType;                               // Stretch cross-fade type
+                    uint32_t            nStretchFadeType;                               // Stretch cross-fade type
                     dspu::sample_loop_t enLoopMode;                                     // Loop mode
                     float               fLoopStart;                                     // Stretch start (ms)
                     float               fLoopEnd;                                       // Stretch end (ms)
                     float               fLoopFade;                                      // Loop cross-fade length
-                    size_t              nLoopFadeType;                                  // Loop cross-fade type
+                    uint32_t            nLoopFadeType;                                  // Loop cross-fade type
                     float               fHeadCut;                                       // Head cut (ms)
                     float               fTailCut;                                       // Tail cut (ms)
                     float               fFadeIn;                                        // Fade In (ms)
                     float               fFadeOut;                                       // Fade Out (ms)
-                    bool                bReverse;                                       // Reverse sample
+                    bool                bPreReverse;                                    // Pre-reverse sample
+                    bool                bPostReverse;                                   // Post-reverse sample
                     bool                bCompensate;                                    // Compensate time
                     float               fCompensateFade;                                // Compensate fade
                     float               fCompensateChunk;                               // Compensate chunk
-                    size_t              nCompensateFadeType;                            // Compensate fade type
+                    uint32_t            nCompensateFadeType;                            // Compensate fade type
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
@@ -198,7 +199,8 @@ namespace lsp
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pOn;                                            // Sample on outputflag
                     plug::IPort        *pListen;                                        // Listen trigger
-                    plug::IPort        *pReverse;                                       // Reverse sample
+                    plug::IPort        *pPreReverse;                                    // Pre-reverse sample
+                    plug::IPort        *pPostReverse;                                   // Post-reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
                     plug::IPort        *pCompensateFade;                                // Compensate fade
                     plug::IPort        *pCompensateChunk;                               // Compensate chunk
@@ -264,8 +266,8 @@ namespace lsp
                 afile_t    *select_active_sample(float velocity);
 
                 template <class T>
-                static void commit_value(size_t & counter, T & field, plug::IPort *port);
-                static void commit_value(size_t & counter, bool & field, plug::IPort *port);
+                static void commit_value(uint32_t & counter, T & field, plug::IPort *port);
+                static void commit_value(uint32_t & counter, bool & field, plug::IPort *port);
 
             protected:
                 static void                 unload_afile(afile_t *file);

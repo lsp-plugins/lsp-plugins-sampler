@@ -18,7 +18,7 @@
 		<!-- Instrument editor -->
 		<grid rows="2" cols="2" visibility=":msel ieq 0" spacing="4" transpose="true" expand="true">
 			<!-- Midi settings -->
-			<cgroup id="inst" active="0" bg.color="bg" spacing="4" ipadding="0">
+			<cgroup id="inst" ui:id="inst_cgroup" active="0" bg.color="bg" spacing="4" ipadding="0">
 				<grid rows="1" cols="5" hspacing="2">
 					<!-- first block -->
 					<vbox spacing="2">
@@ -83,57 +83,86 @@
 				<vbox bg.color="bg" spacing="4">
 					<ui:set id="idx" value="[inst][ssel]"/>
 					<!-- File editor -->
-					<asample
-						expand="true"
-						id="sf${idx}"
-						mesh_id="fd${idx}"
-						path.id="_ui_dlg_sample_path"
-						ftype.id="_ui_dlg_sample_ftype"
-						hcut=":hc${idx}"
-						tcut=":tc${idx}"
-						fadein=":fi${idx}"
-						fadeout=":fo${idx}"
-						stretch.enable="1"
-						stretch.color="(:so${idx}) ? 'stretch_color' : 'stretch_color_off'"
-						stretch.border.color="(:so${idx}) ? 'stretch_border_color' : 'stretch_border_color_off'"
-						stretch.begin=":ss${idx}"
-						stretch.end=":se${idx}"
-						loop.enable="1"
-						loop.color="(:lo${idx}) ? 'loop_color' : 'loop_color_off'"
-						loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
-						loop.begin=":lb${idx}"
-						loop.end=":le${idx}"
-						play.position=":pp${idx}"
-						length=":fl${idx}"
-						length.actual=":al${idx}"
-						status=":fs${idx}"
-						sample.full="true"
-						width.min="320"
-						height.min="160"
-						load.preview="true"
-						clipboard.pitch="pi${idx}"
-						clipboard.stretch_on="so${idx}"
-						clipboard.stretch="st${idx}"
-						clipboard.stretch_start="ss${idx}"
-						clipboard.stretch_end="se${idx}"
-						clipboard.stretch_chunk="sc${idx}"
-						clipboard.stretch_fade="sx${idx}"
-						clipboard.loop_on="lo${idx}"
-						clipboard.loop_start="lb${idx}"
-						clipboard.loop_end="le${idx}"
-						clipboard.crossfade_type="xt${idx}"
-						clipboard.head_cut="hc${idx}"
-						clipboard.tail_cut="tc${idx}"
-						clipboard.fade_in="fi${idx}"
-						clipboard.fade_out="fo${idx}"
-						clipboard.makeup="mk${idx}"
-						clipboard.predelay="pd${idx}"/>
+					<hbox width.min="650" height.min="256">
+						<vbox hexpand="true">
+							<asample
+								expand="true"
+								id="sf${idx}"
+								mesh_id="fd${idx}"
+								path.id="_ui_dlg_sample_path"
+								ftype.id="_ui_dlg_sample_ftype"
+								hcut=":hc${idx}"
+								tcut=":tc${idx}"
+								fadein=":fi${idx}"
+								fadeout=":fo${idx}"
+								stretch.enable="1"
+								stretch.color="(:so${idx}) ? 'stretch_color' : 'stretch_color_off'"
+								stretch.border.color="(:so${idx}) ? 'stretch_border_color' : 'stretch_border_color_off'"
+								stretch.begin=":ss${idx}"
+								stretch.end=":se${idx}"
+								loop.enable="1"
+								loop.color="(:lo${idx}) ? 'loop_color' : 'loop_color_off'"
+								loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
+								loop.begin=":lb${idx}"
+								loop.end=":le${idx}"
+								play.position=":pp${idx}"
+								length=":fl${idx}"
+								length.actual=":al${idx}"
+								status=":fs${idx}"
+								sample.full="true"
+								width.min="320"
+								height.min="160"
+								load.preview="true"
+								clipboard.pitch="pi${idx}"
+								clipboard.stretch_on="so${idx}"
+								clipboard.stretch="st${idx}"
+								clipboard.stretch_start="ss${idx}"
+								clipboard.stretch_end="se${idx}"
+								clipboard.stretch_chunk="sc${idx}"
+								clipboard.stretch_fade="sx${idx}"
+								clipboard.loop_on="lo${idx}"
+								clipboard.loop_start="lb${idx}"
+								clipboard.loop_end="le${idx}"
+								clipboard.crossfade_type="xt${idx}"
+								clipboard.head_cut="hc${idx}"
+								clipboard.tail_cut="tc${idx}"
+								clipboard.fade_in="fi${idx}"
+								clipboard.fade_out="fo${idx}"
+								clipboard.makeup="mk${idx}"
+								clipboard.predelay="pd${idx}"/>
 
-					<!-- Listen button -->
-					<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
-						<void hexpand="true"/>
-						<button id="ls${idx}" text="labels.sedit.listen" width.min="50" ui:inject="Button_cyan" toggle="false"/>
+							<!-- Listen button -->
+							<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
+								<void hexpand="true"/>
+								<button id="ls${idx}" text="labels.sedit.listen" width.min="50" ui:inject="Button_cyan" toggle="false"/>
+							</hbox>
+						</vbox>
 
+						<!-- Sample list -->
+						<void bg.color="bg_graph" pad.h="2" hreduce="true" visibility="(:fs${idx} ine 1)"/>
+
+						<vbox vexpand="true" visibility="(:fs${idx} ine 1)">
+							<void bg.color="bg_graph" pad.v="2" vreduce="true"/>
+							<afolder id="sf${idx}" expand="true" width.min="199"/>
+							<void bg.color="bg_graph" pad.v="2" vreduce="true"/>
+
+							<ui:with fill="true">
+								<hbox pad.h="6" pad.v="4" spacing="4" bg.color="bg_schema">
+									<ui:with height="22">
+										<anavigator id="sf${idx}" text="icons.navigation_big.first_alt" action="first"/>
+										<anavigator id="sf${idx}" text="icons.navigation_big.last_alt" action="last"/>
+										<void hexpand="true"/>
+										<anavigator id="sf${idx}" text="icons.navigation_big.previous" action="previous"/>
+										<anavigator id="sf${idx}" text="icons.navigation_big.next" action="next"/>
+										<void hexpand="true"/>
+
+										<anavigator id="sf${idx}" text="icons.random.dice_fill" action="random"/>
+										<void hexpand="true"/>
+										<anavigator id="sf${idx}" text="icons.actions.cancel_alt" action="clear"/>
+									</ui:with>
+								</hbox>
+							</ui:with>
+						</vbox>
 					</hbox>
 
 					<tabs id="sets" height.min="139" width.min="481" hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 3) and (:lo${idx}))) ? 1.0 : :const_bg_darken">
@@ -168,17 +197,17 @@
 								<label text="labels.sedit.predelay" bg.color="bg_schema" padding="6"/>
 
 								<cell rows="2">
-									<vbox bg.color="bg_schema">
-										<button id="rs${idx}" size="32"/>
-										<label pad.b="6"/>
+									<vbox bg.color="bg_schema" fill="false">
+										<button id="rr${idx}" text="labels.processing.pre" width="48" pad.b="4" />
+										<button id="rs${idx}" text="labels.processing.post" width="48" />
 										<label pad.b="6"/>
 									</vbox>
 								</cell>
 							</ui:with>
 
 							<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-								<knob id="hc${idx}" max=":al${idx}" />
-								<knob id="tc${idx}" max=":al${idx}" />
+								<knob id="hc${idx}" max=":al${idx}"/>
+								<knob id="tc${idx}" max=":al${idx}"/>
 								<knob id="fi${idx}" max=":al${idx}" scolor="fade_in"/>
 								<knob id="fo${idx}" max=":al${idx}" scolor="fade_out"/>
 								<knob id="mk${idx}"/>
@@ -311,8 +340,8 @@
 								</ui:with>
 
 								<ui:with size="20" bg.color="bg_schema" pad="6" pad.t="0">
-									<knob id="lb${idx}" max=":al${idx}" />
-									<knob id="le${idx}" max=":al${idx}" />
+									<knob id="lb${idx}" max=":al${idx}"/>
+									<knob id="le${idx}" max=":al${idx}"/>
 									<knob id="ll${idx}"/>
 								</ui:with>
 
@@ -391,7 +420,7 @@
 							<vsep/>
 						</cell>
 						<ui:with bg.color="bg_schema">
-							<label text="${i}"/>
+							<label text="${:i+1}"/>
 							<ui:set id="idx" value="[inst]_${i}"/>
 
 							<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
@@ -435,7 +464,7 @@
 						<cell rows="14">
 							<vsep pad.l="4"/>
 						</cell>
-						<label text="${i}" padding="6"/>
+						<label text="${:i+1}" padding="6"/>
 						<edit ui:id="iname_${i}" bg.inherit="true" pad.h="6"/>
 						<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 						<knob id="imix_${i}" size="20"/>

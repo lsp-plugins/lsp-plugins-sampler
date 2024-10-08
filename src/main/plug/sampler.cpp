@@ -426,7 +426,7 @@ namespace lsp
                 s->bNoteOff     = (s->pNoteOff != NULL) ? s->pNoteOff->value() >= 0.5f : false;
                 s->bNoteOff     = s->bNoteOff || note_off;
 
-                lsp_trace("Sampler %d channels=0x%04x, note=%d", int(i), int(s->nChannelMap), int(s->nNote));
+//                lsp_trace("Sampler %d channels=0x%04x, note=%d", int(i), int(s->nChannelMap), int(s->nNote));
                 if (s->pMidiNote != NULL)
                     s->pMidiNote->set_value(s->nNote);
 

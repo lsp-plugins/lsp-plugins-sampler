@@ -240,6 +240,7 @@ namespace lsp
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
+            wInstrumentsGroup   = NULL;
         }
 
         sampler_ui::~sampler_ui()
@@ -250,6 +251,7 @@ namespace lsp
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
+            wInstrumentsGroup   = NULL;
 
             // Destroy instrument descriptors
             vInstNames.flush();
@@ -318,6 +320,16 @@ namespace lsp
             if (pHydrogenCustomPath != NULL)
                 pHydrogenCustomPath->bind(this);
 
+            // Find widget and port associated with the current selected instrument
+            pCurrentInstrument  = wrapper()->port("inst");
+            wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
+            wInstrumentsGroup   = wrapper()->controller()->widgets()->get<tk::ComboGroup>("inst_cgroup");
+
+            if (pCurrentInstrument != NULL)
+                pCurrentInstrument->bind(this);
+            if (wCurrentInstrument != NULL)
+                wCurrentInstrument->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
+
             // Add subwidgets
             tk::Registry *widgets   = pWrapper->controller()->widgets();
             tk::Menu *menu          = tk::widget_cast<tk::Menu>(widgets->find(WUID_IMPORT_MENU));
@@ -385,18 +397,11 @@ namespace lsp
                 if (inst == NULL)
                     return STATUS_NO_MEM;
 
-                inst->pWidget   = ed;
+                inst->wEdit     = ed;
+                inst->wListItem = (wInstrumentsGroup != NULL) ? wInstrumentsGroup->items()->get(i) : NULL;
                 inst->nIndex    = i;
                 inst->bChanged  = false;
             }
-
-            // Find widget and port associated with the current selected instrument
-            pCurrentInstrument  = wrapper()->port("inst");
-            wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
-            if (pCurrentInstrument != NULL)
-                pCurrentInstrument->bind(this);
-            if (wCurrentInstrument != NULL)
-                wCurrentInstrument->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
 
             return STATUS_OK;
         }
@@ -491,7 +496,7 @@ namespace lsp
             for (size_t i=0, n=vInstNames.size(); i<n; ++i)
             {
                 inst_name_t *name = vInstNames.uget(i);
-                if ((name->pWidget) && (name->bChanged))
+                if ((name->wEdit) && (name->bChanged))
                     ++changes;
             }
 
@@ -503,20 +508,19 @@ namespace lsp
                 {
                     lsp_finally { wrapper()->kvt_release(); };
 
-                    LSPString value;
-
+                    LSPString name;
                     for (size_t i=0, n=vInstNames.size(); i<n; ++i)
                     {
-                        inst_name_t *name = vInstNames.uget(i);
-                        if ((!name->pWidget) || (!name->bChanged))
+                        inst_name_t *inst = vInstNames.uget(i);
+                        if ((!inst->wEdit) || (!inst->bChanged))
                             continue;
 
                         // Obtain the new instrument name
-                        if (name->pWidget->text()->format(&value) != STATUS_OK)
+                        if (inst->wEdit->text()->format(&name) != STATUS_OK)
                             continue;
 
                         // Submit new value to KVT
-                        set_instrument_name(kvt, name->nIndex, value.get_utf8());
+                        set_kvt_instrument_name(kvt, inst->nIndex, name.get_utf8());
                     }
                 }
             }
@@ -537,9 +541,9 @@ namespace lsp
                 for (size_t i=0, n=vInstNames.size(); i<n; ++i)
                 {
                     inst_name_t *name = vInstNames.uget(i);
-                    if (!name->pWidget)
+                    if (!name->wEdit)
                         continue;
-                    set_instrument_name(kvt, name->nIndex, "");
+                    set_kvt_instrument_name(kvt, name->nIndex, "");
                     name->bChanged  = false;
                 }
             }
@@ -600,22 +604,17 @@ namespace lsp
                 // Valid object number?
                 if ((errno == 0) && (!::strcmp(endptr, "/name")) && (index >= 0))
                 {
+                    LSPString name;
+                    name.set_utf8(value->str);
+
                     for (size_t i=0, n=vInstNames.size(); i<n; ++i)
                     {
-                        inst_name_t *name = vInstNames.uget(i);
-                        if ((!name->pWidget) || (name->nIndex != size_t(index)))
+                        inst_name_t *inst = vInstNames.uget(i);
+                        if ((!inst->wEdit) || (inst->nIndex != size_t(index)))
                             continue;
 
-                        name->pWidget->text()->set_raw(value->str);
-                        name->bChanged = false;
-                    }
-
-                    // Deploy the value to the current selected instrument
-                    if ((wCurrentInstrument != NULL) && (pCurrentInstrument != NULL))
-                    {
-                        ssize_t selected = ssize_t(pCurrentInstrument->value());
-                        if (selected == index)
-                            wCurrentInstrument->text()->set_raw(value->str);
+                        set_ui_instrument_name(inst, &name);
+                        inst->bChanged = false;
                     }
                 }
             }
@@ -840,37 +839,40 @@ namespace lsp
 
         status_t sampler_ui::slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data)
         {
-            sampler_ui *_this = static_cast<sampler_ui *>(ptr);
+            sampler_ui *self = static_cast<sampler_ui *>(ptr);
 
             // Pass the changed value to the corresponding widget
-            ssize_t selected = ((_this->pCurrentInstrument != NULL)) ? ssize_t(_this->pCurrentInstrument->value()) : -1;
+            ssize_t selected = ((self->pCurrentInstrument != NULL)) ? ssize_t(self->pCurrentInstrument->value()) : -1;
 
-            if ((sender != NULL) && (sender == _this->wCurrentInstrument))
+            if ((sender != NULL) && (sender == self->wCurrentInstrument))
             {
                 // Mark the corresponding instrument name being changed
-                for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+                for (size_t i=0, n=self->vInstNames.size(); i<n; ++i)
                 {
-                    inst_name_t *name = _this->vInstNames.uget(i);
-                    if ((ssize_t(name->nIndex) == selected) && (name->pWidget != NULL))
+                    inst_name_t *inst = self->vInstNames.uget(i);
+                    if ((ssize_t(inst->nIndex) == selected) && (inst->wEdit != NULL))
                     {
-                        name->pWidget->text()->set(_this->wCurrentInstrument->text());
-                        name->bChanged  = true;
+                        LSPString name;
+                        self->wCurrentInstrument->text()->format(&name);
+                        self->set_ui_instrument_name(inst, &name);
+
+                        inst->bChanged  = true;
                     }
                 }
             }
             else
             {
                 // Mark the corresponding instrument name being changed
-                for (size_t i=0, n=_this->vInstNames.size(); i<n; ++i)
+                for (size_t i=0, n=self->vInstNames.size(); i<n; ++i)
                 {
-                    inst_name_t *name = _this->vInstNames.uget(i);
-                    if (name->pWidget != sender)
+                    inst_name_t *inst = self->vInstNames.uget(i);
+                    if (inst->wEdit != sender)
                         continue;
 
-                    // Update the name of selected instrument
-                    if (ssize_t(name->nIndex) == selected)
-                        _this->wCurrentInstrument->text()->set(name->pWidget->text());
-                    name->bChanged  = true;
+                    LSPString name;
+                    inst->wEdit->text()->format(&name);
+                    self->set_ui_instrument_name(inst, &name);
+                    inst->bChanged  = true;
                 }
             }
 
@@ -911,7 +913,7 @@ namespace lsp
             va_end(v);
         }
 
-        void sampler_ui::set_instrument_name(core::KVTStorage *kvt, int id, const char *name)
+        void sampler_ui::set_kvt_instrument_name(core::KVTStorage *kvt, int id, const char *name)
         {
             char kvt_name[0x80];
             core::kvt_param_t kparam;
@@ -1177,7 +1179,7 @@ namespace lsp
             if (kvt != NULL)
             {
                 lsp_finally { wrapper()->kvt_release(); };
-                set_instrument_name(kvt, id, (inst != NULL) ? inst->name.get_utf8() : "");
+                set_kvt_instrument_name(kvt, id, (inst != NULL) ? inst->name.get_utf8() : "");
             }
 
             return STATUS_OK;
@@ -1696,7 +1698,7 @@ namespace lsp
                     if (kvt != NULL)
                     {
                         lsp_finally { wrapper()->kvt_release(); };
-                        set_instrument_name(kvt, id, r->group_label.get_utf8());
+                        set_kvt_instrument_name(kvt, id, r->group_label.get_utf8());
                     }
                 }
 
@@ -1754,6 +1756,33 @@ namespace lsp
 
             // Compare associated file names
             return a->sample.compare_to(&b->sample);
+        }
+
+        void sampler_ui::set_ui_instrument_name(inst_name_t *inst, const LSPString *name)
+        {
+            if (inst->wEdit != NULL)
+                inst->wEdit->text()->set_raw(name);
+
+            tk::String *text = (inst->wListItem != NULL) ? inst->wListItem->text() : NULL;
+            if (text != NULL)
+            {
+                expr::Parameters params;
+                params.set_int("id", inst->nIndex + 1);
+                params.set_string("name", name);
+
+                if (name->length() > 0)
+                    text->set("lists.sampler.inst.id_name", &params);
+                else
+                    text->set("lists.sampler.inst.id", &params);
+            }
+
+            // Deploy the value to the current selected instrument
+            if ((wCurrentInstrument != NULL) && (pCurrentInstrument != NULL))
+            {
+                ssize_t selected = ssize_t(pCurrentInstrument->value());
+                if (selected == ssize_t(inst->nIndex))
+                    wCurrentInstrument->text()->set_raw(name);
+            }
         }
 
     } /* namespace plugui */

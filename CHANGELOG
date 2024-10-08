@@ -2,6 +2,13 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.25 ===
+* Added pre-reverse of the loaded sample before cuts, stretches and fades applied.
+* Added directory contents view and navigation of currently loaded sample.
+* Mono samples are now played as stereo samples with duplicated left channel.
+* Added instrument names to the drop-down ComboBox and ComboGroup.
+* Updated build scripts and dependencies.
+
 === 1.0.24 ===
 * Updated build scripts and dependencies.
 
