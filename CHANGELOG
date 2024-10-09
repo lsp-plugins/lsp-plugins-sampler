@@ -3,7 +3,7 @@
 *******************************************************************************
 
 === 1.0.26 ===
-
+* Fixed compilation on modern compilers.
 
 === 1.0.25 ===
 * Added pre-reverse of the loaded sample before cuts, stretches and fades applied.
