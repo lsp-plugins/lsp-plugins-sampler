@@ -31,48 +31,51 @@ namespace lsp
     {
         //---------------------------------------------------------------------
         // Plugin factory
-        typedef struct plugin_settings_t
+        inline namespace
         {
-            const meta::plugin_t   *metadata;
-            uint8_t                 samplers;
-            uint8_t                 channels;
-            bool                    dry_ports;
-        } plugin_settings_t;
+            typedef struct plugin_settings_t
+            {
+                const meta::plugin_t   *metadata;
+                uint8_t                 samplers;
+                uint8_t                 channels;
+                bool                    dry_ports;
+            } plugin_settings_t;
 
-        static const meta::plugin_t *plugins[] =
-        {
-            &meta::sampler_mono,
-            &meta::sampler_stereo,
-            &meta::multisampler_x12,
-            &meta::multisampler_x24,
-            &meta::multisampler_x48,
-            &meta::multisampler_x12_do,
-            &meta::multisampler_x24_do,
-            &meta::multisampler_x48_do
-        };
+            static const meta::plugin_t *plugins[] =
+            {
+                &meta::sampler_mono,
+                &meta::sampler_stereo,
+                &meta::multisampler_x12,
+                &meta::multisampler_x24,
+                &meta::multisampler_x48,
+                &meta::multisampler_x12_do,
+                &meta::multisampler_x24_do,
+                &meta::multisampler_x48_do
+            };
 
-        static const plugin_settings_t plugin_settings[] =
-        {
-            { &meta::sampler_mono,          1,  1, false    },
-            { &meta::sampler_stereo,        1,  2, false    },
-            { &meta::multisampler_x12,      12, 2, false    },
-            { &meta::multisampler_x24,      24, 2, false    },
-            { &meta::multisampler_x48,      48, 2, false    },
-            { &meta::multisampler_x12_do,   12, 2, true     },
-            { &meta::multisampler_x24_do,   24, 2, true     },
-            { &meta::multisampler_x48_do,   48, 2, true     },
-            { NULL, 0, 0, false }
-        };
+            static const plugin_settings_t plugin_settings[] =
+            {
+                { &meta::sampler_mono,          1,  1, false    },
+                { &meta::sampler_stereo,        1,  2, false    },
+                { &meta::multisampler_x12,      12, 2, false    },
+                { &meta::multisampler_x24,      24, 2, false    },
+                { &meta::multisampler_x48,      48, 2, false    },
+                { &meta::multisampler_x12_do,   12, 2, true     },
+                { &meta::multisampler_x24_do,   24, 2, true     },
+                { &meta::multisampler_x48_do,   48, 2, true     },
+                { NULL, 0, 0, false }
+            };
 
-        static plug::Module *plugin_factory(const meta::plugin_t *meta)
-        {
-            for (const plugin_settings_t *s = plugin_settings; s->metadata != NULL; ++s)
-                if (s->metadata == meta)
-                    return new sampler(s->metadata, s->samplers, s->channels, s->dry_ports);
-            return NULL;
-        }
+            static plug::Module *plugin_factory(const meta::plugin_t *meta)
+            {
+                for (const plugin_settings_t *s = plugin_settings; s->metadata != NULL; ++s)
+                    if (s->metadata == meta)
+                        return new sampler(s->metadata, s->samplers, s->channels, s->dry_ports);
+                return NULL;
+            }
 
-        static plug::Factory factory(plugin_factory, plugins, 8);
+            static plug::Factory factory(plugin_factory, plugins, 8);
+        } /* inline namespace */
 
         //-------------------------------------------------------------------------
         sampler::sampler(const meta::plugin_t *metadata, size_t samplers, size_t channels, bool dry_ports):
