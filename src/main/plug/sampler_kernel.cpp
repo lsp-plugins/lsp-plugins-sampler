@@ -1047,9 +1047,9 @@ namespace lsp
                     vListen[i].cancel(fadeout, 0);
             }
             else
+            {
                 for (size_t i=0; i<4; ++i)
                     vListen[i].stop(0);
-            {
             }
         }
 
