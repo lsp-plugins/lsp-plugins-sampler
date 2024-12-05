@@ -99,6 +99,7 @@
 					<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
 						<void hexpand="true"/>
 						<button id="ls[ssel]" text="labels.sedit.listen" width.min="50" ui:inject="Button_cyan" toggle="false"/>
+						<button id="lc[ssel]" text="labels.sedit.stop" width.min="50" ui:inject="Button_cyan" toggle="false"/>
 					</hbox>
 				</vbox>
 
@@ -370,7 +371,7 @@
 		<cell rows="2">
 			<group text="groups.sample_matrix" expand="true" ipadding="0">
 				<!-- Sample matrix -->
-				<grid rows="8" cols="17" transpose="true" hspacing="2" bg.color="bg">
+				<grid rows="9" cols="17" transpose="true" hspacing="2" bg.color="bg">
 					<ui:with bg.color="bg_schema">
 						<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0"/>
@@ -379,6 +380,7 @@
 						<label text="labels.gain" fill="true" halign="0"/>
 						<label text="labels.units.:db" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.sedit.listen" fill="true" halign="0" pad.b="6"/>
+						<label text="labels.sedit.stop" fill="true" halign="0" pad.b="6"/>
 						<void/>
 					</ui:with>
 	
@@ -396,7 +398,14 @@
 							</vbox>
 							<knob id="mx_${i}" size="20"/>
 							<value id="mx_${i}" detailed="false" pad.b="6"/>
-							<button id="ls_${i}" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+							<button id="ls_${i}"
+								font.name="lsp-icons" font.size="16"
+								text="icons.playback.play"
+								size="32" ui:inject="Button_cyan" toggle="false" />
+							<button id="lc_${i}"
+								font.name="lsp-icons" font.size="16"
+								text="icons.playback.stop"
+								size="32" ui:inject="Button_cyan" toggle="false" pad.b="6" />
 							<led id="no_${i}" pad.b="6" width="32" height="6"/>
 						</ui:with>
 					</ui:for>

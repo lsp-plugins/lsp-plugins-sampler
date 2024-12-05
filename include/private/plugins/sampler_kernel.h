@@ -132,7 +132,8 @@ namespace lsp
                     uint32_t            nID;                                            // ID of sample
                     AFLoader           *pLoader;                                        // Audio file loader task
                     AFRenderer         *pRenderer;                                      // Audio file renderer task
-                    dspu::Toggle        sListen;                                        // Listen toggle
+                    dspu::Toggle        sListen;                                        // Listen sample preview toggle
+                    dspu::Toggle        sStop;                                          // Stop listen sample preview toggle
                     dspu::Blink         sNoteOn;                                        // Note on led
                     dspu::Playback      vPlayback[4];                                   // Active playback handle
                     dspu::Playback      vListen[4];                                     // Listen playback handle
@@ -198,7 +199,8 @@ namespace lsp
                     plug::IPort        *pVelocity;                                      // Velocity range top
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pOn;                                            // Sample on outputflag
-                    plug::IPort        *pListen;                                        // Listen trigger
+                    plug::IPort        *pListen;                                        // Listen sample preview
+                    plug::IPort        *pStop;                                          // Stop listen sample preview
                     plug::IPort        *pPreReverse;                                    // Pre-reverse sample
                     plug::IPort        *pPostReverse;                                   // Post-reverse sample
                     plug::IPort        *pCompensate;                                    // Compensate
@@ -224,7 +226,8 @@ namespace lsp
                 dspu::Bypass        vBypass[meta::sampler_metadata::TRACKS_MAX];        // List of bypasses
                 dspu::Playback      vListen[4];                                         // Listen playback handle for instrument
                 dspu::Blink         sActivity;                                          // Note on led for instrument
-                dspu::Toggle        sListen;                                            // Listen toggle
+                dspu::Toggle        sListen;                                            // Listen sample preview toggle
+                dspu::Toggle        sStop;                                              // Stop listen sample preview toggle
                 dspu::Randomizer    sRandom;                                            // Randomizer
                 GCTask              sGCTask;                                            // Garbage collection task
 
@@ -242,7 +245,8 @@ namespace lsp
                 plug::IPort        *pDynamics;                                          // Dynamics port
                 plug::IPort        *pDrift;                                             // Time drifting port
                 plug::IPort        *pActivity;                                          // Activity port
-                plug::IPort        *pListen;                                            // Listen trigger
+                plug::IPort        *pListen;                                            // Listen sample preview
+                plug::IPort        *pStop;                                              // Stop listen sample preview
                 uint8_t            *pData;                                              // Pointer to aligned data
 
             protected:

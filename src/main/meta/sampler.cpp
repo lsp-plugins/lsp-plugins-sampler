@@ -253,7 +253,8 @@ namespace lsp
             { "pd", "Sample pre-delay",  U_MSEC, R_CONTROL, F_LOWER | F_UPPER | F_STEP, \
                     sampler_metadata::PREDELAY_MIN, sampler_metadata::PREDELAY_MAX, 0, sampler_metadata::PREDELAY_STEP, NULL }, \
             SWITCH("on", "Sample enabled", 1.0f), \
-            TRIGGER("ls", "Sample listen"), \
+            TRIGGER("ls", "Sample listen preview"), \
+            TRIGGER("lc", "Sample stop listen preview"), \
             SWITCH("rr", "Sample pre-reverse", 0.0f), \
             SWITCH("rs", "Sample post-reverse", 0.0f), \
             SWITCH("pc", "Sample auto-compensate", 0.0f), \
@@ -276,7 +277,8 @@ namespace lsp
             COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
             COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
             { "mn", "MIDI Note #", U_NONE, R_METER, F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
-            TRIGGER("trg", "Instrument listen"), \
+            TRIGGER("trg", "Instrument listen preview"), \
+            TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
@@ -289,7 +291,8 @@ namespace lsp
             SWITCH("mtg", "Mute on stop", 0.0f), \
             SWITCH("nto", "Note-off handling", 0.0f), \
             { "mn", "MIDI Note #", U_NONE, R_METER, F_LOWER | F_UPPER | F_INT, 0, 127, 0, 0, NULL }, \
-            TRIGGER("trg", "Instrument listen"), \
+            TRIGGER("trg", "Instrument listen preview"), \
+            TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
