@@ -1,7 +1,7 @@
 <plugin resizable="true">
 	<ui:eval id="num_blocks" value="(ex :imix_25) ? 4 : (ex :imix_13) ? 2 : 1"/>
 	<ui:alias id="ssel" value="ssel[inst]"/>
-	
+
 	<vbox spacing="4">
 		<!-- Area selector -->
 		<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
@@ -418,7 +418,7 @@
 							<label text="labels.sedit.stop" pad.b="6"/>
 							<void/>
 						</ui:with>
-	
+
 						<ui:for id="i" first="0" last="7">
 							<cell rows="11">
 								<vsep/>
@@ -426,7 +426,7 @@
 							<ui:with bg.color="bg_schema">
 								<label text="${:i+1}"/>
 								<ui:set id="idx" value="[inst]_${i}"/>
-	
+
 								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 								<knob id="vl${idx}" size="20" scolor="velocity"/>
 								<vbox vfill="false" pad.b="6">
@@ -438,12 +438,12 @@
 								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r"/>
 								<value id="pr${idx}" detailed="false" pad.b="6"/>
 								<button id="ls${idx}"
-									font.name="lsp-icons" font.size="16"
-									text="icons.playback.play"
+									font.name="lsp-icons" font.size="10"
+									text="icons.playback_big.play"
 									size="32" ui:inject="Button_cyan" toggle="false" />
 								<button id="lc${idx}"
-									font.name="lsp-icons" font.size="16"
-									text="icons.playback.stop"
+									font.name="lsp-icons" font.size="10"
+									text="icons.playback_big.stop"
 									size="32" ui:inject="Button_cyan" toggle="false" pad.b="6" />
 								<led id="no${idx}" pad.b="6"/>
 							</ui:with>
@@ -493,12 +493,12 @@
 						<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
 						<led id="iact_${i}" pad.b="6"/>
 						<button id="trg_${i}"
-							font.name="lsp-icons" font.size="16"
-							text="icons.playback.play"
+							font.name="lsp-icons" font.size="10"
+							text="icons.playback_big.play"
 							size="32" ui:inject="Button_cyan" toggle="false" />
 						<button id="stop_${i}"
-							font.name="lsp-icons" font.size="16"
-							text="icons.playback.stop"
+							font.name="lsp-icons" font.size="10"
+							text="icons.playback_big.stop"
 							size="32" ui:inject="Button_cyan" toggle="false" />
 					</ui:for>
 				</grid>

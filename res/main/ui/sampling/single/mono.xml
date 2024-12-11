@@ -130,7 +130,7 @@
 				</vbox>
 			</hbox>
 		</tgroup>
-		
+
 		<tabs id="sets"
 		 	vreduce="true"
 			height.min="139" width.min="481"
@@ -322,7 +322,7 @@
 				</ui:with>
 			</grid>
 		</tabs>
-				
+
 		<group text="groups.audio_channels" spacing="4" ipadding="0">
 			<grid rows="1" cols="3" hspacing="2" bg.color="bg">
 				<grid rows="1" cols="3" hspacing="2">
@@ -367,7 +367,7 @@
 				</grid>
 			</grid>
 		</group>
-		
+
 		<cell rows="2">
 			<group text="groups.sample_matrix" expand="true" ipadding="0">
 				<!-- Sample matrix -->
@@ -383,7 +383,7 @@
 						<label text="labels.sedit.stop" fill="true" halign="0" pad.b="6"/>
 						<void/>
 					</ui:with>
-	
+
 					<ui:for id="i" first="0" last="7">
 						<cell rows="9">
 							<vsep/>
@@ -399,12 +399,12 @@
 							<knob id="mx_${i}" size="20"/>
 							<value id="mx_${i}" detailed="false" pad.b="6"/>
 							<button id="ls_${i}"
-								font.name="lsp-icons" font.size="16"
-								text="icons.playback.play"
+								font.name="lsp-icons" font.size="10"
+								text="icons.playback_big.play"
 								size="32" ui:inject="Button_cyan" toggle="false" />
 							<button id="lc_${i}"
-								font.name="lsp-icons" font.size="16"
-								text="icons.playback.stop"
+								font.name="lsp-icons" font.size="10"
+								text="icons.playback_big.stop"
 								size="32" ui:inject="Button_cyan" toggle="false" pad.b="6" />
 							<led id="no_${i}" pad.b="6" width="32" height="6"/>
 						</ui:with>
