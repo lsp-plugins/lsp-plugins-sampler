@@ -5,6 +5,7 @@
 === 1.0.27 ===
 * Replaced CcomboGroup with TabGroup when selecting samples.
 * Added Stop button that allows to stop sample playback preview.
+* Updated build scripts and dependencies.
 
 === 1.0.26 ===
 * Fixed compilation on modern compilers.
