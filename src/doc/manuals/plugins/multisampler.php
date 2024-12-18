@@ -132,7 +132,8 @@ for path substitutions. For example, the following value:</p>
 </ul>
 <p><b>'Samples' section:</b></p>
 <ul>
-	<li><b>Listen</b> - the button that forces the playback of the selected sample for the selected instrument</li>
+	<li><b>Listen</b> - the button that plays the preview of the selected sample for the selected instrument.</li>
+	<li><b>Stop</b> - the button that stops the preview of the selected sample for the selected instrument.</li>
 	<li><b>Main tab</b> - the main control of the sample</li>
 	<ul>
 		<li><b>Reverse</b> - apply reverse to the sample at different stages:</li>
@@ -202,7 +203,8 @@ for path substitutions. For example, the following value:</p>
 	<li><b>Velocity</b> - the maximum velocity of the note the sample can trigger. Allows to set up velocity layers between different samples.</li>
 	<li><b>Pan Left</b> - the panorama of the left audio channel of the corresponding sample.</li>
 	<li><b>Pan Right</b> - the panorama of the right audio channel of the corresponding sample.</li>
-	<li><b>Listen</b> - the button that forces the playback of the corresponding sample.</li>
+	<li><b>Listen</b> - the button that plays the preview of the corresponding sample.</li>
+	<li><b>Stop</b> - the button that stops the preview of the corresponding sample.</li>
 	<li><b>Note on</b> - indicates that the playback event of the correponding sample has triggered.</li>
 </ul>
 <p><b>'Audio channel' section:</b></p>

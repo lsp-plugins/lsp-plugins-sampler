@@ -128,6 +128,7 @@ namespace lsp
             pDrift          = NULL;
             pActivity       = NULL;
             pListen         = NULL;
+            pStop           = NULL;
             pData           = NULL;
         }
 
@@ -182,6 +183,7 @@ namespace lsp
                 af->pRenderer               = NULL;
 
                 af->sListen.construct();
+                af->sStop.construct();
                 af->sNoteOn.construct();
                 for (size_t i=0; i<4; ++i)
                 {
@@ -192,6 +194,9 @@ namespace lsp
                 af->pProcessed              = NULL;
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
                     af->vThumbs[j]              = NULL;
+
+                af->sListen.init();
+                af->sStop.init();
 
                 af->nUpdateReq              = 0;
                 af->nUpdateResp             = 0;
@@ -253,6 +258,7 @@ namespace lsp
                 af->pPreDelay               = NULL;
                 af->pOn                     = NULL;
                 af->pListen                 = NULL;
+                af->pStop                   = NULL;
                 af->pPreReverse             = NULL;
                 af->pPostReverse            = NULL;
                 af->pCompensate             = NULL;
@@ -315,6 +321,7 @@ namespace lsp
 
             // Initialize toggle
             sListen.init();
+            sStop.init();
 
             return true;
         }
@@ -323,6 +330,7 @@ namespace lsp
         {
             lsp_trace("Binding listen toggle...");
             BIND_PORT(pListen);
+            BIND_PORT(pStop);
 
             if (dynamics)
             {
@@ -365,6 +373,7 @@ namespace lsp
                 BIND_PORT(af->pPreDelay);
                 BIND_PORT(af->pOn);
                 BIND_PORT(af->pListen);
+                BIND_PORT(af->pStop);
                 BIND_PORT(af->pPreReverse);
                 BIND_PORT(af->pPostReverse);
                 BIND_PORT(af->pCompensate);
@@ -419,6 +428,7 @@ namespace lsp
         void sampler_kernel::destroy_afile(afile_t *af)
         {
             af->sListen.destroy();
+            af->sStop.destroy();
             af->sNoteOn.destroy();
             for (size_t i=0; i<4; ++i)
             {
@@ -556,6 +566,8 @@ namespace lsp
             // Process listen toggle
             if (pListen != NULL)
                 sListen.submit(pListen->value());
+            if (pStop != NULL)
+                sStop.submit(pStop->value());
 
             // Update note and octave
 //            lsp_trace("Initializing samples...");
@@ -579,6 +591,7 @@ namespace lsp
                 // Listen trigger
     //            lsp_trace("submit listen%d = %f", int(i), af->pListen->getValue());
                 af->sListen.submit(af->pListen->value());
+                af->sStop.submit(af->pStop->value());
     //            lsp_trace("listen[%d].pending = %s", int(i), (af->sListen.pending()) ? "true" : "false");
 
                 // Makeup gain + mix gain
@@ -984,10 +997,7 @@ namespace lsp
                 lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(0), int(af->nID), int(0), gain * af->fGains[0], int(delay));
                 ps.set_sample_channel(0);
                 ps.set_volume(gain * af->fGains[0]);
-                vpb[0].set(vChannels[0].play(&ps));
-                vpb[1].clear();
-                vpb[2].clear();
-                vpb[3].clear();
+                vpb[0] = vChannels[0].play(&ps);
             }
             else // if (nChannels == 2)
             {
@@ -999,10 +1009,10 @@ namespace lsp
 
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(i), int(af->nID), int(i), gain * af->fGains[i], int(delay));
                     ps.set_volume(gain * af->fGains[i]);
-                    vpb[pb_id++].set(vChannels[i].play(&ps));
+                    vpb[pb_id++] = vChannels[i].play(&ps);
                     lsp_trace("channels[%d].play(%d, %d, %f, %d)", int(j), int(i), int(af->nID), gain * (1.0f - af->fGains[i]), int(delay));
                     ps.set_volume(gain * (1.0f - af->fGains[i]));
-                    vpb[pb_id++].set(vChannels[j].play(&ps));
+                    vpb[pb_id++] = vChannels[j].play(&ps);
                 }
             }
         }
@@ -1047,9 +1057,9 @@ namespace lsp
                     vListen[i].cancel(fadeout, 0);
             }
             else
+            {
                 for (size_t i=0; i<4; ++i)
                     vListen[i].stop(0);
-            {
             }
         }
 
@@ -1260,8 +1270,14 @@ namespace lsp
                 start_listen_instrument(0.5f, 1.0f);
                 sListen.commit();
             }
-            else if (sListen.off())
+			else if (sListen.off())
                 stop_listen_instrument(false);
+   
+            if (sStop.pending())
+            {
+                stop_listen_instrument(true);
+                sStop.commit();
+            }
 
             for (size_t i=0; i<nFiles; ++i)
             {
@@ -1280,6 +1296,12 @@ namespace lsp
                 }
                 else if (af->sListen.off())
                     stop_listen_file(af, false);
+
+                if (af->sStop.pending())
+                {
+                    stop_listen_file(af, true);
+                    af->sStop.commit();
+                }
             }
         }
 
@@ -1424,6 +1446,7 @@ namespace lsp
             v->write_object("pLoader", f->pLoader);
             v->write_object("pRenderer", f->pRenderer);
             v->write_object("sListen", &f->sListen);
+            v->write_object("sStop", &f->sStop);
             v->write_object("sNoteOn", &f->sNoteOn);
             v->write_object_array("vPlayback", f->vPlayback, 4);
             v->write_object_array("vListen", f->vListen, 4);
@@ -1490,6 +1513,7 @@ namespace lsp
             v->write("pPreDelay", f->pPreDelay);
             v->write("pOn", f->pOn);
             v->write("pListen", f->pListen);
+            v->write("pStop", f->pStop);
             v->write("pPreReverse", f->pPreReverse);
             v->write("pPostReverse", f->pPostReverse);
             v->write("pCompensate", f->pCompensate);
@@ -1528,6 +1552,7 @@ namespace lsp
             v->write_object_array("vListen", vListen, 4);
             v->write_object("sActivity", &sActivity);
             v->write_object("sListen", &sListen);
+            v->write_object("sStop", &sStop);
             v->write_object("sRandom", &sRandom);
             v->write_object("sGCTask", &sGCTask);
 
@@ -1546,6 +1571,7 @@ namespace lsp
             v->write("pDrift", pDrift);
             v->write("pActivity", pActivity);
             v->write("pListen", pListen);
+            v->write("pStop", pStop);
             v->write("pData", pData);
         }
     } /* namespace plugins */

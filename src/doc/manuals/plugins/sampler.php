@@ -28,7 +28,8 @@ There are up to eight samples available to play for different note velocities.</
 </ul>
 <p><b>'Samples' section:</b></p>
 <ul>
-	<li><b>Listen</b> - the button that forces the playback of the selected sample for the selected instrument</li>
+	<li><b>Listen</b> - the button that plays the preivew of the selected sample.</li>
+	<li><b>Stop</b> - the button that stops the preivew of the selected sample.</li>
 	<li><b>Main tab</b> - the main control of the sample</li>
 	<ul>
 		<li><b>Reverse</b> - apply reverse to the sample at different stages:</li>
@@ -102,7 +103,8 @@ There are up to eight samples available to play for different note velocities.</
 	<li><b>Pan Left</b> - the panorama of the left audio channel of the corresponding sample.</li>
 	<li><b>Pan Right</b> - the panorama of the right audio channel of the corresponding sample.</li>
 	<?php } ?>
-	<li><b>Listen</b> - the button that forces the playback of the corresponding sample.</li>
+	<li><b>Listen</b> - the button that plays the preview of the corresponding sample.</li>
+	<li><b>Stop</b> - the button that stops the preview of the corresponding sample.</li>
 	<li><b>Note on</b> - indicates that the playback event of the correponding sample has triggered.</li>
 </ul>
 <p><b>'Audio channel' section:</b></p>
