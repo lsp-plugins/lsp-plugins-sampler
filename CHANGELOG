@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.28 ===
+
+
 === 1.0.27 ===
 * Replaced CcomboGroup with TabGroup when selecting samples.
 * Added Stop button that allows to stop sample playback preview.
