@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -24,6 +24,7 @@
 #include <lsp-plug.in/expr/EnvResolver.h>
 #include <lsp-plug.in/fmt/lspc/lspc.h>
 #include <lsp-plug.in/fmt/lspc/util.h>
+#include <lsp-plug.in/fmt/url.h>
 #include <lsp-plug.in/io/Dir.h>
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/plug-fw/meta/func.h>
@@ -58,7 +59,7 @@ namespace lsp
 
         static ui::Module *sampler_factory_func(const meta::plugin_t *meta)
         {
-            return new sampler_ui(meta, true);
+            return new sampler_ui(meta, false);
         }
 
         static ui::Module *multisampler_factory_func(const meta::plugin_t *meta)
@@ -222,6 +223,45 @@ namespace lsp
             return PullParser::commit_param(key, tmp.as_string(), flags);
         }
 
+        //-----------------------------------------------------------------
+        sampler_ui::DragInSink::DragInSink(sampler_ui *ui)
+        {
+            pUI         = ui;
+        }
+
+        sampler_ui::DragInSink::~DragInSink()
+        {
+            unbind();
+        }
+
+        void sampler_ui::DragInSink::unbind()
+        {
+            if (pUI != NULL)
+            {
+                if (pUI->pDragInSink == this)
+                    pUI->pDragInSink    = NULL;
+                pUI = NULL;
+            }
+        }
+
+        status_t sampler_ui::DragInSink::commit_url(const LSPString *url)
+        {
+            if (url == NULL)
+                return STATUS_OK;
+
+            LSPString decoded;
+            status_t res = (url->starts_with_ascii("file://")) ?
+                    url::decode(&decoded, url, 7) :
+                    url::decode(&decoded, url);
+
+            if (res != STATUS_OK)
+                return res;
+
+            pUI->handle_file_drop(&decoded);
+
+            return STATUS_OK;
+        }
+
         //---------------------------------------------------------------------
         sampler_ui::sampler_ui(const meta::plugin_t *meta, bool multiple):
             ui::Module(meta)
@@ -235,12 +275,14 @@ namespace lsp
             pSfzFileType        = NULL;
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
+            pCurrentSample      = NULL;
             wHydrogenImport     = NULL;
             wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
             wInstrumentsGroup   = NULL;
+            pDragInSink         = NULL;
         }
 
         sampler_ui::~sampler_ui()
@@ -259,6 +301,16 @@ namespace lsp
 
         void sampler_ui::destroy()
         {
+            // Destroy sink
+            DragInSink *sink = pDragInSink;
+            if (sink != NULL)
+            {
+                sink->unbind();
+                sink->release();
+                sink   = NULL;
+            }
+
+            // Destroy other stuff
             destroy_hydrogen_menus();
             ui::Module::destroy();
         }
@@ -322,6 +374,7 @@ namespace lsp
 
             // Find widget and port associated with the current selected instrument
             pCurrentInstrument  = wrapper()->port("inst");
+            pCurrentSample      = wrapper()->port("ssel");
             wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
             wInstrumentsGroup   = wrapper()->controller()->widgets()->get<tk::ComboGroup>("inst_cgroup");
 
@@ -402,6 +455,14 @@ namespace lsp
                 inst->nIndex    = i;
                 inst->bChanged  = false;
             }
+
+            // Drag&Drop
+            pDragInSink = new DragInSink(this);
+            if (pDragInSink == NULL)
+                return STATUS_NO_MEM;
+            pDragInSink->acquire();
+
+            pWrapper->window()->slots()->bind(tk::SLOT_DRAG_REQUEST, slot_drag_request, this);
 
             return STATUS_OK;
         }
@@ -1580,6 +1641,33 @@ namespace lsp
             return STATUS_OK;
         }
 
+        status_t sampler_ui::slot_drag_request(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_BAD_STATE;
+
+            tk::Window *wnd     = self->pWrapper->window();
+            if (wnd == NULL)
+                return STATUS_BAD_STATE;
+            tk::Display *dpy    = wnd->display();
+            if (dpy == NULL)
+                return STATUS_BAD_STATE;
+
+            ws::rectangle_t r;
+            wnd->get_rectangle(&r);
+
+            const char * const *ctype = dpy->get_drag_mime_types();
+            ssize_t idx = self->pDragInSink->select_mime_type(ctype);
+            if (idx >= 0)
+            {
+                dpy->accept_drag(self->pDragInSink, ws::DRAG_COPY, &r);
+                lsp_trace("Accepted drag");
+            }
+
+            return STATUS_OK;
+        }
+
         status_t sampler_ui::import_sfz_file(const io::Path *base, const io::Path *path)
         {
             status_t res;
@@ -1783,6 +1871,38 @@ namespace lsp
                 if (selected == ssize_t(inst->nIndex))
                     wCurrentInstrument->text()->set_raw(name);
             }
+        }
+
+        void sampler_ui::handle_file_drop(const LSPString *path)
+        {
+            lsp_trace("Dropped file: %s", path->get_native());
+
+            io::Path io_path;
+            if (io_path.set(path) != STATUS_OK)
+                return;
+
+            // Try Hydrogen file first
+            status_t res = import_hydrogen_file(path);
+
+            // Now try SFZ file
+            if (res != STATUS_OK)
+                res = import_sfz_file(NULL, &io_path);
+
+            // Now try sampler bundle (LSPC) file
+            if (res != STATUS_OK)
+                res = import_sampler_bundle(&io_path);
+
+            // Set regular file to audio sample
+            if (res == STATUS_OK)
+                return;
+
+            if ((pCurrentInstrument == NULL) || (pCurrentSample == NULL))
+                return;
+
+            size_t inst = pCurrentInstrument->value();
+            size_t sample = pCurrentSample->value();
+            lsp_trace("Current instrument=%d, sample=%d", int(inst), int(sample));
+            set_path_value(path->get_utf8(), "sf_%d_%d", inst, sample);   // sample file
         }
 
     } /* namespace plugui */
