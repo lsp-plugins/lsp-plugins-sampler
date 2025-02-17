@@ -5,6 +5,7 @@
 === 1.0.28 ===
 * Implemented possibility to Drag&Drop drumkits, SFZ files and LSPC files directly
   to the plugin's window for import purpose.
+* Updated several labels in the UI.
 * Updated build scripts and dependencies.
 
 === 1.0.27 ===

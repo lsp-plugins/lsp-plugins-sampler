@@ -374,7 +374,7 @@
 				<!-- Sample matrix -->
 				<grid rows="11" cols="17" transpose="true" hspacing="2" bg.color="bg">
 					<ui:with bg.color="bg_schema">
-						<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
+						<label text="labels.sedit.sample" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0"/>
 						<label text="labels.midi.velocity" fill="true" halign="0"/>
 						<label text="labels.midi.code" fill="true" halign="0"/>
