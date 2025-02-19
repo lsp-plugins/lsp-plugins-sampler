@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -119,12 +119,14 @@ namespace lsp
             vBuffer         = NULL;
             bBypass         = false;
             bReorder        = false;
+            bHandleVelocity = true;
             fFadeout        = 10.0f;
             fDynamics       = meta::sampler_metadata::DYNA_DFL;
             fDrift          = meta::sampler_metadata::DRIFT_DFL;
             nSampleRate     = 0;
 
             pDynamics       = NULL;
+            pHandleVelocity = NULL;
             pDrift          = NULL;
             pActivity       = NULL;
             pListen         = NULL;
@@ -338,6 +340,7 @@ namespace lsp
                 lsp_trace("Binding dynamics and drifting...");
                 BIND_PORT(pDynamics);
                 BIND_PORT(pDrift);
+                BIND_PORT(pHandleVelocity);
             }
 
             lsp_trace("Skipping sample selector port...");
@@ -510,6 +513,7 @@ namespace lsp
             bBypass         = false;
 
             pDynamics       = NULL;
+            pHandleVelocity = NULL;
             pDrift          = NULL;
         }
 
@@ -663,6 +667,7 @@ namespace lsp
             // Get humanisation parameters
             fDynamics       = (pDynamics != NULL) ? pDynamics->value() * 0.01f : 0.0f; // fDynamics = 0..1.0
             fDrift          = (pDrift != NULL)    ? pDrift->value() : 0.0f;
+            bHandleVelocity = pHandleVelocity->value() >= 0.5f;
         }
 
         void sampler_kernel::sync_samples_with_ui()
@@ -1086,8 +1091,7 @@ namespace lsp
         void sampler_kernel::trigger_on(size_t timestamp, uint8_t midi_velocity)
         {
             // Get the file and ajdust gain
-            float level     = midi_velocity / 127.0f;
-            float velocity  = level * 100.0f;       // Compute velocity in percents
+            float velocity  = float(midi_velocity) / 1.27f;       // Compute velocity in percents
             afile_t *af     = select_active_sample(velocity);
             if (af == NULL)
                 return;
@@ -1099,11 +1103,12 @@ namespace lsp
             if (af->fMaxVelocity > 0.0f)
             {
                 // Apply 'Humanisation' parameters
-                level       = velocity * (1.0f + fDynamics * (sRandom.random(dspu::RND_EXP) - 0.5f)) / af->fMaxVelocity;
-                delay      += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
+                const float var     = (1.0f + fDynamics * (sRandom.random(dspu::RND_EXP) - 0.5f)); // Variation
+                const float gain    = (bHandleVelocity) ? (velocity * var) / af->fMaxVelocity : var;
+                delay              += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
 
                 // Play sample
-                play_sample(af, level, delay, PLAY_NOTE, false);
+                play_sample(af, gain, delay, PLAY_NOTE, false);
 
                 // Trigger the note On indicator
                 af->sNoteOn.blink();
@@ -1577,12 +1582,14 @@ namespace lsp
             v->write("vBuffer", vBuffer);
             v->write("bBypass", bBypass);
             v->write("bReorder", bReorder);
+            v->write("bHandleVelocity", bHandleVelocity);
             v->write("fFadeout", fFadeout);
             v->write("fDynamics", fDynamics);
             v->write("fDrift", fDrift);
             v->write("nSampleRate", nSampleRate);
 
             v->write("pDynamics", pDynamics);
+            v->write("pHandleVelocity", pHandleVelocity);
             v->write("pDrift", pDrift);
             v->write("pActivity", pActivity);
             v->write("pListen", pListen);

@@ -281,6 +281,7 @@ namespace lsp
             TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            SWITCH("hvel", "Velocity handling", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_MG_INSTRUMENT(sample)    \
@@ -295,6 +296,7 @@ namespace lsp
             TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            SWITCH("hvel", "Velocity handling", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_AREA_SELECTOR(list)     \

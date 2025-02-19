@@ -18,6 +18,7 @@ There are up to eight samples available to play for different note velocities.</
 	<li><b>Channel</b> - the MIDI channel to trigger notes or all channels.</li>
 	<li><b>Note</b> - the note and the octave of the note to trigger.</li>
 	<li><b>Muting</b> - when enabled, turns off any playback when the Channel Control MIDI message is received.</li>
+	<li><b>Velocity</b> - enables volume control of the sample by the velocity value of the MIDI note.</li>
 	<li><b>Note off</b> - when enabled, turns off sample playback for selected channel when the Note Off
 	MIDI message is received. The sample fade-out time can be controlled by the corresponding knob. The behaviour is
 	different, depending on the	loop settings and muting settings. If the loop is enabled for the sample, then

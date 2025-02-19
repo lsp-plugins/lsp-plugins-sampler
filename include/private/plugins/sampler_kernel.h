@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -238,12 +238,14 @@ namespace lsp
                 float              *vBuffer;                                            // Buffer
                 bool                bBypass;                                            // Bypass flag
                 bool                bReorder;                                           // Reorder flag
+                bool                bHandleVelocity;                                    // Velocity handling flag
                 float               fFadeout;                                           // Fadeout in milliseconds
                 float               fDynamics;                                          // Dynamics
                 float               fDrift;                                             // Time drifting
                 size_t              nSampleRate;                                        // Sample rate
 
                 plug::IPort        *pDynamics;                                          // Dynamics port
+                plug::IPort        *pHandleVelocity;                                    // Velocity handling
                 plug::IPort        *pDrift;                                             // Time drifting port
                 plug::IPort        *pActivity;                                          // Activity port
                 plug::IPort        *pListen;                                            // Listen sample preview

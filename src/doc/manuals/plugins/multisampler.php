@@ -120,8 +120,6 @@ for path substitutions. For example, the following value:</p>
 	<li><b>MIDI Number</b> - the MIDI number of the note for the selected instrument.</li>
 	<li><b>Group</b> - The group assigned to the instrument. The sample playback will be stopped for all
 	instruments in the same group except the one's that has triggered the Note On event.</li>
-	<li><b>Muting</b> - when enabled, turns off sample playback for selected instrument 
-	when the Channel Control MIDI message is received.</li>
 	<li><b>Note off</b> - when enabled, turns off sample playback for selected channel when the Note Off
 	MIDI message is received. The sample fade-out time can be controlled by the corresponding knob. The behaviour is
 	different, depending on the	loop settings and muting settings. If the loop is enabled for the sample, then
@@ -129,6 +127,10 @@ for path substitutions. For example, the following value:</p>
 	If the instrument muting is set, then it will fade-out the sample.</li>
 	<li><b>Dynamics</b> - allows to randomize the output gain of the selected instrument.</li>
 	<li><b>Time drifting</b> - allows to randomize the time delay between the MIDI Note On event and the start of the sample's playback for the selected instrument.</li>
+	<li><b>On</b> - enables the instrument.</li>
+	<li><b>Muting</b> - when enabled, turns off sample playback for selected instrument when the Channel Control MIDI message is received.</li>
+	<li><b>Velocity</b> - enables volume control of the sample by the velocity value of the MIDI note.</li>
+	
 </ul>
 <p><b>'Samples' section:</b></p>
 <ul>

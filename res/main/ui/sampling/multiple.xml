@@ -72,9 +72,11 @@
 					<vsep/>
 					<!-- mutting and mute buttons -->
 					<vbox spacing="2">
-						<button text="labels.chan.ON" id="ion[inst]" height="18" width="50" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<button text="labels.chan.ON" id="ion[inst]" height="18" width="60" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 						<hsep vreduce="true"/>
-						<button text="labels.muting" id="mtg[inst]" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<button text="labels.muting" id="mtg[inst]" height="18" width="60" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<hsep vreduce="true"/>
+						<button text="labels.midi.velocity" id="hvel[inst]" height="18" width="60" ui:inject="Button_cyan" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 					</vbox>
 				</grid>
 			</cgroup>
