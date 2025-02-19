@@ -144,7 +144,8 @@ namespace lsp
                     uint32_t            nUpdateReq;                                     // Update request
                     uint32_t            nUpdateResp;                                    // Update response
                     bool                bSync;                                          // Sync flag
-                    float               fVelocity;                                      // Velocity
+                    float               fMinVelocity;                                   // Minimum velocity
+                    float               fMaxVelocity;                                   // Maximum velocity
                     float               fPitch;                                         // Pitch (st)
                     bool                bStretchOn;                                     // Stretch enabled
                     float               fStretch;                                       // Stretch (sec)
@@ -294,7 +295,7 @@ namespace lsp
                 sampler_kernel & operator = (sampler_kernel &&) = delete;
 
             public:
-                void        trigger_on(size_t timestamp, float level);
+                void        trigger_on(size_t timestamp, uint8_t midi_velocity);
                 void        trigger_off(size_t timestamp, bool handle);
                 void        trigger_cancel(size_t timestamp);
 

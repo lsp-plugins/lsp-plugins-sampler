@@ -201,7 +201,8 @@ namespace lsp
                 af->nUpdateReq              = 0;
                 af->nUpdateResp             = 0;
                 af->bSync                   = false;
-                af->fVelocity               = 1.0f;
+                af->fMinVelocity            = 1.0f;
+                af->fMaxVelocity            = 1.0f;
                 af->fPitch                  = 0.0f;
                 af->bStretchOn              = false;
                 af->fStretch                = 0.0f;
@@ -614,11 +615,11 @@ namespace lsp
     //            #endif
 
                 // Update velocity
-                float value     = af->pVelocity->value();
-                if (value != af->fVelocity)
+                float value         = af->pVelocity->value();
+                if (value != af->fMaxVelocity)
                 {
-                    af->fVelocity   = value;
-                    bReorder        = true;
+                    af->fMaxVelocity    = value;
+                    bReorder            = true;
                 }
 
                 // Update sample parameters
@@ -1072,7 +1073,7 @@ namespace lsp
             while (f_last > f_first)
             {
                 ssize_t f_mid = (f_last + f_first) >> 1;
-                if (velocity <= vActive[f_mid]->fVelocity)
+                if (velocity <= vActive[f_mid]->fMaxVelocity)
                     f_last  = f_mid;
                 else
                     f_first = f_mid + 1;
@@ -1082,22 +1083,23 @@ namespace lsp
             return vActive[f_last];
         }
 
-        void sampler_kernel::trigger_on(size_t timestamp, float level)
+        void sampler_kernel::trigger_on(size_t timestamp, uint8_t midi_velocity)
         {
             // Get the file and ajdust gain
+            float level     = midi_velocity / 127.0f;
             float velocity  = level * 100.0f;       // Compute velocity in percents
             afile_t *af     = select_active_sample(velocity);
             if (af == NULL)
                 return;
 
             size_t delay    = dspu::millis_to_samples(nSampleRate, af->fPreDelay) + timestamp;
-            lsp_trace("af->id=%d, af->velocity=%.3f", int(af->nID), af->fVelocity);
+            lsp_trace("af->id=%d, af->velocity={%.3f .. %.3f}", int(af->nID), af->fMinVelocity, af->fMaxVelocity);
 
             // Apply changes to all ports
-            if (af->fVelocity > 0.0f)
+            if (af->fMaxVelocity > 0.0f)
             {
                 // Apply 'Humanisation' parameters
-                level       = velocity * ((1.0f - fDynamics*0.5) + fDynamics * sRandom.random(dspu::RND_EXP)) / af->fVelocity;
+                level       = velocity * (1.0f + fDynamics * (sRandom.random(dspu::RND_EXP) - 0.5f)) / af->fMaxVelocity;
                 delay      += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
 
                 // Play sample
@@ -1329,13 +1331,21 @@ namespace lsp
             {
                 for (size_t i=0; i<(nActive-1); ++i)
                     for (size_t j=i+1; j<nActive; ++j)
-                        if (vActive[i]->fVelocity > vActive[j]->fVelocity)
+                        if (vActive[i]->fMaxVelocity > vActive[j]->fMaxVelocity)
                             lsp::swap(vActive[i], vActive[j]);
+            }
+
+            // Update minimum velocity value
+            float velocity = 0;
+            for (size_t i=0; i<nActive; ++i)
+            {
+                vActive[i]->fMinVelocity    = velocity;
+                velocity = vActive[i]->fMaxVelocity;
             }
 
             #ifdef LSP_TRACE
                 for (size_t i=0; i<nActive; ++i)
-                    lsp_trace("active file #%d: velocity=%.3f", int(vActive[i]->nID), vActive[i]->fVelocity);
+                    lsp_trace("active file #%d: velocity={%.3f .. %.3f}", int(vActive[i]->nID), vActive[i]->fMinVelocity, vActive[i]->fMaxVelocity);
             #endif /* LSP_TRACE */
         }
 
@@ -1461,7 +1471,8 @@ namespace lsp
             v->write("nUpdateReq", f->nUpdateReq);
             v->write("nUpdateResp", f->nUpdateResp);
             v->write("bSync", f->bSync);
-            v->write("fVelocity", f->fVelocity);
+            v->write("fMinVelocity", f->fMinVelocity);
+            v->write("fMaxVelocity", f->fMaxVelocity);
             v->write("fPitch", f->fPitch);
             v->write("bStretchOn", f->bStretchOn);
             v->write("fStretch", f->fStretch);

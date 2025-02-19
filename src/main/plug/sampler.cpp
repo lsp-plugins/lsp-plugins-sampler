@@ -548,7 +548,6 @@ namespace lsp
                         uint32_t ts[BITMASK_MAX]; // Triggered samplers
 
                         // Initialize parameters
-                        float gain  = me->note.velocity / 127.0f;
                         for (size_t j=0; j<BITMASK_MAX; ++j)
                         {
                             mg[j]       = 0;
@@ -576,7 +575,7 @@ namespace lsp
                             bool triggered  = ts[j >> 5] & (1 << (j & 0x1f));
 
                             if (triggered)
-                                s->sSampler.trigger_on(me->timestamp, gain);
+                                s->sSampler.trigger_on(me->timestamp, me->note.velocity);
                             else if (muted)
                                 s->sSampler.trigger_cancel(me->timestamp);
                         }
