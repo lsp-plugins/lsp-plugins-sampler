@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -96,6 +96,7 @@ namespace lsp
                 tc->vOut        = NULL;
                 tc->vTmpIn      = NULL;
                 tc->vTmpOut     = NULL;
+                tc->vTmpListen  = NULL;
                 tc->pIn         = NULL;
                 tc->pOut        = NULL;
             }
@@ -165,6 +166,7 @@ namespace lsp
                 {
                     sampler_channel_t *c    = &s->vChannels[j];
                     c->vDry     = NULL;
+                    c->vListen  = NULL;
                     c->fPan     = 1.0f;
                     c->pDry     = NULL;
                     c->pPan     = NULL;
@@ -184,7 +186,7 @@ namespace lsp
             }
 
             // Initialize temporary buffers
-            size_t allocate         = meta::sampler_metadata::BUFFER_SIZE * nChannels * 2; // vTmpIn + vTmpOut
+            size_t allocate         = meta::sampler_metadata::BUFFER_SIZE * nChannels * 3; // vTmpIn + vTmpOut + vTmpListen
             lsp_trace("Allocating temporary buffer of %d samples", int(allocate));
             pBuffer                 = new float[allocate];
             if (pBuffer == NULL)
@@ -196,6 +198,7 @@ namespace lsp
             {
                 vChannels[i].vTmpIn     = advance_ptr<float>(fptr, meta::sampler_metadata::BUFFER_SIZE);
                 vChannels[i].vTmpOut    = advance_ptr<float>(fptr, meta::sampler_metadata::BUFFER_SIZE);
+                vChannels[i].vTmpListen = advance_ptr<float>(fptr, meta::sampler_metadata::BUFFER_SIZE);
             }
 
             // Initialize metadata
@@ -344,6 +347,7 @@ namespace lsp
                     {
                         sampler_channel_t *c    = &s->vChannels[j];
                         c->vDry         = NULL;
+                        c->vListen      = NULL;
                         c->pDry         = NULL;
                         c->pPan         = NULL;
                     }
@@ -373,6 +377,7 @@ namespace lsp
                     tc->vOut        = NULL;
                     tc->vTmpIn      = NULL;
                     tc->vTmpOut     = NULL;
+                    tc->vTmpListen  = NULL;
                     tc->pIn         = NULL;
                     tc->pOut        = NULL;
                 }
@@ -637,19 +642,21 @@ namespace lsp
 
             // Prepare sampler's buffers
             float *tmp_outs[meta::sampler_metadata::TRACKS_MAX];
+            float *tmp_listen[meta::sampler_metadata::TRACKS_MAX];
             const float *tmp_ins[meta::sampler_metadata::TRACKS_MAX];
 
             for (size_t i=0; i<nChannels; ++i)
             {
                 tmp_ins[i]      = NULL;
                 tmp_outs[i]     = vChannels[i].vTmpOut;
+                tmp_listen[i]   = vChannels[i].vTmpListen;
 
                 // Bind direct channels (if present)
                 for (size_t j=0; j<nSamplers; ++j)
                 {
                     sampler_t *s            = &vSamplers[j];
                     sampler_channel_t *c    = &s->vChannels[i];
-                    c->vDry         = (c->pDry != NULL) ? c->pDry->buffer<float>() : NULL;
+                    c->vDry                 = (c->pDry != NULL) ? c->pDry->buffer<float>() : NULL;
                 }
             }
 
@@ -675,7 +682,7 @@ namespace lsp
                     sampler_t *s = &vSamplers[i];
 
                     // Call sampler for processing
-                    s->sSampler.process(tmp_outs, tmp_ins, left);
+                    s->sSampler.process(tmp_listen, tmp_outs, tmp_ins, left);
 
                     // Preprocess dry channels: fill with zeros
                     for (size_t j=0; j<nChannels; ++j)
@@ -700,6 +707,7 @@ namespace lsp
 
                         // Process output
                         c->sBypass.process(tmp_outs[j], NULL, tmp_outs[j], count);
+                        dsp::add2(tmp_outs[j], tmp_listen[j], count);
 
                         // Mix output to common sampler's bus
                         if (vChannels[j].vOut != NULL)
@@ -790,6 +798,7 @@ namespace lsp
             v->write("vOut", s->vOut);
             v->write("vTmpIn", s->vTmpIn);
             v->write("vTmpOut", s->vTmpOut);
+            v->write("vTmpListen", s->vTmpListen);
             v->write_object("sBypass", &s->sBypass);
             v->write("pIn", s->pIn);
             v->write("pOut", s->pOut);

@@ -53,6 +53,7 @@ namespace lsp
                 typedef struct sampler_channel_t
                 {
                     float          *vDry;           // Dry output
+                    float          *vListen;        // Listen output
                     float           fPan;           // Gain
                     dspu::Bypass    sBypass;        // Bypass
                     dspu::Bypass    sDryBypass;     // Dry channel bypass
@@ -67,6 +68,7 @@ namespace lsp
                     float           *vOut;           // Output
                     float           *vTmpIn;         // Temporary input buffer
                     float           *vTmpOut;        // Temporary output buffer
+                    float           *vTmpListen;     // Temporary listen buffer
                     dspu::Bypass     sBypass;        // Bypass
 
                     plug::IPort     *pIn;            // Input port

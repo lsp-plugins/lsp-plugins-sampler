@@ -253,7 +253,7 @@ namespace lsp
                 void        destroy_state();
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
-                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode);
+                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode, bool listen);
                 void        cancel_sample(afile_t *af, size_t delay);
                 void        start_listen_file(afile_t *af, float gain);
                 void        stop_listen_file(afile_t *af, bool force);
@@ -265,7 +265,7 @@ namespace lsp
                 void        process_gc_tasks();
                 void        reorder_samples();
                 void        process_listen_events();
-                void        play_samples(float **outs, const float **ins, size_t samples);
+                void        play_samples(float **listen, float **outs, const float **ins, size_t samples);
                 void        output_parameters(size_t samples);
                 afile_t    *select_active_sample(float velocity);
 
@@ -313,11 +313,12 @@ namespace lsp
 
                 /** Process the sampler kernel
                  *
+                 * @param lisents list of outputs for listen events
                  * @param outs list of outputs (should be not the sampe as ins)
                  * @param ins list of inputs, elements may be NULL
                  * @param samples number of samples to process
                  */
-                void        process(float **outs, const float **ins, size_t samples);
+                void        process(float **listens, float **outs, const float **ins, size_t samples);
 
                 void        dump(dspu::IStateDumper *v) const;
         };
