@@ -660,12 +660,10 @@ namespace lsp
             }
 
             // Process samples
-            size_t left         = samples;
-
-            while (left > 0)
+            for (size_t offset = 0; offset < samples; )
             {
                 // Determine number of elements to process
-                size_t count        = lsp_min(left, meta::sampler_metadata::BUFFER_SIZE);
+                const size_t count      = lsp_min(samples - offset, meta::sampler_metadata::BUFFER_SIZE);
 
                 // Save input data into temporary input buffer
                 for (size_t i=0; i<nChannels; ++i)
@@ -681,7 +679,7 @@ namespace lsp
                     sampler_t *s = &vSamplers[i];
 
                     // Call sampler for processing
-                    s->sSampler.process(tmp_listen, tmp_outs, tmp_ins, left);
+                    s->sSampler.process(tmp_listen, tmp_outs, tmp_ins, count);
 
                     // Preprocess dry channels: fill with zeros
                     for (size_t j=0; j<nChannels; ++j)
@@ -744,7 +742,7 @@ namespace lsp
                 }
 
                 // Decrement counter
-                left                   -= count;
+                offset                 += count;
             }
         }
 
