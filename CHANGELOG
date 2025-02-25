@@ -8,6 +8,9 @@
 * Muting instrument now does not mute the listen button.
 * Added 'velocity' button that allows to disable or enable the volume control
   of a sample by the velocity value of the MIDI note.
+* Added automatic instrument name assign same to current sample file name if UI behavior
+  option 'Take instrument name from file' is enabled and the name of instrument is
+  empty or similar to currently selected sample file.
 * Updated several labels in the UI.
 * Updated build scripts and dependencies.
 

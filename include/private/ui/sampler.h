@@ -58,6 +58,13 @@ namespace lsp
                     bool                bChanged;   // Change flag
                 } inst_name_t;
 
+                typedef struct inst_file_t
+                {
+                    LSPString           sPrevName;  // Previous name
+                    ui::IPort          *pPort;      // Related port
+                    inst_name_t        *pInst;      // Related instrument
+                } inst_file_t;
+
                 class BundleSerializer: public config::Serializer
                 {
                     private:
@@ -117,6 +124,9 @@ namespace lsp
                 ui::IPort                  *pHydrogenCustomPath;    // Custom Hydrogen path
                 ui::IPort                  *pCurrentInstrument;     // Name that holds number of current instrument
                 ui::IPort                  *pCurrentSample;         // Current sample
+                ui::IPort                  *pOverrideHydrogen;      // Override hydrogen path
+                ui::IPort                  *pTakeNameFromFile;      // Take instrument name from file
+
                 tk::FileDialog             *wHydrogenImport;        // Hyrdogen file import dialog
                 tk::FileDialog             *wSfzImport;             // SFZ file import dialog
                 tk::FileDialog             *wBundleDialog;
@@ -128,6 +138,7 @@ namespace lsp
                 lltl::parray<tk::Widget>    vHydrogenMenus;
                 lltl::parray<h2drumkit_t>   vDrumkits;
                 lltl::darray<inst_name_t>   vInstNames;             // Names of instruments
+                lltl::parray<inst_file_t>   vInstFiles;             // Instrument files
 
             protected:
                 static status_t     slot_start_import_hydrogen_file(tk::Widget *sender, void *ptr, void *data);
@@ -157,6 +168,8 @@ namespace lsp
                 static status_t     allocate_temp_file(io::Path *dst, const io::Path *src);
                 static status_t     slot_close_message_box(tk::Widget *sender, void *ptr, void *data);
 
+                static bool         extract_name(LSPString *dst, ui::IPort *src);
+
             protected:
                 status_t            read_path(io::Path *dst, const char *port_id);
                 status_t            import_hydrogen_file(const LSPString *path);
@@ -173,6 +186,7 @@ namespace lsp
                 void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();
                 void                destroy_hydrogen_menus();
+                void                sync_instrument_name(ui::IPort *port);
                 void                init_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type);
                 void                commit_path(tk::Widget *sender, ui::IPort *path, ui::IPort *file_type);
                 status_t            scan_hydrogen_directory(const io::Path *path, h2drumkit_type_t type);

@@ -276,6 +276,9 @@ namespace lsp
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
             pCurrentSample      = NULL;
+            pOverrideHydrogen   = NULL;
+            pTakeNameFromFile   = NULL;
+
             wHydrogenImport     = NULL;
             wSfzImport          = NULL;
             wBundleDialog       = NULL;
@@ -301,6 +304,15 @@ namespace lsp
 
         void sampler_ui::destroy()
         {
+            // Destroy instrument files
+            for (size_t i=0; i<vInstFiles.size(); ++i)
+            {
+                inst_file_t *inst = vInstFiles.uget(i);
+                if (inst != NULL)
+                    delete inst;
+            }
+            vInstFiles.flush();
+
             // Destroy sink
             DragInSink *sink = pDragInSink;
             if (sink != NULL)
@@ -367,6 +379,8 @@ namespace lsp
             pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
             pSfzFileType            =  pWrapper->port(SFZ_FTYPE_PORT);
             pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
+            pOverrideHydrogen       =  pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
+            pTakeNameFromFile       =  pWrapper->port(UI_TAKE_INST_NAME_FROM_FILE_PORT);
 
             // Bind ports
             if (pHydrogenCustomPath != NULL)
@@ -456,6 +470,41 @@ namespace lsp
                 inst->bChanged  = false;
             }
 
+            // Bind instrument files
+            for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+            {
+                inst_name_t *inst   = vInstNames.uget(i);
+
+                for (size_t j=0; j < meta::sampler_metadata::SAMPLE_FILES; ++j)
+                {
+                    // Create instrument file
+                    inst_file_t *file   = new inst_file_t();
+                    if (file == NULL)
+                        return STATUS_NO_MEM;
+                    lsp_finally {
+                        if (file != NULL)
+                            delete file;
+                    };
+
+                    // Find port
+                    snprintf(name, sizeof(name), "sf_%d_%d", int(i), int(j));
+                    file->pPort         = wrapper()->port(name);
+                    if (file->pPort == NULL)
+                        continue;
+
+                    file->pInst         = inst;
+                    if (!extract_name(&file->sPrevName, file->pPort))
+                        continue;
+
+                    if (file->pPort != NULL)
+                        file->pPort->bind(this);
+
+                    if (!vInstFiles.add(file))
+                        return STATUS_NO_MEM;
+                    file    = NULL;
+                }
+            }
+
             // Drag&Drop
             pDragInSink = new DragInSink(this);
             if (pDragInSink == NULL)
@@ -465,6 +514,23 @@ namespace lsp
             pWrapper->window()->slots()->bind(tk::SLOT_DRAG_REQUEST, slot_drag_request, this);
 
             return STATUS_OK;
+        }
+
+        bool sampler_ui::extract_name(LSPString *dst, ui::IPort *src)
+        {
+            const meta::port_t *meta = src->metadata();
+            if ((meta == NULL) || (!meta::is_path_port(meta)))
+                return false;
+
+            const char *path = src->buffer<const char>();
+            if (path == NULL)
+                return false;
+
+            io::Path spath;
+            if (spath.set(path) != STATUS_OK)
+                return false;
+
+            return spath.get_last_noext(dst) == STATUS_OK;
         }
 
         void sampler_ui::destroy_hydrogen_menus()
@@ -1099,10 +1165,9 @@ namespace lsp
             LSPString file_ext;
 
             // Check that hydrogen override it turned on
-            ui::IPort *flag = pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
-            if ((flag == NULL) || (!meta::is_control_port(flag->metadata())))
+            if ((pOverrideHydrogen == NULL) || (!meta::is_control_port(pOverrideHydrogen->metadata())))
                 return import_hydrogen_file(path);
-            if (flag->value() <= 0.5f)
+            if (pOverrideHydrogen->value() <= 0.5f)
                 return import_hydrogen_file(path);
 
             // Check extension and skip override if configuration file is used
@@ -1269,6 +1334,46 @@ namespace lsp
 
             if (port == pHydrogenCustomPath)
                 sync_hydrogen_files();
+
+            if ((flags & ui::PORT_USER_EDIT) && (meta::is_path_port(port->metadata())))
+                sync_instrument_name(port);
+        }
+
+        void sampler_ui::sync_instrument_name(ui::IPort *port)
+        {
+            LSPString name, edit_name;
+        #ifdef LSP_TRACE
+            const char *path = port->buffer<char>();
+            lsp_trace("User has changed path: id=%s, value=%s", port->id(), path);
+        #endif /* LSP_TRACE */
+
+            if (extract_name(&name, port))
+                lsp_trace("Instrument name: %s", name.get_native());
+
+            const bool update = (pTakeNameFromFile != NULL) ? pTakeNameFromFile->value() >= 0.5f : false;
+
+            for (size_t i=0, n=vInstFiles.size(); i<n; ++i)
+            {
+                inst_file_t *ifile = vInstFiles.uget(i);
+                if (ifile->pPort != port)
+                    continue;
+
+                // Check that previous name matches instument name
+                inst_name_t *inst = ifile->pInst;
+                if ((inst == NULL) || (inst->wEdit == NULL))
+                    continue;
+
+                inst->wEdit->text()->format(&edit_name);
+                const bool matches = (update) ? (edit_name.equals(&ifile->sPrevName)) || (edit_name.is_empty()) : false;
+                ifile->sPrevName.set(&name);
+
+                // Update instrument name
+                if (matches)
+                {
+                    set_ui_instrument_name(inst, &name);
+                    inst->bChanged  = true;
+                }
+            }
         }
 
         tk::FileDialog *sampler_ui::get_bundle_dialog(bool import)
