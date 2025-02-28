@@ -109,7 +109,7 @@ namespace lsp
 
             static constexpr size_t PLAYBACKS_MAX               = 8192;         // Maximum number of simultaneously playing samples
             static constexpr size_t SAMPLE_FILES                = 8;            // Number of sample files
-            static constexpr size_t BUFFER_SIZE                 = 4096;         // Size of temporary buffer
+            static constexpr size_t BUFFER_SIZE                 = 1024;         // Size of temporary buffer
 
             static constexpr size_t INSTRUMENTS_MAX             = 64;           // Maximum supported instruments
 

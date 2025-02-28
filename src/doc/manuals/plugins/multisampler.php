@@ -96,7 +96,7 @@ for path substitutions. For example, the following value:</p>
 <p><b>Controls:</b></p>
 <ul>
 	<li><b>Bypass</b> - hot bypass switch, when turned on (led indicator is shining), the plugin does not affect the input signal.</li>
-	<li><b>Working area</b> - combo box that allows to switch between instrument setup and instrument mixer.</li>
+	<li><b>Workspace</b> - combo box that allows to switch between instrument setup and instrument mixer.</li>
 </ul>
 
 <p><b>'Instrument mixer' section:</b></p>
@@ -108,7 +108,7 @@ for path substitutions. For example, the following value:</p>
 	<?php } ?>
 	<li><b>Pan Left</b> - the panorama of the left channel of the corresponding instrument.</li>
 	<li><b>Pan Right</b> - the panorama of the right channel of the corresponding instrument.</li>
-	<li><b>MIDI #</b> - the MIDI number of the note associated with the corresponding instrument. Allows to change the number with mouse scroll or mouse double click.</li>
+	<li><b>MIDI Number</b> - the MIDI number of the note associated with the corresponding instrument. Allows to change the number with mouse scroll or mouse double click.</li>
 	<li><b>Note on</b> - indicates that the corresponding instrument has triggered the MIDI Note On event.</li>
 	<li><b>Listen</b> - forces the corresponding instrument to trigger the Note On event.</li>
 </ul>
@@ -117,11 +117,9 @@ for path substitutions. For example, the following value:</p>
 <ul>
 	<li><b>Channel</b> - the MIDI channel to trigger notes by the selected instrument or all channels.</li>
 	<li><b>Note</b> - the note and the octave of the note to trigger for the selected instrument.</li>
-	<li><b>MIDI #</b> - the MIDI number of the note for the selected instrument.</li>
+	<li><b>MIDI Number</b> - the MIDI number of the note for the selected instrument.</li>
 	<li><b>Group</b> - The group assigned to the instrument. The sample playback will be stopped for all
 	instruments in the same group except the one's that has triggered the Note On event.</li>
-	<li><b>Muting</b> - when enabled, turns off sample playback for selected instrument 
-	when the Channel Control MIDI message is received.</li>
 	<li><b>Note off</b> - when enabled, turns off sample playback for selected channel when the Note Off
 	MIDI message is received. The sample fade-out time can be controlled by the corresponding knob. The behaviour is
 	different, depending on the	loop settings and muting settings. If the loop is enabled for the sample, then
@@ -129,6 +127,10 @@ for path substitutions. For example, the following value:</p>
 	If the instrument muting is set, then it will fade-out the sample.</li>
 	<li><b>Dynamics</b> - allows to randomize the output gain of the selected instrument.</li>
 	<li><b>Time drifting</b> - allows to randomize the time delay between the MIDI Note On event and the start of the sample's playback for the selected instrument.</li>
+	<li><b>On</b> - enables the instrument.</li>
+	<li><b>Muting</b> - when enabled, turns off sample playback for selected instrument when the Channel Control MIDI message is received.</li>
+	<li><b>Velocity</b> - enables volume control of the sample by the velocity value of the MIDI note.</li>
+	
 </ul>
 <p><b>'Samples' section:</b></p>
 <ul>

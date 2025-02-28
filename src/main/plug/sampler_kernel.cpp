@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -119,12 +119,14 @@ namespace lsp
             vBuffer         = NULL;
             bBypass         = false;
             bReorder        = false;
+            bHandleVelocity = true;
             fFadeout        = 10.0f;
             fDynamics       = meta::sampler_metadata::DYNA_DFL;
             fDrift          = meta::sampler_metadata::DRIFT_DFL;
             nSampleRate     = 0;
 
             pDynamics       = NULL;
+            pHandleVelocity = NULL;
             pDrift          = NULL;
             pActivity       = NULL;
             pListen         = NULL;
@@ -201,7 +203,8 @@ namespace lsp
                 af->nUpdateReq              = 0;
                 af->nUpdateResp             = 0;
                 af->bSync                   = false;
-                af->fVelocity               = 1.0f;
+                af->fMinVelocity            = 1.0f;
+                af->fMaxVelocity            = 1.0f;
                 af->fPitch                  = 0.0f;
                 af->bStretchOn              = false;
                 af->fStretch                = 0.0f;
@@ -337,6 +340,7 @@ namespace lsp
                 lsp_trace("Binding dynamics and drifting...");
                 BIND_PORT(pDynamics);
                 BIND_PORT(pDrift);
+                BIND_PORT(pHandleVelocity);
             }
 
             lsp_trace("Skipping sample selector port...");
@@ -509,6 +513,7 @@ namespace lsp
             bBypass         = false;
 
             pDynamics       = NULL;
+            pHandleVelocity = NULL;
             pDrift          = NULL;
         }
 
@@ -614,11 +619,11 @@ namespace lsp
     //            #endif
 
                 // Update velocity
-                float value     = af->pVelocity->value();
-                if (value != af->fVelocity)
+                float value         = af->pVelocity->value();
+                if (value != af->fMaxVelocity)
                 {
-                    af->fVelocity   = value;
-                    bReorder        = true;
+                    af->fMaxVelocity    = value;
+                    bReorder            = true;
                 }
 
                 // Update sample parameters
@@ -662,6 +667,7 @@ namespace lsp
             // Get humanisation parameters
             fDynamics       = (pDynamics != NULL) ? pDynamics->value() * 0.01f : 0.0f; // fDynamics = 0..1.0
             fDrift          = (pDrift != NULL)    ? pDrift->value() : 0.0f;
+            bHandleVelocity = pHandleVelocity->value() >= 0.5f;
         }
 
         void sampler_kernel::sync_samples_with_ui()
@@ -953,17 +959,14 @@ namespace lsp
             {
                 dspu::SamplePlayer *p = &vChannels[i];
                 for (size_t j=0; j<nChannels; ++j)
-                    p->cancel_all(af->nID, j, fadeout, delay);
+                    p->cancel_all(af->nID, j, fadeout, delay, dspu::SAMPLER_PLAYBACK);
             }
 
             for (size_t i=0; i<4; ++i)
-            {
-                af->vListen[i].clear();
                 af->vPlayback[i].clear();
-            }
         }
 
-        void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode)
+        void sampler_kernel::play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode, bool listen)
         {
             lsp_trace("id=%d, gain=%f, delay=%d", int(af->nID), gain, int(delay));
 
@@ -987,6 +990,7 @@ namespace lsp
                 dspu::millis_to_samples(nSampleRate, af->fLoopFade));
             ps.set_delay(delay);
             ps.set_start((af->bPostReverse) ? s->length() : 0, af->bPostReverse);
+            ps.set_listen(listen);
 
             dspu::Playback *vpb = (mode == PLAY_FILE) ? af->vListen :
                                   (mode == PLAY_INSTRUMENT) ? vListen :
@@ -1036,7 +1040,7 @@ namespace lsp
 
         void sampler_kernel::start_listen_file(afile_t *af, float gain)
         {
-            play_sample(af, gain, 0, PLAY_FILE);
+            play_sample(af, gain, 0, PLAY_FILE, true);
         }
 
         void sampler_kernel::start_listen_instrument(float velocity, float gain)
@@ -1044,7 +1048,7 @@ namespace lsp
             // Obtain the active file and
             afile_t *af     = select_active_sample(velocity);
             if (af != NULL)
-                play_sample(af, gain, 0, PLAY_INSTRUMENT);
+                play_sample(af, gain, 0, PLAY_INSTRUMENT, true);
         }
 
         void sampler_kernel::stop_listen_instrument(bool force)
@@ -1074,7 +1078,7 @@ namespace lsp
             while (f_last > f_first)
             {
                 ssize_t f_mid = (f_last + f_first) >> 1;
-                if (velocity <= vActive[f_mid]->fVelocity)
+                if (velocity <= vActive[f_mid]->fMaxVelocity)
                     f_last  = f_mid;
                 else
                     f_first = f_mid + 1;
@@ -1084,26 +1088,27 @@ namespace lsp
             return vActive[f_last];
         }
 
-        void sampler_kernel::trigger_on(size_t timestamp, float level)
+        void sampler_kernel::trigger_on(size_t timestamp, uint8_t midi_velocity)
         {
             // Get the file and ajdust gain
-            float velocity  = level * 100.0f;       // Compute velocity in percents
+            float velocity  = float(midi_velocity) / 1.27f;       // Compute velocity in percents
             afile_t *af     = select_active_sample(velocity);
             if (af == NULL)
                 return;
 
             size_t delay    = dspu::millis_to_samples(nSampleRate, af->fPreDelay) + timestamp;
-            lsp_trace("af->id=%d, af->velocity=%.3f", int(af->nID), af->fVelocity);
+            lsp_trace("af->id=%d, af->velocity={%.3f .. %.3f}", int(af->nID), af->fMinVelocity, af->fMaxVelocity);
 
             // Apply changes to all ports
-            if (af->fVelocity > 0.0f)
+            if (af->fMaxVelocity > 0.0f)
             {
                 // Apply 'Humanisation' parameters
-                level       = velocity * ((1.0f - fDynamics*0.5) + fDynamics * sRandom.random(dspu::RND_EXP)) / af->fVelocity;
-                delay      += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
+                const float var     = (1.0f + fDynamics * (sRandom.random(dspu::RND_EXP) - 0.5f)); // Variation
+                const float gain    = (bHandleVelocity) ? (velocity * var) / af->fMaxVelocity : var;
+                delay              += dspu::millis_to_samples(nSampleRate, fDrift) * sRandom.random(dspu::RND_EXP);
 
                 // Play sample
-                play_sample(af, level, delay, PLAY_NOTE);
+                play_sample(af, gain, delay, PLAY_NOTE, false);
 
                 // Trigger the note On indicator
                 af->sNoteOn.blink();
@@ -1331,27 +1336,41 @@ namespace lsp
             {
                 for (size_t i=0; i<(nActive-1); ++i)
                     for (size_t j=i+1; j<nActive; ++j)
-                        if (vActive[i]->fVelocity > vActive[j]->fVelocity)
+                        if (vActive[i]->fMaxVelocity > vActive[j]->fMaxVelocity)
                             lsp::swap(vActive[i], vActive[j]);
+            }
+
+            // Update minimum velocity value
+            float velocity = 0;
+            for (size_t i=0; i<nActive; ++i)
+            {
+                vActive[i]->fMinVelocity    = velocity;
+                velocity = vActive[i]->fMaxVelocity;
             }
 
             #ifdef LSP_TRACE
                 for (size_t i=0; i<nActive; ++i)
-                    lsp_trace("active file #%d: velocity=%.3f", int(vActive[i]->nID), vActive[i]->fVelocity);
+                    lsp_trace("active file #%d: velocity={%.3f .. %.3f}", int(vActive[i]->nID), vActive[i]->fMinVelocity, vActive[i]->fMaxVelocity);
             #endif /* LSP_TRACE */
         }
 
-        void sampler_kernel::play_samples(float **outs, const float **ins, size_t samples)
+        void sampler_kernel::play_samples(float **listen, float **outs, const float **ins, size_t samples)
         {
             if (ins != NULL)
             {
                 for (size_t i=0; i<nChannels; ++i)
-                    vChannels[i].process(outs[i], ins[i], samples);
+                {
+                    vChannels[i].process(outs[i], ins[i], samples, dspu::SAMPLER_PLAYBACK);
+                    vChannels[i].process(listen[i], samples, dspu::SAMPLER_LISTEN);
+                }
             }
             else
             {
                 for (size_t i=0; i<nChannels; ++i)
-                    vChannels[i].process(outs[i], NULL, samples);
+                {
+                    vChannels[i].process(outs[i], samples, dspu::SAMPLER_PLAYBACK);
+                    vChannels[i].process(listen[i], samples, dspu::SAMPLER_LISTEN);
+                }
             }
         }
 
@@ -1402,14 +1421,14 @@ namespace lsp
             }
         }
 
-        void sampler_kernel::process(float **outs, const float **ins, size_t samples)
+        void sampler_kernel::process(float **listens, float **outs, const float **ins, size_t samples)
         {
             process_file_load_requests();
             process_file_render_requests();
             process_gc_tasks();
             reorder_samples();
             process_listen_events();
-            play_samples(outs, ins, samples);
+            play_samples(listens, outs, ins, samples);
             output_parameters(samples);
         }
 
@@ -1457,7 +1476,8 @@ namespace lsp
             v->write("nUpdateReq", f->nUpdateReq);
             v->write("nUpdateResp", f->nUpdateResp);
             v->write("bSync", f->bSync);
-            v->write("fVelocity", f->fVelocity);
+            v->write("fMinVelocity", f->fMinVelocity);
+            v->write("fMaxVelocity", f->fMaxVelocity);
             v->write("fPitch", f->fPitch);
             v->write("bStretchOn", f->bStretchOn);
             v->write("fStretch", f->fStretch);
@@ -1562,12 +1582,14 @@ namespace lsp
             v->write("vBuffer", vBuffer);
             v->write("bBypass", bBypass);
             v->write("bReorder", bReorder);
+            v->write("bHandleVelocity", bHandleVelocity);
             v->write("fFadeout", fFadeout);
             v->write("fDynamics", fDynamics);
             v->write("fDrift", fDrift);
             v->write("nSampleRate", nSampleRate);
 
             v->write("pDynamics", pDynamics);
+            v->write("pHandleVelocity", pHandleVelocity);
             v->write("pDrift", pDrift);
             v->write("pActivity", pActivity);
             v->write("pListen", pListen);

@@ -339,11 +339,11 @@
 					</cell>
 					<!-- mutting and mute buttons -->
 					<grid rows="3" cols="1" vspacing="2">
-						<button text="labels.muting" id="muting" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
-						<cell>
-							<hsep/>
-						</cell>
-						<button text="labels.mute" id="mute" ui:inject="Button_red" height="18" width="50" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<button text="labels.muting" id="muting" height="18" width="60" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<hsep/>
+						<button text="labels.midi.velocity" id="hvel" height="18" width="60" ui:inject="Button_cyan" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<hsep/>
+						<button text="labels.mute" id="mute" ui:inject="Button_red" height="18" width="60" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 					</grid>
 				</grid>
 				<cell rows="3">
@@ -374,7 +374,7 @@
 				<!-- Sample matrix -->
 				<grid rows="11" cols="17" transpose="true" hspacing="2" bg.color="bg">
 					<ui:with bg.color="bg_schema">
-						<label text="labels.sedit.sample_num" fill="true" halign="0" padding="6"/>
+						<label text="labels.sedit.sample" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0"/>
 						<label text="labels.midi.velocity" fill="true" halign="0"/>
 						<label text="labels.midi.code" fill="true" halign="0"/>

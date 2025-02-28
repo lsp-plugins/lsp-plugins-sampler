@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   27
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   28
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -281,6 +281,7 @@ namespace lsp
             TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            SWITCH("hvel", "Velocity handling", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_MG_INSTRUMENT(sample)    \
@@ -295,6 +296,7 @@ namespace lsp
             TRIGGER("stop", "Stop instrument listen preview"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            SWITCH("hvel", "Velocity handling", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_AREA_SELECTOR(list)     \

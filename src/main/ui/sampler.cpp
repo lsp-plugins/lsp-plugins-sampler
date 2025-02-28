@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -24,6 +24,7 @@
 #include <lsp-plug.in/expr/EnvResolver.h>
 #include <lsp-plug.in/fmt/lspc/lspc.h>
 #include <lsp-plug.in/fmt/lspc/util.h>
+#include <lsp-plug.in/fmt/url.h>
 #include <lsp-plug.in/io/Dir.h>
 #include <lsp-plug.in/plug-fw/ui.h>
 #include <lsp-plug.in/plug-fw/meta/func.h>
@@ -58,7 +59,7 @@ namespace lsp
 
         static ui::Module *sampler_factory_func(const meta::plugin_t *meta)
         {
-            return new sampler_ui(meta, true);
+            return new sampler_ui(meta, false);
         }
 
         static ui::Module *multisampler_factory_func(const meta::plugin_t *meta)
@@ -222,6 +223,45 @@ namespace lsp
             return PullParser::commit_param(key, tmp.as_string(), flags);
         }
 
+        //-----------------------------------------------------------------
+        sampler_ui::DragInSink::DragInSink(sampler_ui *ui)
+        {
+            pUI         = ui;
+        }
+
+        sampler_ui::DragInSink::~DragInSink()
+        {
+            unbind();
+        }
+
+        void sampler_ui::DragInSink::unbind()
+        {
+            if (pUI != NULL)
+            {
+                if (pUI->pDragInSink == this)
+                    pUI->pDragInSink    = NULL;
+                pUI = NULL;
+            }
+        }
+
+        status_t sampler_ui::DragInSink::commit_url(const LSPString *url)
+        {
+            if (url == NULL)
+                return STATUS_OK;
+
+            LSPString decoded;
+            status_t res = (url->starts_with_ascii("file://")) ?
+                    url::decode(&decoded, url, 7) :
+                    url::decode(&decoded, url);
+
+            if (res != STATUS_OK)
+                return res;
+
+            pUI->handle_file_drop(&decoded);
+
+            return STATUS_OK;
+        }
+
         //---------------------------------------------------------------------
         sampler_ui::sampler_ui(const meta::plugin_t *meta, bool multiple):
             ui::Module(meta)
@@ -235,12 +275,17 @@ namespace lsp
             pSfzFileType        = NULL;
             pHydrogenCustomPath = NULL;
             pCurrentInstrument  = NULL;
+            pCurrentSample      = NULL;
+            pOverrideHydrogen   = NULL;
+            pTakeNameFromFile   = NULL;
+
             wHydrogenImport     = NULL;
             wSfzImport          = NULL;
             wBundleDialog       = NULL;
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
             wInstrumentsGroup   = NULL;
+            pDragInSink         = NULL;
         }
 
         sampler_ui::~sampler_ui()
@@ -259,6 +304,25 @@ namespace lsp
 
         void sampler_ui::destroy()
         {
+            // Destroy instrument files
+            for (size_t i=0; i<vInstFiles.size(); ++i)
+            {
+                inst_file_t *inst = vInstFiles.uget(i);
+                if (inst != NULL)
+                    delete inst;
+            }
+            vInstFiles.flush();
+
+            // Destroy sink
+            DragInSink *sink = pDragInSink;
+            if (sink != NULL)
+            {
+                sink->unbind();
+                sink->release();
+                sink   = NULL;
+            }
+
+            // Destroy other stuff
             destroy_hydrogen_menus();
             ui::Module::destroy();
         }
@@ -315,6 +379,8 @@ namespace lsp
             pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
             pSfzFileType            =  pWrapper->port(SFZ_FTYPE_PORT);
             pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
+            pOverrideHydrogen       =  pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
+            pTakeNameFromFile       =  pWrapper->port(UI_TAKE_INST_NAME_FROM_FILE_PORT);
 
             // Bind ports
             if (pHydrogenCustomPath != NULL)
@@ -322,6 +388,7 @@ namespace lsp
 
             // Find widget and port associated with the current selected instrument
             pCurrentInstrument  = wrapper()->port("inst");
+            pCurrentSample      = wrapper()->port("ssel");
             wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
             wInstrumentsGroup   = wrapper()->controller()->widgets()->get<tk::ComboGroup>("inst_cgroup");
 
@@ -403,7 +470,67 @@ namespace lsp
                 inst->bChanged  = false;
             }
 
+            // Bind instrument files
+            for (size_t i=0, n=vInstNames.size(); i<n; ++i)
+            {
+                inst_name_t *inst   = vInstNames.uget(i);
+
+                for (size_t j=0; j < meta::sampler_metadata::SAMPLE_FILES; ++j)
+                {
+                    // Create instrument file
+                    inst_file_t *file   = new inst_file_t();
+                    if (file == NULL)
+                        return STATUS_NO_MEM;
+                    lsp_finally {
+                        if (file != NULL)
+                            delete file;
+                    };
+
+                    // Find port
+                    snprintf(name, sizeof(name), "sf_%d_%d", int(i), int(j));
+                    file->pPort         = wrapper()->port(name);
+                    if (file->pPort == NULL)
+                        continue;
+
+                    file->pInst         = inst;
+                    if (!extract_name(&file->sPrevName, file->pPort))
+                        continue;
+
+                    if (file->pPort != NULL)
+                        file->pPort->bind(this);
+
+                    if (!vInstFiles.add(file))
+                        return STATUS_NO_MEM;
+                    file    = NULL;
+                }
+            }
+
+            // Drag&Drop
+            pDragInSink = new DragInSink(this);
+            if (pDragInSink == NULL)
+                return STATUS_NO_MEM;
+            pDragInSink->acquire();
+
+            pWrapper->window()->slots()->bind(tk::SLOT_DRAG_REQUEST, slot_drag_request, this);
+
             return STATUS_OK;
+        }
+
+        bool sampler_ui::extract_name(LSPString *dst, ui::IPort *src)
+        {
+            const meta::port_t *meta = src->metadata();
+            if ((meta == NULL) || (!meta::is_path_port(meta)))
+                return false;
+
+            const char *path = src->buffer<const char>();
+            if (path == NULL)
+                return false;
+
+            io::Path spath;
+            if (spath.set(path) != STATUS_OK)
+                return false;
+
+            return spath.get_last_noext(dst) == STATUS_OK;
         }
 
         void sampler_ui::destroy_hydrogen_menus()
@@ -1038,10 +1165,9 @@ namespace lsp
             LSPString file_ext;
 
             // Check that hydrogen override it turned on
-            ui::IPort *flag = pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
-            if ((flag == NULL) || (!meta::is_control_port(flag->metadata())))
+            if ((pOverrideHydrogen == NULL) || (!meta::is_control_port(pOverrideHydrogen->metadata())))
                 return import_hydrogen_file(path);
-            if (flag->value() <= 0.5f)
+            if (pOverrideHydrogen->value() <= 0.5f)
                 return import_hydrogen_file(path);
 
             // Check extension and skip override if configuration file is used
@@ -1208,6 +1334,46 @@ namespace lsp
 
             if (port == pHydrogenCustomPath)
                 sync_hydrogen_files();
+
+            if ((flags & ui::PORT_USER_EDIT) && (meta::is_path_port(port->metadata())))
+                sync_instrument_name(port);
+        }
+
+        void sampler_ui::sync_instrument_name(ui::IPort *port)
+        {
+            LSPString name, edit_name;
+        #ifdef LSP_TRACE
+            const char *path = port->buffer<char>();
+            lsp_trace("User has changed path: id=%s, value=%s", port->id(), path);
+        #endif /* LSP_TRACE */
+
+            if (extract_name(&name, port))
+                lsp_trace("Instrument name: %s", name.get_native());
+
+            const bool update = (pTakeNameFromFile != NULL) ? pTakeNameFromFile->value() >= 0.5f : false;
+
+            for (size_t i=0, n=vInstFiles.size(); i<n; ++i)
+            {
+                inst_file_t *ifile = vInstFiles.uget(i);
+                if (ifile->pPort != port)
+                    continue;
+
+                // Check that previous name matches instument name
+                inst_name_t *inst = ifile->pInst;
+                if ((inst == NULL) || (inst->wEdit == NULL))
+                    continue;
+
+                inst->wEdit->text()->format(&edit_name);
+                const bool matches = (update) ? (edit_name.equals(&ifile->sPrevName)) || (edit_name.is_empty()) : false;
+                ifile->sPrevName.set(&name);
+
+                // Update instrument name
+                if (matches)
+                {
+                    set_ui_instrument_name(inst, &name);
+                    inst->bChanged  = true;
+                }
+            }
         }
 
         tk::FileDialog *sampler_ui::get_bundle_dialog(bool import)
@@ -1580,6 +1746,33 @@ namespace lsp
             return STATUS_OK;
         }
 
+        status_t sampler_ui::slot_drag_request(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_BAD_STATE;
+
+            tk::Window *wnd     = self->pWrapper->window();
+            if (wnd == NULL)
+                return STATUS_BAD_STATE;
+            tk::Display *dpy    = wnd->display();
+            if (dpy == NULL)
+                return STATUS_BAD_STATE;
+
+            ws::rectangle_t r;
+            wnd->get_rectangle(&r);
+
+            const char * const *ctype = dpy->get_drag_mime_types();
+            ssize_t idx = self->pDragInSink->select_mime_type(ctype);
+            if (idx >= 0)
+            {
+                dpy->accept_drag(self->pDragInSink, ws::DRAG_COPY, &r);
+                lsp_trace("Accepted drag");
+            }
+
+            return STATUS_OK;
+        }
+
         status_t sampler_ui::import_sfz_file(const io::Path *base, const io::Path *path)
         {
             status_t res;
@@ -1783,6 +1976,38 @@ namespace lsp
                 if (selected == ssize_t(inst->nIndex))
                     wCurrentInstrument->text()->set_raw(name);
             }
+        }
+
+        void sampler_ui::handle_file_drop(const LSPString *path)
+        {
+            lsp_trace("Dropped file: %s", path->get_native());
+
+            io::Path io_path;
+            if (io_path.set(path) != STATUS_OK)
+                return;
+
+            // Try Hydrogen file first
+            status_t res = import_hydrogen_file(path);
+
+            // Now try SFZ file
+            if (res != STATUS_OK)
+                res = import_sfz_file(NULL, &io_path);
+
+            // Now try sampler bundle (LSPC) file
+            if (res != STATUS_OK)
+                res = import_sampler_bundle(&io_path);
+
+            // Set regular file to audio sample
+            if (res == STATUS_OK)
+                return;
+
+            if ((pCurrentInstrument == NULL) || (pCurrentSample == NULL))
+                return;
+
+            size_t inst = pCurrentInstrument->value();
+            size_t sample = pCurrentSample->value();
+            lsp_trace("Current instrument=%d, sample=%d", int(inst), int(sample));
+            set_path_value(path->get_utf8(), "sf_%d_%d", inst, sample);   // sample file
         }
 
     } /* namespace plugui */

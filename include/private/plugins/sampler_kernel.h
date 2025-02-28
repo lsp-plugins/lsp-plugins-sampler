@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 12 июл. 2021 г.
@@ -144,7 +144,8 @@ namespace lsp
                     uint32_t            nUpdateReq;                                     // Update request
                     uint32_t            nUpdateResp;                                    // Update response
                     bool                bSync;                                          // Sync flag
-                    float               fVelocity;                                      // Velocity
+                    float               fMinVelocity;                                   // Minimum velocity
+                    float               fMaxVelocity;                                   // Maximum velocity
                     float               fPitch;                                         // Pitch (st)
                     bool                bStretchOn;                                     // Stretch enabled
                     float               fStretch;                                       // Stretch (sec)
@@ -237,12 +238,14 @@ namespace lsp
                 float              *vBuffer;                                            // Buffer
                 bool                bBypass;                                            // Bypass flag
                 bool                bReorder;                                           // Reorder flag
+                bool                bHandleVelocity;                                    // Velocity handling flag
                 float               fFadeout;                                           // Fadeout in milliseconds
                 float               fDynamics;                                          // Dynamics
                 float               fDrift;                                             // Time drifting
                 size_t              nSampleRate;                                        // Sample rate
 
                 plug::IPort        *pDynamics;                                          // Dynamics port
+                plug::IPort        *pHandleVelocity;                                    // Velocity handling
                 plug::IPort        *pDrift;                                             // Time drifting port
                 plug::IPort        *pActivity;                                          // Activity port
                 plug::IPort        *pListen;                                            // Listen sample preview
@@ -253,7 +256,7 @@ namespace lsp
                 void        destroy_state();
                 status_t    load_file(afile_t *file);
                 status_t    render_sample(afile_t *af);
-                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode);
+                void        play_sample(afile_t *af, float gain, size_t delay, play_mode_t mode, bool listen);
                 void        cancel_sample(afile_t *af, size_t delay);
                 void        start_listen_file(afile_t *af, float gain);
                 void        stop_listen_file(afile_t *af, bool force);
@@ -265,7 +268,7 @@ namespace lsp
                 void        process_gc_tasks();
                 void        reorder_samples();
                 void        process_listen_events();
-                void        play_samples(float **outs, const float **ins, size_t samples);
+                void        play_samples(float **listen, float **outs, const float **ins, size_t samples);
                 void        output_parameters(size_t samples);
                 afile_t    *select_active_sample(float velocity);
 
@@ -294,7 +297,7 @@ namespace lsp
                 sampler_kernel & operator = (sampler_kernel &&) = delete;
 
             public:
-                void        trigger_on(size_t timestamp, float level);
+                void        trigger_on(size_t timestamp, uint8_t midi_velocity);
                 void        trigger_off(size_t timestamp, bool handle);
                 void        trigger_cancel(size_t timestamp);
 
@@ -313,11 +316,12 @@ namespace lsp
 
                 /** Process the sampler kernel
                  *
+                 * @param lisents list of outputs for listen events
                  * @param outs list of outputs (should be not the sampe as ins)
                  * @param ins list of inputs, elements may be NULL
                  * @param samples number of samples to process
                  */
-                void        process(float **outs, const float **ins, size_t samples);
+                void        process(float **listens, float **outs, const float **ins, size_t samples);
 
                 void        dump(dspu::IStateDumper *v) const;
         };

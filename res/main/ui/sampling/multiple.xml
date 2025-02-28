@@ -5,7 +5,7 @@
 	<vbox spacing="4">
 		<!-- Area selector -->
 		<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
-			<label text="labels.working_area"/>
+			<label text="labels.workspace"/>
 			<combo id="msel" halign="1"/>
 			<ui:if test="ex :don_0">
 				<label text="labels.direct_output_" pad.l="12"/>
@@ -72,9 +72,11 @@
 					<vsep/>
 					<!-- mutting and mute buttons -->
 					<vbox spacing="2">
-						<button text="labels.chan.ON" id="ion[inst]" height="18" width="50" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<button text="labels.chan.ON" id="ion[inst]" height="18" width="60" ui:inject="Button_green" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 						<hsep vreduce="true"/>
-						<button text="labels.muting" id="mtg[inst]" height="18" width="50" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<button text="labels.muting" id="mtg[inst]" height="18" width="60" ui:inject="Button_yellow" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
+						<hsep vreduce="true"/>
+						<button text="labels.midi.velocity" id="hvel[inst]" height="18" width="60" ui:inject="Button_cyan" led="true" bg.color="bg_schema" pad.l="6" pad.r="6"/>
 					</vbox>
 				</grid>
 			</cgroup>
@@ -406,7 +408,7 @@
 					<!-- Sample matrix -->
 					<grid rows="11" cols="17" transpose="true" hspacing="2" bg.color="bg">
 						<ui:with bg.color="bg_schema" fill="true" halign="0">
-							<label text="labels.sedit.sample_num" padding="6"/>
+							<label text="labels.sedit.sample" padding="6"/>
 							<label text="labels.sedit.enabled" />
 							<label text="labels.midi.velocity" />
 							<label text="labels.midi.code" />
@@ -458,7 +460,7 @@
 			<group text="groups.instrument_mixer" ipadding="0" visibility=":msel ieq ${:m+1}" expand="true">
 				<grid rows="15" cols="25" transpose="true" hspacing="0" vspacing="2">
 					<ui:with fill="true" halign="0">
-						<label text="labels.instrument_num" padding="6"/>
+						<label text="labels.instrument" padding="6"/>
 						<label text="labels.name" padding="6"/>
 						<label text="labels.sedit.enabled" padding="6"/>
 						<label text="labels.mix_gain" />
@@ -469,7 +471,7 @@
 						<label text="labels.signal.pan_right" />
 						<label text="labels.units.:pc" pad.b="6"/>
 						<label text="labels.group" pad.b="6"/>
-						<label text="labels.midi.midi_num" pad.b="6"/>
+						<label text="labels.midi.midi_number" pad.b="6"/>
 						<label text="labels.midi.note_on" pad.b="6"/>
 						<label text="labels.listen" />
 						<label text="labels.stop" />
