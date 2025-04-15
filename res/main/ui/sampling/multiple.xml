@@ -1,13 +1,11 @@
 <plugin resizable="true">
 	<ui:eval id="num_blocks" value="(ex :imix_25) ? 4 : (ex :imix_13) ? 2 : 1"/>
 	<ui:alias id="ssel" value="ssel[inst]"/>
-	
-	<!-- TODO
+
 	<ui:for id="i" first="0" count="8">
 		<ui:port id="sample_state_${i}" value="'fs_' scat int(:inst) scat '_' scat ${i}" />
 	</ui:for>
-	 -->
-	
+
 	<vbox spacing="4">
 		<!-- Area selector -->
 		<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
@@ -435,21 +433,15 @@
 								<label text="${:i+1}"/>
 								<ui:set id="idx" value="[inst]_${i}"/>
 
-								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
-								<knob id="vl${idx}" size="20" scolor="velocity"/>
+								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6" activity=":sample_state_${i} ieq 0"/>
+								<knob id="vl${idx}" size="20" scolor="velocity" activity=":sample_state_${i} ieq 0"/>
 								<vbox vfill="false" pad.b="6">
 									<value id="midivel${idx}" detailed="false"/>
 									<value id="vl${idx}" detailed="true" sline="true"/>
 								</vbox>
-								<!-- TODO
 								<knob ui:tag="42" id="pl${idx}" size="20" balance="0.5" scolor="balance_l" activity=":sample_state_${i} ieq 0" />
-								 -->
-								<knob ui:tag="42" id="pl${idx}" size="20" balance="0.5" scolor="balance_l" />
 								<value id="pl${idx}" detailed="false" pad.b="6"/>
-								<!-- TODO
 								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r" activity=":sample_state_${i} ieq 0" />
-								-->
-								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r"/>
 								<value id="pr${idx}" detailed="false" pad.b="6"/>
 								<button id="ls${idx}"
 									activity=":fs${idx} ieq 0"
