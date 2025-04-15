@@ -429,31 +429,30 @@
 							<cell rows="11">
 								<vsep/>
 							</cell>
-							<ui:with bg.color="bg_schema">
-								<label text="${:i+1}" activity=":sample_state_${i} ieq 0"/>
-								<ui:set id="idx" value="[inst]_${i}"/>
 
-								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6" activity=":sample_state_${i} ieq 0"/>
-								<knob id="vl${idx}" size="20" scolor="velocity" activity=":sample_state_${i} ieq 0"/>
-								<vbox vfill="false" pad.b="6">
-									<value id="midivel${idx}" detailed="false" activity=":sample_state_${i} ieq 0"/>
-									<value id="vl${idx}" detailed="true" sline="true" activity=":sample_state_${i} ieq 0"/>
+							<ui:set id="idx" value="[inst]_${i}"/>
+							<ui:with bg.color="bg_schema" activity=":sample_state_${i} ieq 0">
+								<label text="${:i+1}" />
+
+								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6" />
+								<knob id="vl${idx}" size="20" scolor="velocity" />
+								<vbox vfill="false" pad.b="6" activity=":sample_state_${i} ieq 0">
+									<value id="midivel${idx}" detailed="false" />
+									<value id="vl${idx}" detailed="true" sline="true" />
 								</vbox>
-								<knob ui:tag="42" id="pl${idx}" size="20" balance="0.5" scolor="balance_l" activity=":sample_state_${i} ieq 0" />
-								<value id="pl${idx}" detailed="false" pad.b="6" activity=":sample_state_${i} ieq 0"/>
-								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r" activity=":sample_state_${i} ieq 0" />
-								<value id="pr${idx}" detailed="false" pad.b="6" activity=":sample_state_${i} ieq 0"/>
+								<knob ui:tag="42" id="pl${idx}" size="20" balance="0.5" scolor="balance_l" />
+								<value id="pl${idx}" detailed="false" pad.b="6" />
+								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r" />
+								<value id="pr${idx}" detailed="false" pad.b="6" />
 								<button id="ls${idx}"
-									activity=":sample_state_${i} ieq 0"
 									font.name="lsp-icons" font.size="10"
 									text="icons.playback_big.play"
 									size="32" ui:inject="Button_cyan" toggle="false" />
 								<button id="lc${idx}"
-								 	activity=":sample_state_${i} ieq 0"
 									font.name="lsp-icons" font.size="10"
 									text="icons.playback_big.stop"
 									size="32" ui:inject="Button_cyan" toggle="false" pad.b="6" />
-								<led activity=":sample_state_${i} ieq 0" id="no${idx}" pad.b="6"/>
+								<led id="no${idx}" pad.b="6"/>
 							</ui:with>
 						</ui:for>
 					</grid>
