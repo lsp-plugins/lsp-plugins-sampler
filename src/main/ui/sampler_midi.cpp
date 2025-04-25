@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 18 февр. 2024 г.
@@ -39,11 +39,12 @@ namespace lsp
             {
                 "",
                 "MIDI velocity",
+                NULL,
                 meta::U_NONE,
                 meta::R_CONTROL,
                 meta::F_INT | meta::F_LOWER | meta::F_UPPER | meta::F_STEP,
                 midi_velocity_min, midi_velocity_max, 0.0f, 0.05f,
-                NULL, NULL
+                NULL, NULL, NULL
             };
 
             MidiVelocityPort::MidiVelocityPort()
@@ -96,7 +97,7 @@ namespace lsp
                 return lsp_limit(value, meta->min, meta->max);
             }
 
-        } /* namespace sampler */
+        } /* namespace sampler_midi */
     } /* namespace plugui */
 } /* namespace lsp */
 
