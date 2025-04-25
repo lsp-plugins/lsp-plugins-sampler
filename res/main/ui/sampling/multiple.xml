@@ -436,7 +436,7 @@
 
 								<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6" />
 								<knob id="vl${idx}" size="20" scolor="velocity" />
-								<vbox vfill="false" pad.b="6" activity=":sample_state_${i} ieq 0">
+								<vbox vfill="false" pad.b="6">
 									<value id="midivel${idx}" detailed="false" />
 									<value id="vl${idx}" detailed="true" sline="true" />
 								</vbox>
