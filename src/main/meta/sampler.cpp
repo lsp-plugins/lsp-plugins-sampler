@@ -214,36 +214,36 @@ namespace lsp
 
         #define S_PORTS_GLOBAL      \
             BYPASS,                 \
-            TRIGGER("mute", "Forced mute"), \
-            SWITCH("muting", "Mute on stop", 1.0f), \
-            SWITCH("noff", "Note-off handling", 0.0f), \
+            TRIGGER("mute", "Forced mute", "Mute"), \
+            SWITCH("muting", "Mute on stop", "Muting", 1.0f), \
+            SWITCH("noff", "Note-off handling", "Note off", 0.0f), \
             CONTROL("fout", "Note-off fadeout", U_MSEC, sampler_metadata::FADEOUT), \
             DRY_GAIN(1.0f),         \
             WET_GAIN(1.0f),         \
             DRYWET(100.0f),         \
             OUT_GAIN, \
-            COMBO("sets", "Sample Editor Tab Selection", 0, sampler_sample_editor_tabs)
+            COMBO("sets", "Sample Editor Tab Selection", "Tab selector", 0, sampler_sample_editor_tabs)
 
         #define S_DO_CONTROL \
-            SWITCH("do_gain", "Apply gain to direct-out", 1.0f), \
-            SWITCH("do_pan", "Apply panning to direct-out", 1.0f)
+            SWITCH("do_gain", "Apply gain to direct-out", "DOut gain on", 1.0f), \
+            SWITCH("do_pan", "Apply panning to direct-out", "DOut pan on", 1.0f)
 
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
             CONTROL("pi", "Sample pitch", U_SEMITONES, sampler_metadata::SAMPLE_PITCH), \
-            SWITCH("so", "Sample stretch enabled", 0.0f), \
+            SWITCH("so", "Sample stretch enabled", NULL, 0.0f), \
             CONTROL("st", "Sample relative stretch time", U_MSEC, sampler_metadata::SAMPLE_STRETCH), \
             CONTROL("ss", "Sample stretch region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("se", "Sample stretch region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("sc", "Sample stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
             CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
-            COMBO("xt", "Sample stretch crossfade type", 1, sampler_crossfade_type), \
-            SWITCH("lo", "Sample loop enabled", 0.0f), \
-            COMBO("lm", "Sample loop mode", 0, sampler_loop_mode), \
+            COMBO("xt", "Sample stretch crossfade type", NULL, 1, sampler_crossfade_type), \
+            SWITCH("lo", "Sample loop enabled", NULL, 0.0f), \
+            COMBO("lm", "Sample loop mode", NULL, 0, sampler_loop_mode), \
             CONTROL("lb", "Sample loop region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("le", "Sample loop region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("ll", "Sample loop fade", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            COMBO("lx", "Sample loop crossfade type", 1, sampler_crossfade_type), \
+            COMBO("lx", "Sample loop crossfade type", NULL, 1, sampler_crossfade_type), \
             CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
@@ -251,15 +251,15 @@ namespace lsp
             AMP_GAIN10("mk", "Sample makeup gain", 1.0f), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
             CONTROL("pd", "Sample pre-delay", U_MSEC, sampler_metadata::PREDELAY), \
-            SWITCH("on", "Sample enabled", 1.0f), \
-            TRIGGER("ls", "Sample listen preview"), \
-            TRIGGER("lc", "Sample stop listen preview"), \
-            SWITCH("rr", "Sample pre-reverse", 0.0f), \
-            SWITCH("rs", "Sample post-reverse", 0.0f), \
-            SWITCH("pc", "Sample auto-compensate", 0.0f), \
+            SWITCH("on", "Sample enabled", NULL, 1.0f), \
+            TRIGGER("ls", "Sample listen preview", NULL), \
+            TRIGGER("lc", "Sample stop listen preview", NULL), \
+            SWITCH("rr", "Sample pre-reverse", NULL, 0.0f), \
+            SWITCH("rs", "Sample post-reverse", NULL, 0.0f), \
+            SWITCH("pc", "Sample auto-compensate", NULL, 0.0f), \
             CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
             CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \
-            COMBO("xc", "Sample auto-compensate crossfade type", 1, sampler_crossfade_type), \
+            COMBO("xc", "Sample auto-compensate crossfade type", NULL, 1, sampler_crossfade_type), \
             gain, \
             BLINK("ac", "Sample activity"), \
             METER("pp", "Sample play position", U_MSEC, sampler_metadata::SAMPLE_PLAYBACK), \
@@ -270,40 +270,40 @@ namespace lsp
             MESH("fd", "Sample file contents", sampler_metadata::TRACKS_MAX, sampler_metadata::MESH_SIZE)
 
         #define S_INSTRUMENT(sample)    \
-            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
-            COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
-            COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
+            COMBO("chan", "Channel", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
+            COMBO("note", "Note", "Note", sampler_metadata::NOTE_DFL, notes), \
+            COMBO("oct", "Octave", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
             INT_METER_ALL("mn", "MIDI Note #", U_NONE, 0, 127, 0, 1), \
-            TRIGGER("trg", "Instrument listen preview"), \
-            TRIGGER("stop", "Stop instrument listen preview"), \
+            TRIGGER("trg", "Instrument listen preview", "Inst play"), \
+            TRIGGER("stop", "Stop instrument listen preview", "Inst stop"), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
-            SWITCH("hvel", "Velocity handling", 1.0f), \
+            SWITCH("hvel", "Velocity handling", "Velocity on", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_MG_INSTRUMENT(sample)    \
-            COMBO("chan", "Channel", sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
-            COMBO("note", "Note", sampler_metadata::NOTE_DFL, notes), \
-            COMBO("oct", "Octave", sampler_metadata::OCTAVE_DFL, octaves), \
-            COMBO("mgrp", "Mute Group", 0, mute_groups), \
-            SWITCH("mtg", "Mute on stop", 0.0f), \
-            SWITCH("nto", "Note-off handling", 0.0f), \
+            COMBO("chan", "Channel", NULL, sampler_metadata::CHANNEL_DFL, sampler_midi_channels), \
+            COMBO("note", "Note", NULL, sampler_metadata::NOTE_DFL, notes), \
+            COMBO("oct", "Octave", NULL, sampler_metadata::OCTAVE_DFL, octaves), \
+            COMBO("mgrp", "Mute Group", NULL, 0, mute_groups), \
+            SWITCH("mtg", "Mute on stop", NULL, 0.0f), \
+            SWITCH("nto", "Note-off handling", NULL, 0.0f), \
             INT_METER_ALL("mn", "MIDI Note #", U_NONE, 0, 127, 0, 1), \
-            TRIGGER("trg", "Instrument listen preview"), \
-            TRIGGER("stop", "Stop instrument listen preview"), \
+            TRIGGER("trg", "Instrument listen preview", NULL), \
+            TRIGGER("stop", "Stop instrument listen preview", NULL), \
             CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
             CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
-            SWITCH("hvel", "Velocity handling", 1.0f), \
+            SWITCH("hvel", "Velocity handling", NULL, 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
         #define S_AREA_SELECTOR(list)     \
-            COMBO("msel", "Area selector", 0, list)
+            COMBO("msel", "Area selector", "Area", 0, list)
 
         #define S_INSTRUMENT_SELECTOR(list)     \
             PORT_SET("inst", "Instrument selector", list, sampler_multiple_ports)
 
         #define S_MIXER(id)                      \
-            SWITCH("ion_" #id, "Instrument on " #id, 1.0f), \
+            SWITCH("ion_" #id, "Instrument on " #id, "Inst on " #id, 1.0f), \
             AMP_GAIN10("imix_" #id, "Instrument mix gain " #id, 1.0f), \
             PAN_CTL("panl_" #id, "Instrument panorama left " #id, -100.0f), \
             PAN_CTL("panr_" #id, "Instrument manorama right " #id, 100.0f), \
@@ -311,7 +311,7 @@ namespace lsp
 
         #define S_DIRECT_OUT(id)                \
             S_MIXER(id),                        \
-            SWITCH("don_" #id, "Direct output on " #id, 1.0f), \
+            SWITCH("don_" #id, "Direct output on " #id, "DOut on " #id, 1.0f), \
             AUDIO_OUTPUT("dol_" #id, "Direct output left " #id), \
             AUDIO_OUTPUT("dor_" #id, "Direct output right " #id)
 
