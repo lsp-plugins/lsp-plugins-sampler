@@ -217,7 +217,7 @@ namespace lsp
             TRIGGER("mute", "Forced mute", "Mute"), \
             SWITCH("muting", "Mute on stop", "Muting", 1.0f), \
             SWITCH("noff", "Note-off handling", "Note off", 0.0f), \
-            CONTROL("fout", "Note-off fadeout", U_MSEC, sampler_metadata::FADEOUT), \
+            CONTROL("fout", "Note-off fadeout", "Note fade out", U_MSEC, sampler_metadata::FADEOUT), \
             DRY_GAIN(1.0f),         \
             WET_GAIN(1.0f),         \
             DRYWET(100.0f),         \
@@ -230,35 +230,35 @@ namespace lsp
 
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
-            CONTROL("pi", "Sample pitch", U_SEMITONES, sampler_metadata::SAMPLE_PITCH), \
+            CONTROL("pi", "Sample pitch", NULL, U_SEMITONES, sampler_metadata::SAMPLE_PITCH), \
             SWITCH("so", "Sample stretch enabled", NULL, 0.0f), \
-            CONTROL("st", "Sample relative stretch time", U_MSEC, sampler_metadata::SAMPLE_STRETCH), \
-            CONTROL("ss", "Sample stretch region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("se", "Sample stretch region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("sc", "Sample stretch chunk", U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
-            CONTROL("sx", "Sample stretch fade", U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
+            CONTROL("st", "Sample relative stretch time", NULL, U_MSEC, sampler_metadata::SAMPLE_STRETCH), \
+            CONTROL("ss", "Sample stretch region start", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("se", "Sample stretch region end", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("sc", "Sample stretch chunk", NULL, U_MSEC, sampler_metadata::SAMPLE_STRETCH_CHUNK), \
+            CONTROL("sx", "Sample stretch fade", NULL, U_PERCENT, sampler_metadata::SAMPLE_STRETCH_FADE), \
             COMBO("xt", "Sample stretch crossfade type", NULL, 1, sampler_crossfade_type), \
             SWITCH("lo", "Sample loop enabled", NULL, 0.0f), \
             COMBO("lm", "Sample loop mode", NULL, 0, sampler_loop_mode), \
-            CONTROL("lb", "Sample loop region start", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("le", "Sample loop region end", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("ll", "Sample loop fade", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("lb", "Sample loop region start", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("le", "Sample loop region end", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("ll", "Sample loop fade", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             COMBO("lx", "Sample loop crossfade type", NULL, 1, sampler_crossfade_type), \
-            CONTROL("hc", "Sample head cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("tc", "Sample tail cut", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("fi", "Sample fade in", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            CONTROL("fo", "Sample fade out", U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("hc", "Sample head cut", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("tc", "Sample tail cut", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("fi", "Sample fade in", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
+            CONTROL("fo", "Sample fade out", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             AMP_GAIN10("mk", "Sample makeup gain", 1.0f), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", NULL, U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
-            CONTROL("pd", "Sample pre-delay", U_MSEC, sampler_metadata::PREDELAY), \
+            CONTROL("pd", "Sample pre-delay", NULL, U_MSEC, sampler_metadata::PREDELAY), \
             SWITCH("on", "Sample enabled", NULL, 1.0f), \
             TRIGGER("ls", "Sample listen preview", NULL), \
             TRIGGER("lc", "Sample stop listen preview", NULL), \
             SWITCH("rr", "Sample pre-reverse", NULL, 0.0f), \
             SWITCH("rs", "Sample post-reverse", NULL, 0.0f), \
             SWITCH("pc", "Sample auto-compensate", NULL, 0.0f), \
-            CONTROL("xx", "Sample auto-compensate fade", U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
-            CONTROL("cc", "Sample auto-compensate stretch chunk", U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \
+            CONTROL("xx", "Sample auto-compensate fade", NULL, U_PERCENT, sampler_metadata::SAMPLE_COMPENSATE_FADE), \
+            CONTROL("cc", "Sample auto-compensate stretch chunk", NULL, U_MSEC, sampler_metadata::SAMPLE_COMPENSATE_CHUNK), \
             COMBO("xc", "Sample auto-compensate crossfade type", NULL, 1, sampler_crossfade_type), \
             gain, \
             BLINK("ac", "Sample activity"), \
@@ -276,8 +276,8 @@ namespace lsp
             INT_METER_ALL("mn", "MIDI Note #", U_NONE, 0, 127, 0, 1), \
             TRIGGER("trg", "Instrument listen preview", "Inst play"), \
             TRIGGER("stop", "Stop instrument listen preview", "Inst stop"), \
-            CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
-            CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            CONTROL("dyna", "Dynamics", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
+            CONTROL("drft", "Time drifting", "Drifting", U_MSEC, sampler_metadata::DRIFT), \
             SWITCH("hvel", "Velocity handling", "Velocity on", 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
@@ -291,8 +291,8 @@ namespace lsp
             INT_METER_ALL("mn", "MIDI Note #", U_NONE, 0, 127, 0, 1), \
             TRIGGER("trg", "Instrument listen preview", NULL), \
             TRIGGER("stop", "Stop instrument listen preview", NULL), \
-            CONTROL("dyna", "Dynamics", U_PERCENT, sampler_metadata::DYNA), \
-            CONTROL("drft", "Time drifting", U_MSEC, sampler_metadata::DRIFT), \
+            CONTROL("dyna", "Dynamics", NULL, U_PERCENT, sampler_metadata::DYNA), \
+            CONTROL("drft", "Time drifting", NULL, U_MSEC, sampler_metadata::DRIFT), \
             SWITCH("hvel", "Velocity handling", NULL, 1.0f), \
             PORT_SET("ssel", "Sample selector", sampler_sample_selectors, sample)
 
