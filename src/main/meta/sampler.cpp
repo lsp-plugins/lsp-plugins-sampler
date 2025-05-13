@@ -207,10 +207,10 @@ namespace lsp
             { "direct_out_" #i, "Direct Output " #i,    GRP_STEREO,     PGF_OUT,    dout_ ## i ##_ports      }
 
         #define S_FILE_GAIN_MONO \
-            AMP_GAIN10("mx", "Sample mix gain", 1.0f)
+            AMP_GAIN10("mx", "Sample mix gain", NULL, 1.0f)
         #define S_FILE_GAIN_STEREO \
-            PAN_CTL("pl", "Sample left channel panorama", -100.0f), \
-            PAN_CTL("pr", "Sample right channel panorama", 100.0f)
+            PAN_CTL("pl", "Sample left channel panorama", NULL, -100.0f), \
+            PAN_CTL("pr", "Sample right channel panorama", NULL, 100.0f)
 
         #define S_PORTS_GLOBAL      \
             BYPASS,                 \
@@ -248,7 +248,7 @@ namespace lsp
             CONTROL("tc", "Sample tail cut", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fi", "Sample fade in", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fo", "Sample fade out", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
-            AMP_GAIN10("mk", "Sample makeup gain", 1.0f), \
+            AMP_GAIN10("mk", "Sample makeup gain", NULL, 1.0f), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", NULL, U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
             CONTROL("pd", "Sample pre-delay", NULL, U_MSEC, sampler_metadata::PREDELAY), \
             SWITCH("on", "Sample enabled", NULL, 1.0f), \
@@ -304,9 +304,9 @@ namespace lsp
 
         #define S_MIXER(id)                      \
             SWITCH("ion_" #id, "Instrument on " #id, "Inst on " #id, 1.0f), \
-            AMP_GAIN10("imix_" #id, "Instrument mix gain " #id, 1.0f), \
-            PAN_CTL("panl_" #id, "Instrument panorama left " #id, -100.0f), \
-            PAN_CTL("panr_" #id, "Instrument manorama right " #id, 100.0f), \
+            AMP_GAIN10("imix_" #id, "Instrument mix gain " #id, "Inst gain" #id, 1.0f), \
+            PAN_CTL("panl_" #id, "Instrument panorama left " #id, "Inst pan L " #id, -100.0f), \
+            PAN_CTL("panr_" #id, "Instrument manorama right " #id, "Inst pan R " #id, 100.0f), \
             BLINK("iact_" #id, "Instrument activity " #id)
 
         #define S_DIRECT_OUT(id)                \
