@@ -207,7 +207,7 @@ for path substitutions. For example, the following value:</p>
 	<li><b>Pan Right</b> - the panorama of the right audio channel of the corresponding sample.</li>
 	<li><b>Listen</b> - the button that plays the preview of the corresponding sample.</li>
 	<li><b>Stop</b> - the button that stops the preview of the corresponding sample.</li>
-	<li><b>Note on</b> - indicates that the playback event of the correponding sample has triggered.</li>
+	<li><b>Note on</b> - indicates that the playback event of the corresponding sample has triggered.</li>
 </ul>
 <p><b>'Audio channel' section:</b></p>
 <ul>
