@@ -239,6 +239,7 @@ namespace lsp
 
                 af->pFile                   = NULL;
                 af->pPitch                  = NULL;
+
                 af->pStretchOn              = NULL;
                 af->pStretch                = NULL;
                 af->pStretchStart           = NULL;
@@ -246,18 +247,36 @@ namespace lsp
                 af->pStretchChunk           = NULL;
                 af->pStretchFade            = NULL;
                 af->pStretchFadeType        = NULL;
+
                 af->pLoopOn                 = NULL;
                 af->pLoopMode               = NULL;
                 af->pLoopStart              = NULL;
                 af->pLoopEnd                = NULL;
                 af->pLoopFade               = NULL;
                 af->pLoopFadeType           = NULL;
+
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
                 af->pFadeOut                = NULL;
                 af->pVelocity               = NULL;
                 af->pMakeup                 = NULL;
+
+                af->pEnvelopeOn             = NULL;
+                af->pEnvelopeHoldOn         = NULL;
+                af->pEnvelopeBreakOn        = NULL;
+                af->pEnvelopeAttackTime     = NULL;
+                af->pEnvelopeHoldTime       = NULL;
+                af->pEnvelopeDecayTime      = NULL;
+                af->pEnvelopeSlopeTime      = NULL;
+                af->pEnvelopeReleaseTime    = NULL;
+                af->pEnvelopeBreakLevel     = NULL;
+                af->pEnvelopeSustainLevel   = NULL;
+                af->pEnvelopeAttackCurve    = NULL;
+                af->pEnvelopeDecayCurve     = NULL;
+                af->pEnvelopeSlopeCurve     = NULL;
+                af->pEnvelopeReleaseCurve   = NULL;
+
                 af->pPreDelay               = NULL;
                 af->pOn                     = NULL;
                 af->pListen                 = NULL;
@@ -355,6 +374,7 @@ namespace lsp
                 // Allocate files
                 BIND_PORT(af->pFile);
                 BIND_PORT(af->pPitch);
+
                 BIND_PORT(af->pStretchOn);
                 BIND_PORT(af->pStretch);
                 BIND_PORT(af->pStretchStart);
@@ -362,17 +382,35 @@ namespace lsp
                 BIND_PORT(af->pStretchChunk);
                 BIND_PORT(af->pStretchFade);
                 BIND_PORT(af->pStretchFadeType);
+
                 BIND_PORT(af->pLoopOn);
                 BIND_PORT(af->pLoopMode);
                 BIND_PORT(af->pLoopStart);
                 BIND_PORT(af->pLoopEnd);
                 BIND_PORT(af->pLoopFade);
                 BIND_PORT(af->pLoopFadeType);
+
                 BIND_PORT(af->pHeadCut);
                 BIND_PORT(af->pTailCut);
                 BIND_PORT(af->pFadeIn);
                 BIND_PORT(af->pFadeOut);
                 BIND_PORT(af->pMakeup);
+
+                BIND_PORT(af->pEnvelopeOn);
+                BIND_PORT(af->pEnvelopeHoldOn);
+                BIND_PORT(af->pEnvelopeBreakOn);
+                BIND_PORT(af->pEnvelopeAttackTime);
+                BIND_PORT(af->pEnvelopeHoldTime);
+                BIND_PORT(af->pEnvelopeDecayTime);
+                BIND_PORT(af->pEnvelopeSlopeTime);
+                BIND_PORT(af->pEnvelopeReleaseTime);
+                BIND_PORT(af->pEnvelopeBreakLevel);
+                BIND_PORT(af->pEnvelopeSustainLevel);
+                BIND_PORT(af->pEnvelopeAttackCurve);
+                BIND_PORT(af->pEnvelopeDecayCurve);
+                BIND_PORT(af->pEnvelopeSlopeCurve);
+                BIND_PORT(af->pEnvelopeReleaseCurve);
+
                 BIND_PORT(af->pVelocity);
                 BIND_PORT(af->pPreDelay);
                 BIND_PORT(af->pOn);
@@ -1471,6 +1509,7 @@ namespace lsp
             v->write("fMinVelocity", f->fMinVelocity);
             v->write("fMaxVelocity", f->fMaxVelocity);
             v->write("fPitch", f->fPitch);
+
             v->write("bStretchOn", f->bStretchOn);
             v->write("fStretch", f->fStretch);
             v->write("fStretchStart", f->fStretchStart);
@@ -1478,11 +1517,13 @@ namespace lsp
             v->write("fStretchChunk", f->fStretchChunk);
             v->write("fStretchFade", f->fStretchFade);
             v->write("nStretchFadeType", f->nStretchFadeType);
+
             v->write("enLoopMode", int(f->enLoopMode));
             v->write("fLoopStart", f->fLoopStart);
             v->write("fLoopEnd", f->fLoopEnd);
             v->write("fLoopFade", f->fLoopFade);
             v->write("nLoopFadeType", f->nLoopFadeType);
+
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1495,6 +1536,7 @@ namespace lsp
             v->write("nCompensateFadeType", f->nCompensateFadeType);
             v->write("fPreDelay", f->fPreDelay);
             v->write("fMakeup", f->fMakeup);
+
             v->writev("fGains", f->fGains, meta::sampler_metadata::TRACKS_MAX);
             v->write("fLength", f->fLength);
             v->write("fActualLength", f->fActualLength);
@@ -1503,6 +1545,7 @@ namespace lsp
 
             v->write("pFile", f->pFile);
             v->write("pPitch", f->pPitch);
+
             v->write("pStretchOn", f->pStretchOn);
             v->write("pStretch", f->pStretch);
             v->write("pStretchStart", f->pStretchStart);
@@ -1510,17 +1553,35 @@ namespace lsp
             v->write("pStretchChunk", f->pStretchChunk);
             v->write("pStretchFade", f->pStretchFade);
             v->write("pStretchFadeType", f->pStretchFadeType);
+
             v->write("pLoopOn", f->pLoopOn);
             v->write("pLoopMode", f->pLoopMode);
             v->write("pLoopStart", f->pLoopStart);
             v->write("pLoopEnd", f->pLoopEnd);
             v->write("pLoopFadeType", f->pLoopFadeType);
             v->write("pLoopFade", f->pLoopFade);
+
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);
             v->write("pFadeOut", f->pFadeOut);
             v->write("pMakeup", f->pMakeup);
+
+            v->write("pEnvelopeOn", f->pEnvelopeOn);
+            v->write("pEnvelopeHoldOn", f->pEnvelopeHoldOn);
+            v->write("pEnvelopeBreakOn", f->pEnvelopeBreakOn);
+            v->write("pEnvelopeAttackTime", f->pEnvelopeAttackTime);
+            v->write("pEnvelopeHoldTime", f->pEnvelopeHoldTime);
+            v->write("pEnvelopeDecayTime", f->pEnvelopeDecayTime);
+            v->write("pEnvelopeSlopeTime", f->pEnvelopeSlopeTime);
+            v->write("pEnvelopeReleaseTime", f->pEnvelopeReleaseTime);
+            v->write("pEnvelopeBreakLevel", f->pEnvelopeBreakLevel);
+            v->write("pEnvelopeSustainLevel", f->pEnvelopeSustainLevel);
+            v->write("pEnvelopeAttackCurve", f->pEnvelopeAttackCurve);
+            v->write("pEnvelopeDecayCurve", f->pEnvelopeDecayCurve);
+            v->write("pEnvelopeSlopeCurve", f->pEnvelopeSlopeCurve);
+            v->write("pEnvelopeReleaseCurve", f->pEnvelopeReleaseCurve);
+
             v->write("pVelocity", f->pVelocity);
             v->write("pPreDelay", f->pPreDelay);
             v->write("pOn", f->pOn);

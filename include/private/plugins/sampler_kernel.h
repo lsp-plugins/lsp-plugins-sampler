@@ -179,6 +179,7 @@ namespace lsp
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
+
                     plug::IPort        *pStretchOn;                                     // Stretch enabled
                     plug::IPort        *pStretch;                                       // Stretch amount
                     plug::IPort        *pStretchStart;                                  // Start of the stretch region
@@ -186,17 +187,35 @@ namespace lsp
                     plug::IPort        *pStretchChunk;                                  // Stretch chunk
                     plug::IPort        *pStretchFade;                                   // Stretch cross-fade length
                     plug::IPort        *pStretchFadeType;                               // Stretch cross-fade type
+
                     plug::IPort        *pLoopOn;                                        // Loop enabled
                     plug::IPort        *pLoopMode;                                      // Loop mode
                     plug::IPort        *pLoopStart;                                     // Start of the loop region
                     plug::IPort        *pLoopEnd;                                       // End of the loop region
                     plug::IPort        *pLoopFadeType;                                  // Loop cross-fade type
                     plug::IPort        *pLoopFade;                                      // Loop cross-fade length
+
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length
                     plug::IPort        *pFadeOut;                                       // Fade out length
                     plug::IPort        *pMakeup;                                        // Makup gain
+
+                    plug::IPort        *pEnvelopeOn;                                    // Enable envelope
+                    plug::IPort        *pEnvelopeHoldOn;                                // Enable Hold point
+                    plug::IPort        *pEnvelopeBreakOn;                               // Enable Break point
+                    plug::IPort        *pEnvelopeAttackTime;                            // Attack time
+                    plug::IPort        *pEnvelopeHoldTime;                              // Hold time
+                    plug::IPort        *pEnvelopeDecayTime;                             // Decay time
+                    plug::IPort        *pEnvelopeSlopeTime;                             // Slope time
+                    plug::IPort        *pEnvelopeReleaseTime;                           // Release time
+                    plug::IPort        *pEnvelopeBreakLevel;                            // Break level
+                    plug::IPort        *pEnvelopeSustainLevel;                          // Sustain level
+                    plug::IPort        *pEnvelopeAttackCurve;                           // Attack curvature
+                    plug::IPort        *pEnvelopeDecayCurve;                            // Decay curvature
+                    plug::IPort        *pEnvelopeSlopeCurve;                            // Slope curvature
+                    plug::IPort        *pEnvelopeReleaseCurve;                          // Release curvature
+
                     plug::IPort        *pVelocity;                                      // Velocity range top
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pOn;                                            // Sample on outputflag

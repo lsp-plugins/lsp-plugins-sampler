@@ -249,6 +249,20 @@ namespace lsp
             CONTROL("fi", "Sample fade in", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fo", "Sample fade out", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             AMP_GAIN10("mk", "Sample makeup gain", NULL, 1.0f), \
+            SWITCH("ee", "Sample envelope enable", NULL, 0.0f), \
+            SWITCH("eh", "Sample envelope hold enable", NULL, 0.0f), \
+            SWITCH("eb", "Sample envelope break enable", NULL, 0.0f), \
+            PERCENTS("ta", "Sample attack time", NULL, 5.0f, 0.1f), \
+            PERCENTS("th", "Sample hold time", NULL, 10.0f, 0.1f), \
+            PERCENTS("td", "Sample decay time", NULL, 30.0f, 0.1f), \
+            PERCENTS("ts", "Sample slope time", NULL, 50.0f, 0.1f), \
+            PERCENTS("tr", "Sample release time", NULL, 80.0f, 0.1f), \
+            PERCENTS("bl", "Sample break level", NULL, 40.0f, 0.1f), \
+            PERCENTS("sl", "Sample sustain level", NULL, 60.0f, 0.1f), \
+            PERCENTS("ca", "Sample attack curvature", NULL, 50.0f, 0.1f), \
+            PERCENTS("cd", "Sample decay curvature", NULL, 50.0f, 0.1f), \
+            PERCENTS("cs", "Sample slope curvature", NULL, 50.0f, 0.1f), \
+            PERCENTS("cr", "Sample release curvature", NULL, 50.0f, 0.1f), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", NULL, U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
             CONTROL("pd", "Sample pre-delay", NULL, U_MSEC, sampler_metadata::PREDELAY), \
             SWITCH("on", "Sample enabled", NULL, 1.0f), \

@@ -134,7 +134,25 @@
 							clipboard.fade_in="fi${idx}"
 							clipboard.fade_out="fo${idx}"
 							clipboard.makeup="mk${idx}"
-							clipboard.predelay="pd${idx}"/>
+							clipboard.predelay="pd${idx}">
+							
+							<aenvelope
+								attack.time.id="ta${idx}"
+								hold.time.id="th${idx}"
+								decay.time.id="td${idx}"
+								slope.time.id="ts${idx}"
+								release.time.id="tr${idx}"
+								attack.curvature.id="ca${idx}"
+								decay.curvature.id="cd${idx}"
+								slope.curvature.id="cs${idx}"
+								release.curvature.id="cr${idx}"
+								break.level.id="bl${idx}"
+								sustain.level.id="sl${idx}"
+								hold.enabled=":eh${idx}"
+								break.enabled=":eb${idx}"
+								/>
+
+						</asample>
 
 						<!-- Listen button -->
 						<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
