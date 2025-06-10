@@ -142,10 +142,10 @@
 								decay.time.id="td${idx}"
 								slope.time.id="ts${idx}"
 								release.time.id="tr${idx}"
-								attack.curvature.id="ca${idx}"
-								decay.curvature.id="cd${idx}"
-								slope.curvature.id="cs${idx}"
-								release.curvature.id="cr${idx}"
+								attack.curve.id="ca${idx}"
+								decay.curve.id="cd${idx}"
+								slope.curve.id="cs${idx}"
+								release.curve.id="cr${idx}"
 								break.level.id="bl${idx}"
 								sustain.level.id="sl${idx}"
 								hold.enabled=":eh${idx}"
@@ -339,6 +339,61 @@
 						<value id="sc${idx}" bg.color="bg_schema" pad.b="6"/>
 					</ui:with>
 
+				</grid>
+				
+				<!-- envelope -->
+				<grid rows="4" cols="15" bg.color="bg" hspacing="2">
+					<!-- Row 1 -->
+					<cell cols="3"><label text="labels.adsr.attack" /></cell>
+					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
+					<cell cols="3"><label text="labels.adsr.decay" /></cell>
+					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
+					<cell cols="2"><label text="labels.adsr.slope" /></cell>
+					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
+					<label text="labels.adsr.sustain" />
+					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
+					<cell cols="2"><label text="labels.adsr.release" /></cell>
+					
+					<!-- Row 2 -->
+					<label text="labels.adsr.time" />
+					<label text="labels.adsr.convex" />
+					<button id="eh${idx}" text="labels.adsr.hold" />
+					<label text="labels.adsr.time" />
+					<label text="labels.adsr.convex" />
+					<button id="eb${idx}" text="labels.adsr.break" />
+					<label text="labels.adsr.time" />
+					<label text="labels.adsr.convex" />
+					<void />
+					<label text="labels.adsr.time" />
+					<label text="labels.adsr.convex" />
+					
+					<!-- Row 3 -->
+					<knob id="ta${idx}" />
+					<knob id="ca${idx}" />
+					<knob id="th${idx}" />
+					<knob id="td${idx}" />
+					<knob id="cd${idx}" />
+					<knob id="bl${idx}" />
+					<knob id="ts${idx}" activity=":eb${idx}" />
+					<knob id="tc${idx}" activity=":eb${idx}" />
+					<knob id="sl${idx}" />
+					<knob id="tr${idx}" />
+					<knob id="cr${idx}" />
+					
+					<!-- Row 4 -->
+					<ui:with sline="true">
+						<value id="ta${idx}" />
+						<value id="ca${idx}" />
+						<value id="th${idx}" />
+						<value id="td${idx}" />
+						<value id="cd${idx}" />
+						<value id="bl${idx}" />
+						<value id="ts${idx}" activity=":eb${idx}" />
+						<value id="tc${idx}" activity=":eb${idx}" />
+						<value id="sl${idx}" />
+						<value id="tr${idx}" />
+						<value id="cr${idx}" />
+					</ui:with>
 				</grid>
 
 				<!-- loop -->

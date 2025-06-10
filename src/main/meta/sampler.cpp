@@ -174,6 +174,7 @@ namespace lsp
             { "Main",           "sampler.edit.main"      },
             { "Pitch",          "sampler.edit.pitch"     },
             { "Stretch",        "sampler.edit.stretch"   },
+            { "Envelope",       "sampler.edit.envelope"  },
             { "Loop",           "sampler.edit.loop"      },
             { NULL, NULL }
         };
