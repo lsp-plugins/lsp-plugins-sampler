@@ -375,7 +375,7 @@
 					<knob id="cd${idx}" />
 					<knob id="bl${idx}" />
 					<knob id="ts${idx}" activity=":eb${idx}" />
-					<knob id="tc${idx}" activity=":eb${idx}" />
+					<knob id="cs${idx}" activity=":eb${idx}" />
 					<knob id="sl${idx}" />
 					<knob id="tr${idx}" />
 					<knob id="cr${idx}" />
@@ -389,7 +389,7 @@
 						<value id="cd${idx}" />
 						<value id="bl${idx}" />
 						<value id="ts${idx}" activity=":eb${idx}" />
-						<value id="tc${idx}" activity=":eb${idx}" />
+						<value id="cs${idx}" activity=":eb${idx}" />
 						<value id="sl${idx}" />
 						<value id="tr${idx}" />
 						<value id="cr${idx}" />
