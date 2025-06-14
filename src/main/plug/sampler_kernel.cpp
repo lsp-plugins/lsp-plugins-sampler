@@ -276,6 +276,10 @@ namespace lsp
                 af->pEnvelopeDecayCurve     = NULL;
                 af->pEnvelopeSlopeCurve     = NULL;
                 af->pEnvelopeReleaseCurve   = NULL;
+                af->pEnvelopeAttackType     = NULL;
+                af->pEnvelopeDecayType      = NULL;
+                af->pEnvelopeSlopeType      = NULL;
+                af->pEnvelopeReleaseType    = NULL;
 
                 af->pPreDelay               = NULL;
                 af->pOn                     = NULL;
@@ -410,6 +414,10 @@ namespace lsp
                 BIND_PORT(af->pEnvelopeDecayCurve);
                 BIND_PORT(af->pEnvelopeSlopeCurve);
                 BIND_PORT(af->pEnvelopeReleaseCurve);
+                BIND_PORT(af->pEnvelopeAttackType);
+                BIND_PORT(af->pEnvelopeDecayType);
+                BIND_PORT(af->pEnvelopeSlopeType);
+                BIND_PORT(af->pEnvelopeReleaseType);
 
                 BIND_PORT(af->pVelocity);
                 BIND_PORT(af->pPreDelay);

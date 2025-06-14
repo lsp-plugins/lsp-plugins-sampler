@@ -215,6 +215,10 @@ namespace lsp
                     plug::IPort        *pEnvelopeDecayCurve;                            // Decay curvature
                     plug::IPort        *pEnvelopeSlopeCurve;                            // Slope curvature
                     plug::IPort        *pEnvelopeReleaseCurve;                          // Release curvature
+                    plug::IPort        *pEnvelopeAttackType;                            // Attack curve type
+                    plug::IPort        *pEnvelopeDecayType;                             // Decay curve type
+                    plug::IPort        *pEnvelopeSlopeType;                             // Slope curve type
+                    plug::IPort        *pEnvelopeReleaseType;                           // Release curve type
 
                     plug::IPort        *pVelocity;                                      // Velocity range top
                     plug::IPort        *pPreDelay;                                      // Pre-delay

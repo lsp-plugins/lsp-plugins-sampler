@@ -179,7 +179,7 @@ namespace lsp
             { NULL, NULL }
         };
 
-        const port_item_t sampler_midi_channels[] =
+        static const port_item_t sampler_midi_channels[] =
         {
             { "01",             "sampler.midi_channels.1" },
             { "02",             "sampler.midi_channels.2" },
@@ -198,6 +198,17 @@ namespace lsp
             { "15",             "sampler.midi_channels.15" },
             { "16",             "sampler.midi_channels.16" },
             { "All",            "sampler.midi_channels.all" },
+            { NULL,             NULL }
+        };
+
+        static const port_item_t sampler_envelope_types[] =
+        {
+            { "Off",            "adsr.type.off"             },
+            { "VLines",         "adsr.type.vline"           },
+            { "DLines",         "adsr.type.dline"           },
+            { "Cubic",          "adsr.type.cubic"           },
+            { "Quad",           "adsr.type.quad"            },
+            { "Exp",            "adsr.type.exp"             },
             { NULL,             NULL }
         };
 
@@ -264,6 +275,10 @@ namespace lsp
             PERCENTS("cd", "Sample decay curvature", NULL, 50.0f, 0.1f), \
             PERCENTS("cs", "Sample slope curvature", NULL, 50.0f, 0.1f), \
             PERCENTS("cr", "Sample release curvature", NULL, 50.0f, 0.1f), \
+            COMBO("ea", "Sample attack envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("ed", "Sample decay envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("es", "Sample slope envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("er", "Sample release envelope", NULL, 5, sampler_envelope_types), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", NULL, U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
             CONTROL("pd", "Sample pre-delay", NULL, U_MSEC, sampler_metadata::PREDELAY), \
             SWITCH("on", "Sample enabled", NULL, 1.0f), \

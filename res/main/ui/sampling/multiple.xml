@@ -148,8 +148,13 @@
 								release.curve.id="cr${idx}"
 								break.level.id="bl${idx}"
 								sustain.level.id="sl${idx}"
+								attack.type.id="ea${idx}"
+								decay.type.id="ed${idx}"
+								slope.type.id="es${idx}"
+								release.type.id="er${idx}"
 								hold.enabled=":eh${idx}"
 								break.enabled=":eb${idx}"
+								visibility=":ee${idx}"
 								/>
 
 						</asample>
@@ -157,6 +162,7 @@
 						<!-- Listen button -->
 						<hbox pad.l="6" pad.r="6" pad.t="4" pad.b="4" spacing="8" fill="true" bg.color="bg_schema">
 							<void hexpand="true"/>
+							<button id="ee${idx}" text="labels.adsr.envelope" width.min="50" ui:inject="Button_yellow" toggle="false"/>
 							<button id="ls${idx}" text="labels.sedit.listen" width.min="50" ui:inject="Button_cyan" toggle="false"/>
 							<button id="lc${idx}" text="labels.sedit.stop" width.min="50" ui:inject="Button_cyan" toggle="false"/>
 						</hbox>
@@ -344,15 +350,35 @@
 				<!-- envelope -->
 				<grid rows="4" cols="15" bg.color="bg" hspacing="2">
 					<!-- Row 1 -->
-					<cell cols="3"><label text="labels.adsr.attack" /></cell>
+					<cell cols="3">
+						<hbox>
+							<label text="labels.adsr.attack" />
+							<combo id="ea${idx}" />
+						</hbox>
+					</cell>
 					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
-					<cell cols="3"><label text="labels.adsr.decay" /></cell>
+					<cell cols="3">
+						<hbox>
+							<label text="labels.adsr.decay" />
+							<combo id="ed${idx}" />
+						</hbox>
+					</cell>
 					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
-					<cell cols="2"><label text="labels.adsr.slope" /></cell>
+					<cell cols="2">
+						<hbox>
+							<label text="labels.adsr.slope" />
+							<combo id="es${idx}" />
+						</hbox>
+					</cell>
 					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
 					<label text="labels.adsr.sustain" />
 					<cell rows="4"><vsep bg.color="bg" bg.bright="1.0" bright="1" /></cell>
-					<cell cols="2"><label text="labels.adsr.release" /></cell>
+					<cell cols="2">
+						<hbox>
+							<label text="labels.adsr.release" />
+							<combo id="er${idx}" />
+						</hbox>
+					</cell>
 					
 					<!-- Row 2 -->
 					<label text="labels.adsr.time" />
