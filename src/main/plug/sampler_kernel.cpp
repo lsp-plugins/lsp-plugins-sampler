@@ -25,6 +25,7 @@
 #include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/dsp-units/misc/fade.h>
 #include <lsp-plug.in/dsp-units/sampling/PlaySettings.h>
+#include <lsp-plug.in/dsp-units/util/ADSREnvelope.h>
 #include <lsp-plug.in/dsp/dsp.h>
 #include <lsp-plug.in/shared/debug.h>
 
@@ -241,12 +242,31 @@ namespace lsp
                 af->nCompensateFadeType     = XFADE_DFL;
                 af->fPreDelay               = meta::sampler_metadata::PREDELAY_DFL;
                 af->fMakeup                 = 1.0f;
+                af->fEnvelopeAttackTime     = 0.0f;
+                af->fEnvelopeHoldTime       = 0.0f;
+                af->fEnvelopeDecayTime      = 0.0f;
+                af->fEnvelopeSlopeTime      = 0.0f;
+                af->fEnvelopeReleaseTime    = 0.0f;
+                af->fEnvelopeBreakLevel     = 0.0f;
+                af->fEnvelopeSustainLevel   = 0.0f;
+                af->fEnvelopeAttackCurve    = 0.0f;
+                af->fEnvelopeDecayCurve     = 0.0f;
+                af->fEnvelopeSlopeCurve     = 0.0f;
+                af->fEnvelopeReleaseCurve   = 0.0f;
+                af->nEnvelopeAttackType     = 0.0f;
+                af->nEnvelopeDecayType      = 0.0f;
+                af->nEnvelopeSlopeType      = 0.0f;
+                af->nEnvelopeReleaseType    = 0.0f;
+
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
                     af->fGains[j]               = 0;
                 af->fLength                 = 0.0f;
                 af->fActualLength           = 0.0f;
                 af->nStatus                 = STATUS_UNSPECIFIED;
                 af->bOn                     = true;
+                af->bEnvelopeOn             = false;
+                af->bEnvelopeHoldOn         = false;
+                af->bEnvelopeBreakOn        = false;
 
                 af->pFile                   = NULL;
                 af->pPitch                  = NULL;
@@ -583,7 +603,7 @@ namespace lsp
         template <class T>
         void sampler_kernel::commit_value(uint32_t & counter, T & field, plug::IPort *port)
         {
-            const T temp = port->value();
+            const T temp = T(port->value());
             if (temp != field)
             {
                 field       = temp;
@@ -723,6 +743,36 @@ namespace lsp
                 if ((loop_update > 0) || (upd_req != af->nUpdateReq))
                     cancel_sample(af, 0);
 
+                // Update envelope settings
+                commit_value(af->nUpdateReq, af->bEnvelopeOn, af->pEnvelopeOn);
+                if (af->bEnvelopeOn)
+                {
+                    commit_value(af->nUpdateReq, af->bEnvelopeOn, af->pEnvelopeOn);
+                    commit_value(af->nUpdateReq, af->bEnvelopeHoldOn, af->pEnvelopeHoldOn);
+                    commit_value(af->nUpdateReq, af->bEnvelopeBreakOn, af->pEnvelopeBreakOn);
+                    commit_value(af->nUpdateReq, af->fEnvelopeAttackTime, af->pEnvelopeAttackTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeDecayTime, af->pEnvelopeDecayTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeReleaseTime, af->pEnvelopeReleaseTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeSustainLevel, af->pEnvelopeSustainLevel);
+                    commit_value(af->nUpdateReq, af->fEnvelopeAttackCurve, af->pEnvelopeAttackCurve);
+                    commit_value(af->nUpdateReq, af->fEnvelopeDecayCurve, af->pEnvelopeDecayCurve);
+                    commit_value(af->nUpdateReq, af->fEnvelopeReleaseCurve, af->pEnvelopeReleaseCurve);
+                    commit_value(af->nUpdateReq, af->nEnvelopeAttackType, af->pEnvelopeAttackType);
+                    commit_value(af->nUpdateReq, af->nEnvelopeDecayType, af->pEnvelopeDecayType);
+                    commit_value(af->nUpdateReq, af->nEnvelopeReleaseType, af->pEnvelopeReleaseType);
+
+                    if (af->bEnvelopeHoldOn)
+                        commit_value(af->nUpdateReq, af->fEnvelopeHoldTime, af->pEnvelopeHoldTime);
+                    if (af->bEnvelopeBreakOn)
+                    {
+                        commit_value(af->nUpdateReq, af->fEnvelopeBreakLevel, af->pEnvelopeBreakLevel);
+                        commit_value(af->nUpdateReq, af->fEnvelopeSlopeTime, af->pEnvelopeSlopeTime);
+                        commit_value(af->nUpdateReq, af->fEnvelopeSlopeCurve, af->pEnvelopeSlopeCurve);
+                        commit_value(af->nUpdateReq, af->nEnvelopeSlopeType, af->pEnvelopeSlopeType);
+                    }
+                }
+
+                // Update envelope view
                 const bool env_edit = (i == active_file) && bEnvelopeEdit;
                 if (env_edit != af->bEnvEdit)
                 {
@@ -961,6 +1011,42 @@ namespace lsp
                 abs_max                 = lsp_max(abs_max, dsp::abs_max(temp.channel(i, rp->nHeadCut), rp->nCutLength));
             const float cut_norming = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
 
+            // Apply envelope if it is enabled
+            if ((af->bEnvelopeOn) && (rp->nCutLength > 0))
+            {
+                dspu::ADSREnvelope e;
+                e.set_attack(
+                    af->fEnvelopeAttackTime * 0.01f,
+                    af->fEnvelopeAttackCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeAttackType));
+                e.set_hold(
+                    af->fEnvelopeHoldTime * 0.01f,
+                    af->bEnvelopeHoldOn);
+                e.set_decay(
+                    af->fEnvelopeDecayTime * 0.01f,
+                    af->fEnvelopeDecayCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeDecayType));
+                e.set_break(
+                    af->fEnvelopeBreakLevel * 0.01f,
+                    af->bEnvelopeBreakOn);
+                e.set_slope(
+                    af->fEnvelopeSlopeTime * 0.01f,
+                    af->fEnvelopeSlopeCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeSlopeType));
+                e.set_sustain_level(af->fEnvelopeSustainLevel * 0.01f);
+                e.set_release(
+                    af->fEnvelopeReleaseTime * 0.01f,
+                    af->fEnvelopeReleaseCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeReleaseType));
+
+                const float step    = 1.0f / rp->nCutLength;
+                for (size_t j=0; j<channels; ++j)
+                {
+                    float *dst          = temp.channel(j, rp->nHeadCut);
+                    e.generate_mul(dst, 0.0f, step, rp->nCutLength);
+                }
+            }
+
             // Render the thumbnails
             {
                 const float scaling     = float(rp->nLength) / meta::sampler_metadata::MESH_SIZE;
@@ -1024,9 +1110,9 @@ namespace lsp
             // Apply head cut and tail cut
             for (size_t j=0; j<channels; ++j)
             {
-                const float *src    = temp.channel(j);
+                const float *src    = temp.channel(j, rp->nHeadCut);
                 float *dst          = out->channel(j);
-                dsp::copy(dst, &src[rp->nHeadCut], rp->nCutLength);
+                dsp::copy(dst, src, rp->nCutLength);
             }
 
             // Commit the new sample to the processed
@@ -1600,11 +1686,30 @@ namespace lsp
             v->write("fPreDelay", f->fPreDelay);
             v->write("fMakeup", f->fMakeup);
 
+            v->write("fEnvelopeAttackTime", f->fEnvelopeAttackTime);
+            v->write("fEnvelopeHoldTime", f->fEnvelopeHoldTime);
+            v->write("fEnvelopeDecayTime", f->fEnvelopeDecayTime);
+            v->write("fEnvelopeSlopeTime", f->fEnvelopeSlopeTime);
+            v->write("fEnvelopeReleaseTime", f->fEnvelopeReleaseTime);
+            v->write("fEnvelopeBreakLevel", f->fEnvelopeBreakLevel);
+            v->write("fEnvelopeSustainLevel", f->fEnvelopeSustainLevel);
+            v->write("fEnvelopeAttackCurve", f->fEnvelopeAttackCurve);
+            v->write("fEnvelopeDecayCurve", f->fEnvelopeDecayCurve);
+            v->write("fEnvelopeSlopeCurve", f->fEnvelopeSlopeCurve);
+            v->write("fEnvelopeReleaseCurve", f->fEnvelopeReleaseCurve);
+            v->write("fEnvelopeAttackType", f->nEnvelopeAttackType);
+            v->write("fEnvelopeDecayType", f->nEnvelopeDecayType);
+            v->write("fEnvelopeSlopeType", f->nEnvelopeSlopeType);
+            v->write("fEnvelopeReleaseType", f->nEnvelopeReleaseType);
+
             v->writev("fGains", f->fGains, meta::sampler_metadata::TRACKS_MAX);
             v->write("fLength", f->fLength);
             v->write("fActualLength", f->fActualLength);
             v->write("nStatus", f->nStatus);
             v->write("bOn", f->bOn);
+            v->write("bEnvelopeOn", f->bEnvelopeOn);
+            v->write("bEnvelopeHoldOn", f->bEnvelopeHoldOn);
+            v->write("bEnvelopeBreakOn", f->bEnvelopeBreakOn);
 
             v->write("pFile", f->pFile);
             v->write("pPitch", f->pPitch);

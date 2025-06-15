@@ -173,11 +173,29 @@ namespace lsp
                     uint32_t            nCompensateFadeType;                            // Compensate fade type
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
+                    float               fEnvelopeAttackTime;                            // Attack time
+                    float               fEnvelopeHoldTime;                              // Hold time
+                    float               fEnvelopeDecayTime;                             // Decay time
+                    float               fEnvelopeSlopeTime;                             // Slope time
+                    float               fEnvelopeReleaseTime;                           // Release time
+                    float               fEnvelopeBreakLevel;                            // Break level
+                    float               fEnvelopeSustainLevel;                          // Sustain level
+                    float               fEnvelopeAttackCurve;                           // Attack curvature
+                    float               fEnvelopeDecayCurve;                            // Decay curvature
+                    float               fEnvelopeSlopeCurve;                            // Slope curvature
+                    float               fEnvelopeReleaseCurve;                          // Release curvature
+                    uint32_t            nEnvelopeAttackType;                            // Attack curve type
+                    uint32_t            nEnvelopeDecayType;                             // Decay curve type
+                    uint32_t            nEnvelopeSlopeType;                             // Slope curve type
+                    uint32_t            nEnvelopeReleaseType;                           // Release curve type
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
                     float               fLength;                                        // Length of source sample in milliseconds
                     float               fActualLength;                                  // Length of processed sample in milliseconds
                     status_t            nStatus;                                        // Loading status
                     bool                bOn;                                            // On flag
+                    bool                bEnvelopeOn;                                    // Envelope is enabled
+                    bool                bEnvelopeHoldOn;                                // Enable Hold point
+                    bool                bEnvelopeBreakOn;                               // Enable Break point
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
