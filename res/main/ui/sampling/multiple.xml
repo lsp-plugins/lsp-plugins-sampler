@@ -156,6 +156,7 @@
 								hold.enabled=":eh${idx}"
 								break.enabled=":eb${idx}"
 								visibility=":ee${idx}"
+								editable=":ee${idx} and (:sets eq 3)"
 								/>
 
 						</asample>
