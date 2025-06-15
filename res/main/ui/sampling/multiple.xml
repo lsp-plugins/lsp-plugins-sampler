@@ -110,8 +110,8 @@
 							loop.border.color="(:lo${idx}) ? 'loop_border_color' : 'loop_border_color_off'"
 							loop.begin=":lb${idx}"
 							loop.end=":le${idx}"
-							play.position=":pp${idx}"
-							length="(:sets ine 3) ? :fl${idx} : (:fl${idx} - :hc${idx} - :tc${idx})"
+							play.position="(:sets ine 3) ? :pp${idx} : :pp${idx} - :hc${idx}"
+							length="(:sets ine 3) ? :fl${idx} : (:al${idx} - :hc${idx} - :tc${idx})"
 							length.actual=":al${idx}"
 							status=":fs${idx}"
 							sample.full=":sets ine 3"
@@ -157,6 +157,7 @@
 								break.enabled=":eb${idx}"
 								visibility=":ee${idx}"
 								editable=":ee${idx} and (:sets eq 3)"
+								wire=":sets eq 3"
 								/>
 
 						</asample>
