@@ -120,6 +120,7 @@ namespace lsp
             bBypass         = false;
             bReorder        = false;
             bHandleVelocity = true;
+            bEnvelopeEdit   = false;
             fFadeout        = 10.0f;
             fDynamics       = meta::sampler_metadata::DYNA_DFL;
             fDrift          = meta::sampler_metadata::DRIFT_DFL;
@@ -128,6 +129,7 @@ namespace lsp
             pDynamics       = NULL;
             pHandleVelocity = NULL;
             pDrift          = NULL;
+            pSampleSel      = NULL;
             pActivity       = NULL;
             pListen         = NULL;
             pStop           = NULL;
@@ -143,6 +145,11 @@ namespace lsp
         void sampler_kernel::set_fadeout(float length)
         {
             fFadeout        = length;
+        }
+
+        void sampler_kernel::set_envelope_edit(bool edit)
+        {
+            bEnvelopeEdit       = edit;
         }
 
         bool sampler_kernel::init(ipc::IExecutor *executor, size_t files, size_t channels)
@@ -195,13 +202,17 @@ namespace lsp
                 af->pOriginal               = NULL;
                 af->pProcessed              = NULL;
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
+                {
                     af->vThumbs[j]              = NULL;
+                    af->vCutThumbs[j]           = NULL;
+                }
 
                 af->sListen.init();
                 af->sStop.init();
 
                 af->nUpdateReq              = 0;
                 af->nUpdateResp             = 0;
+                af->bEnvEdit                = false;
                 af->bSync                   = false;
                 af->fMinVelocity            = 1.0f;
                 af->fMaxVelocity            = 1.0f;
@@ -367,7 +378,7 @@ namespace lsp
             }
 
             lsp_trace("Skipping sample selector port...");
-            SKIP_PORT("Sample selector");
+            BIND_PORT(pSampleSel);
 
             // Iterate each file
             for (size_t i=0; i<nFiles; ++i)
@@ -561,6 +572,7 @@ namespace lsp
             pDynamics       = NULL;
             pHandleVelocity = NULL;
             pDrift          = NULL;
+            pSampleSel      = NULL;
         }
 
         void sampler_kernel::destroy()
@@ -619,6 +631,8 @@ namespace lsp
                 sListen.submit(pListen->value());
             if (pStop != NULL)
                 sStop.submit(pStop->value());
+
+            const size_t active_file    = pSampleSel->value();
 
             // Update note and octave
 //            lsp_trace("Initializing samples...");
@@ -708,6 +722,13 @@ namespace lsp
 
                 if ((loop_update > 0) || (upd_req != af->nUpdateReq))
                     cancel_sample(af, 0);
+
+                const bool env_edit = (i == active_file) && bEnvelopeEdit;
+                if (env_edit != af->bEnvEdit)
+                {
+                    af->bEnvEdit        = env_edit;
+                    af->bSync           = true;
+                }
             }
 
             // Get humanisation parameters
@@ -746,10 +767,12 @@ namespace lsp
 
             // Destroy pointer to thumbnails
             if (af->vThumbs[0])
-            {
                 free(af->vThumbs[0]);
-                for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
-                    af->vThumbs[i]              = NULL;
+
+            for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
+            {
+                af->vThumbs[i]              = NULL;
+                af->vCutThumbs[i]           = NULL;
             }
         }
 
@@ -796,14 +819,15 @@ namespace lsp
             }
 
             // Initialize thumbnails
-            float *thumbs           = static_cast<float *>(malloc(sizeof(float) * channels * meta::sampler_metadata::MESH_SIZE));
+            float *thumbs           = static_cast<float *>(malloc(
+                sizeof(float) * channels * meta::sampler_metadata::MESH_SIZE * 2));
             if (thumbs == NULL)
                 return STATUS_NO_MEM;
 
             for (size_t i=0; i<channels; ++i)
             {
-                file->vThumbs[i]        = thumbs;
-                thumbs                 += meta::sampler_metadata::MESH_SIZE;
+                file->vThumbs[i]        = advance_ptr<float>(thumbs, meta::sampler_metadata::MESH_SIZE);
+                file->vCutThumbs[i]     = advance_ptr<float>(thumbs, meta::sampler_metadata::MESH_SIZE);
             }
 
             // Commit the result
@@ -855,15 +879,6 @@ namespace lsp
                     return res;
             }
 
-            // Determine the normalizing factor
-            float abs_max           = 0.0f;
-            for (size_t i=0; i<channels; ++i)
-            {
-                // Determine the maximum amplitude
-                float a_max             = dsp::abs_max(temp.channel(i), temp.length());
-                abs_max                 = lsp_max(abs_max, a_max);
-            }
-            float norming           = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
             af->fLength             = dspu::samples_to_millis(nSampleRate, temp.length());
 
             // Allocate target sample
@@ -921,6 +936,13 @@ namespace lsp
             af->fActualLength   = dspu::samples_to_millis(nSampleRate, rp->nLength);
             rp->nHeadCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fHeadCut), 0, rp->nLength);
             rp->nTailCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fTailCut), 0, rp->nLength);
+            rp->nCutLength      = lsp_max(rp->nLength - rp->nTailCut - rp->nHeadCut, 0);
+
+            // Determine the normalizing factor
+            float abs_max           = 0.0f;
+            for (size_t i=0; i<channels; ++i)
+                abs_max                 = lsp_max(abs_max, dsp::abs_max(temp.channel(i), rp->nLength));
+            const float norming     = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
 
             // Apply the fade-in and fade-out
             ssize_t fade_in     = dspu::millis_to_samples(nSampleRate, af->fFadeIn);
@@ -933,33 +955,65 @@ namespace lsp
                 dspu::fade_out(dst, dst, fade_out, rp->nLength - rp->nTailCut);
             }
 
+            // Determine the normalizing factor for cut sample
+            abs_max                 = 0.0f;
+            for (size_t i=0; i<channels; ++i)
+                abs_max                 = lsp_max(abs_max, dsp::abs_max(temp.channel(i, rp->nHeadCut), rp->nCutLength));
+            const float cut_norming = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
+
             // Render the thumbnails
-            for (size_t j=0; j<channels; ++j)
             {
-                const float *src    = temp.channel(j);
-                float *dst          = af->vThumbs[j];
-                size_t len          = temp.length();
-
-                for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                const float scaling     = float(rp->nLength) / meta::sampler_metadata::MESH_SIZE;
+                for (size_t j=0; j<channels; ++j)
                 {
-                    size_t first    = (k * len) / meta::sampler_metadata::MESH_SIZE;
-                    size_t last     = ((k + 1) * len) / meta::sampler_metadata::MESH_SIZE;
-                    if (first < last)
-                        dst[k]          = dsp::abs_max(&src[first], last - first);
-                    else if (first < len)
-                        dst[k]          = fabs(src[first]);
-                    else
-                        dst[k]          = 0.0f;
-                }
+                    const float *src    = temp.channel(j);
+                    float *dst          = af->vThumbs[j];
 
-                // Normalize graph if possible
-                if (norming != 1.0f)
-                    dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
+                    for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                    {
+                        const ssize_t first = k * scaling;
+                        const ssize_t last  = (k + 1) * scaling;
+                        if (first < last)
+                            dst[k]              = dsp::abs_max(&src[first], last - first);
+                        else if (first < rp->nLength)
+                            dst[k]              = fabs(src[first]);
+                        else
+                            dst[k]              = 0.0f;
+                    }
+
+                    // Normalize graph if possible
+                    if (norming != 1.0f)
+                        dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
+                }
+            }
+
+            // Render the cut thumbnails
+            {
+                const float scaling     = float(rp->nCutLength) / meta::sampler_metadata::MESH_SIZE;
+                for (size_t j=0; j<channels; ++j)
+                {
+                    const float *src    = temp.channel(j, rp->nHeadCut);
+                    float *dst          = af->vCutThumbs[j];
+
+                    for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                    {
+                        const ssize_t first = k * scaling;
+                        const ssize_t last  = (k + 1) * scaling;
+                        if (first < last)
+                            dst[k]              = dsp::abs_max(&src[first], last - first);
+                        else if (first < rp->nCutLength)
+                            dst[k]              = fabs(src[first]);
+                        else
+                            dst[k]              = 0.0f;
+                    }
+
+                    // Normalize graph if possible
+                    if (cut_norming != 1.0f)
+                        dsp::mul_k2(dst, cut_norming, meta::sampler_metadata::MESH_SIZE);
+                }
             }
 
             // Perform the head and tail cut operations
-            rp->nCutLength      = lsp_max(rp->nLength - rp->nTailCut - rp->nHeadCut, 0);
-
             // Initialize target sample
             if (!out->resize(channels, rp->nCutLength, rp->nCutLength))
             {
@@ -1447,8 +1501,9 @@ namespace lsp
                 if ((channels > 0) && (af->vThumbs[0] != NULL))
                 {
                     // Copy thumbnails
+                    const float * const *thumbs = (af->bEnvEdit) ? af->vCutThumbs : af->vThumbs;
                     for (size_t j=0; j<channels; ++j)
-                        dsp::copy(mesh->pvData[j], af->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
+                        dsp::copy(mesh->pvData[j], thumbs[j], meta::sampler_metadata::MESH_SIZE);
 
                     mesh->data(channels, meta::sampler_metadata::MESH_SIZE);
                 }
@@ -1652,6 +1707,7 @@ namespace lsp
             v->write("pDynamics", pDynamics);
             v->write("pHandleVelocity", pHandleVelocity);
             v->write("pDrift", pDrift);
+            v->write("pSampleSel", pSampleSel);
             v->write("pActivity", pActivity);
             v->write("pListen", pListen);
             v->write("pStop", pStop);

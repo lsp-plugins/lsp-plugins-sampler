@@ -140,9 +140,11 @@ namespace lsp
                     dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
                     dspu::Sample       *pProcessed;                                     // Processed sample
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
+                    float              *vCutThumbs[meta::sampler_metadata::TRACKS_MAX]; // List of thumbnails with cut-off
 
                     uint32_t            nUpdateReq;                                     // Update request
                     uint32_t            nUpdateResp;                                    // Update response
+                    bool                bEnvEdit;                                       // Envelope editing
                     bool                bSync;                                          // Sync flag
                     float               fMinVelocity;                                   // Minimum velocity
                     float               fMaxVelocity;                                   // Maximum velocity
@@ -262,6 +264,7 @@ namespace lsp
                 bool                bBypass;                                            // Bypass flag
                 bool                bReorder;                                           // Reorder flag
                 bool                bHandleVelocity;                                    // Velocity handling flag
+                bool                bEnvelopeEdit;                                      // Envelope edit
                 float               fFadeout;                                           // Fadeout in milliseconds
                 float               fDynamics;                                          // Dynamics
                 float               fDrift;                                             // Time drifting
@@ -270,6 +273,7 @@ namespace lsp
                 plug::IPort        *pDynamics;                                          // Dynamics port
                 plug::IPort        *pHandleVelocity;                                    // Velocity handling
                 plug::IPort        *pDrift;                                             // Time drifting port
+                plug::IPort        *pSampleSel;                                         // Sample selector
                 plug::IPort        *pActivity;                                          // Activity port
                 plug::IPort        *pListen;                                            // Listen sample preview
                 plug::IPort        *pStop;                                              // Stop listen sample preview
@@ -326,6 +330,7 @@ namespace lsp
 
             public:
                 void        set_fadeout(float length);
+                void        set_envelope_edit(bool edit);
 
             public:
                 bool        init(ipc::IExecutor *executor, size_t files, size_t channels);

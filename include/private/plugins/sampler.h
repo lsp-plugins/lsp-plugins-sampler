@@ -125,6 +125,8 @@ namespace lsp
                 plug::IPort        *pWet;               // Wet amount port
                 plug::IPort        *pDryWet;            // Dry/Wet balance
                 plug::IPort        *pGain;              // Output gain port
+                plug::IPort        *pEditMode;          // Edit mode
+                plug::IPort        *pInstSel;           // Instrument selector
                 plug::IPort        *pDOGain;            // Direct output gain flag
                 plug::IPort        *pDOPan;             // Direct output panning flag
 
