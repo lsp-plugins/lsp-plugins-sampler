@@ -134,6 +134,7 @@ for path substitutions. For example, the following value:</p>
 </ul>
 <p><b>'Samples' section:</b></p>
 <ul>
+	<li><b>Envelope</b> - the button that enables the additional AHDBSSR (Attack, Hold, Decay, Break, Slope, Sustain, Release) envelope control over the sample.</li>
 	<li><b>Listen</b> - the button that plays the preview of the selected sample for the selected instrument.</li>
 	<li><b>Stop</b> - the button that stops the preview of the selected sample for the selected instrument.</li>
 	<li><b>Main tab</b> - the main control of the sample</li>
@@ -173,6 +174,26 @@ for path substitutions. For example, the following value:</p>
 		<li><b>End</b> - the end position of the stretch region.</li>
 		<li><b>Fade length</b> - the relative to the chunk size cross-fade length between sample chunks.</li>
 		<li><b>Chunk size</b> - the maximum chunk size to use for stretching.</li>
+	</ul>
+	<li><b>Envelope tab:</b> - control over the AHDBSSR (Attack, Hold, Decay, Break, Slope, Sustain, Release) envelope of the sample:</li>
+	<ul>
+		<li><b>Attack Time</b> - the time of the point associated with end of attack segment.</li>
+		<li><b>Attack Type</b> - the attack segment curvature type.</li>
+		<li><b>Attack Convex</b> - the attack segment convex.</li>
+		<li><b>Hold</b> - the button that enables additional hold segment.</li>
+		<li><b>Hold Time</b> - the time of the point associated with end of hold segment.</li>
+		<li><b>Decay Time</b> - the time of the point associated with end of decay segment.</li>
+		<li><b>Decay Type</b> - the decay segment curvature type.</li>
+		<li><b>Decay Convex</b> - the decay segment convex.</li>
+		<li><b>Break</b> - the button that enables additional break point and slope segment.</li>
+		<li><b>Break Level</b> - the level of the break point.</li>
+		<li><b>Slope Time</b> - the time of the point associated with end of slope segment.</li>
+		<li><b>Slope Type</b> - the slope segment curvature type.</li>
+		<li><b>Slope Convex</b> - the slope segment convex.</li>
+		<li><b>Sustain</b> - the level of the sustain segment.</li>
+		<li><b>Release Time</b> - the time of the point associated with start of release segment.</li>
+		<li><b>Release Type</b> - the release segment curvature type.</li>
+		<li><b>Release Convex</b> - the release segment convex.</li>
 	</ul>
 	<li><b>Loop tab:</b> - control over loop over the sample</li>
 	<ul>
