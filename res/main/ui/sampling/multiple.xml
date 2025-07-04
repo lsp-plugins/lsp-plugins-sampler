@@ -203,7 +203,7 @@
 			<tabs id="sets" vreduce="true" height.min="139" width.min="481" hgap.brightness="((:sets ilt 2) or ((:sets ieq 2) and (:so${idx})) or ((:sets ieq 4) and (:lo${idx})) or ((:sets ieq 3) and (:ee${idx}))) ? 1.0 : :const_bg_darken">
 
 				<!-- main -->
-				<grid rows="3" cols="13" bg.color="bg" >
+				<grid rows="3" cols="13" bg.color="bg">
 					<ui:with width.min="50">
 						<label text="labels.sedit.reverse" bg.color="bg_schema" padding="6"/>
 						<cell rows="3">
