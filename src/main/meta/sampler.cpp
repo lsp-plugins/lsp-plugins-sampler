@@ -264,17 +264,17 @@ namespace lsp
             SWITCH("ee", "Sample envelope enable", NULL, 0.0f), \
             SWITCH("eh", "Sample envelope hold enable", NULL, 0.0f), \
             SWITCH("eb", "Sample envelope break enable", NULL, 0.0f), \
-            PERCENTS("ta", "Sample attack time", NULL, 5.0f, 0.1f), \
-            PERCENTS("th", "Sample hold time", NULL, 10.0f, 0.1f), \
-            PERCENTS("td", "Sample decay time", NULL, 30.0f, 0.1f), \
-            PERCENTS("ts", "Sample slope time", NULL, 50.0f, 0.1f), \
-            PERCENTS("tr", "Sample release time", NULL, 80.0f, 0.1f), \
-            PERCENTS("bl", "Sample break level", NULL, 40.0f, 0.1f), \
-            PERCENTS("sl", "Sample sustain level", NULL, 60.0f, 0.1f), \
-            PERCENTS("ca", "Sample attack curvature", NULL, 50.0f, 0.1f), \
-            PERCENTS("cd", "Sample decay curvature", NULL, 50.0f, 0.1f), \
-            PERCENTS("cs", "Sample slope curvature", NULL, 50.0f, 0.1f), \
-            PERCENTS("cr", "Sample release curvature", NULL, 50.0f, 0.1f), \
+            PERCENTS("ta", "Sample attack time", NULL, 5.0f, 0.01f), \
+            PERCENTS("th", "Sample hold time", NULL, 10.0f, 0.01f), \
+            PERCENTS("td", "Sample decay time", NULL, 30.0f, 0.01f), \
+            PERCENTS("ts", "Sample slope time", NULL, 50.0f, 0.01f), \
+            PERCENTS("tr", "Sample release time", NULL, 80.0f, 0.01f), \
+            PERCENTS("bl", "Sample break level", NULL, 40.0f, 0.05f), \
+            PERCENTS("sl", "Sample sustain level", NULL, 60.0f, 0.05f), \
+            PERCENTS("ca", "Sample attack curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cd", "Sample decay curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cs", "Sample slope curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cr", "Sample release curvature", NULL, 50.0f, 0.01f), \
             COMBO("ea", "Sample attack envelope", NULL, 5, sampler_envelope_types), \
             COMBO("ed", "Sample decay envelope", NULL, 5, sampler_envelope_types), \
             COMBO("es", "Sample slope envelope", NULL, 5, sampler_envelope_types), \
