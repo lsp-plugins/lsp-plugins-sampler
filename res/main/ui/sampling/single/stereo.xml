@@ -121,7 +121,7 @@
 
 					</asample>
 
-					<!-- Listen button -->
+					<!-- Envelope, Listen, Stop buttons -->
 					<hbox pad.h="6" fill="true" bg.color="bg_schema">
 						<void hexpand="true"/>
 						<button id="ee${idx}" text="labels.adsr.envelope" width.min="50" ui:inject="Button_envelope" toggle="false" pad.r="6"/>
@@ -347,45 +347,45 @@
 
 					<!-- Row 2 -->
 					<ui:with bg.color="bg_schema">
-					<label text="labels.adsr.time"/>
-					<label text="labels.adsr.convex"/>
-					<button id="eh${idx}" text="labels.adsr.hold" ui:inject="Button_envelope" activity="(:ee${idx})"/>
-					<label text="labels.adsr.time"/>
-					<label text="labels.adsr.convex"/>
-					<button id="eb${idx}" text="labels.adsr.break" ui:inject="Button_envelope"/>
-					<label text="labels.adsr.time" activity=":eb${idx}"/>
-					<label text="labels.adsr.convex" activity=":eb${idx}"/>
-					<void/>
-					<label text="labels.adsr.time"/>
-					<label text="labels.adsr.convex"/>
+						<label text="labels.adsr.time"/>
+						<label text="labels.adsr.convex"/>
+						<button id="eh${idx}" text="labels.adsr.hold" ui:inject="Button_envelope" activity="(:ee${idx})"/>
+						<label text="labels.adsr.time"/>
+						<label text="labels.adsr.convex"/>
+						<button id="eb${idx}" text="labels.adsr.break" ui:inject="Button_envelope"/>
+						<label text="labels.adsr.time" activity=":eb${idx}"/>
+						<label text="labels.adsr.convex" activity=":eb${idx}"/>
+						<void/>
+						<label text="labels.adsr.time"/>
+						<label text="labels.adsr.convex"/>
 
-					<!-- Row 3 -->
-					<knob id="ta${idx}"/>
-					<knob id="ca${idx}"/>
-					<knob id="th${idx}" scolor="(:eh${idx}) and (:ee${idx}) ? 'envelope' : 'kscale_inactive'"/>
-					<knob id="td${idx}"/>
-					<knob id="cd${idx}"/>
-					<knob id="bl${idx}" scolor="(:eb${idx}) and (:ee${idx}) ? 'envelope' : 'kscale_inactive'"/>
-					<knob id="ts${idx}" activity=":eb${idx}"/>
-					<knob id="cs${idx}" activity=":eb${idx}"/>
-					<knob id="sl${idx}"/>
-					<knob id="tr${idx}"/>
-					<knob id="cr${idx}"/>
+						<!-- Row 3 -->
+						<knob id="ta${idx}"/>
+						<knob id="ca${idx}"/>
+						<knob id="th${idx}" scolor="(:eh${idx}) and (:ee${idx}) ? 'envelope' : 'kscale_inactive'"/>
+						<knob id="td${idx}"/>
+						<knob id="cd${idx}"/>
+						<knob id="bl${idx}" scolor="(:eb${idx}) and (:ee${idx}) ? 'envelope' : 'kscale_inactive'"/>
+						<knob id="ts${idx}" activity=":eb${idx}"/>
+						<knob id="cs${idx}" activity=":eb${idx}"/>
+						<knob id="sl${idx}"/>
+						<knob id="tr${idx}"/>
+						<knob id="cr${idx}"/>
 
-					<!-- Row 4 -->
-					<ui:with sline="true">
-						<value id="ta${idx}"/>
-						<value id="ca${idx}"/>
-						<value id="th${idx}" bright="(:eh${idx}) and (:ee${idx})? 1 : 0.75"/>
-						<value id="td${idx}"/>
-						<value id="cd${idx}"/>
-						<value id="bl${idx}" bright="(:eb${idx}) and (:ee${idx})? 1 : 0.75"/>
-						<value id="ts${idx}" activity=":eb${idx}"/>
-						<value id="cs${idx}" activity=":eb${idx}"/>
-						<value id="sl${idx}"/>
-						<value id="tr${idx}"/>
-						<value id="cr${idx}"/>
-					</ui:with>
+						<!-- Row 4 -->
+						<ui:with sline="true">
+							<value id="ta${idx}"/>
+							<value id="ca${idx}"/>
+							<value id="th${idx}" bright="(:eh${idx}) and (:ee${idx})? 1 : 0.75"/>
+							<value id="td${idx}"/>
+							<value id="cd${idx}"/>
+							<value id="bl${idx}" bright="(:eb${idx}) and (:ee${idx})? 1 : 0.75"/>
+							<value id="ts${idx}" activity=":eb${idx}"/>
+							<value id="cs${idx}" activity=":eb${idx}"/>
+							<value id="sl${idx}"/>
+							<value id="tr${idx}"/>
+							<value id="cr${idx}"/>
+						</ui:with>
 					</ui:with>
 				</ui:with>
 			</grid>
