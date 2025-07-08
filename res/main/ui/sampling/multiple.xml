@@ -93,6 +93,7 @@
 						<asample
 							expand="true"
 							id="sf${idx}"
+							activity="(:sets ine 3) or (:fs${idx} ine 0)"
 							mesh_id="fd${idx}"
 							path.id="_ui_dlg_sample_path"
 							ftype.id="_ui_dlg_sample_ftype"
