@@ -118,6 +118,8 @@ namespace lsp
             pWet            = NULL;
             pDryWet         = NULL;
             pGain           = NULL;
+            pEditMode       = NULL;
+            pInstSel        = NULL;
             pDOGain         = NULL;
             pDOPan          = NULL;
         }
@@ -236,7 +238,7 @@ namespace lsp
             BIND_PORT(pWet);
             BIND_PORT(pDryWet);
             BIND_PORT(pGain);
-            SKIP_PORT("Sample editor tab selector"); // Skip sample editor tab selector
+            BIND_PORT(pEditMode);
             if (bDryPorts)
             {
                 BIND_PORT(pDOGain);
@@ -254,7 +256,7 @@ namespace lsp
             if (nSamplers > 1)
             {
                 lsp_trace("Skipping instrument selector...");
-                SKIP_PORT("Instrument selector");
+                BIND_PORT(pInstSel);
             }
 
             // Now process each instrument
@@ -387,10 +389,12 @@ namespace lsp
         void sampler::update_settings()
         {
             // Update dry & wet parameters
-            const float dry   = (pDry != NULL)    ? pDry->value()  : 1.0f;
-            const float wet   = (pWet != NULL)    ? pWet->value()  : 1.0f;
-            const float drywet= (pDryWet != NULL) ? pDryWet->value() * 0.01f : 1.0f;
-            const float gain  = (pGain != NULL)   ? pGain->value() : 1.0f;
+            const float dry     = (pDry != NULL)    ? pDry->value()  : 1.0f;
+            const float wet     = (pWet != NULL)    ? pWet->value()  : 1.0f;
+            const float drywet  = (pDryWet != NULL) ? pDryWet->value() * 0.01f : 1.0f;
+            const float gain    = (pGain != NULL)   ? pGain->value() : 1.0f;
+            const bool env_ed   = (pEditMode != NULL) ? (int(pEditMode->value()) == 3) : false;
+            const size_t inst   = (pInstSel != NULL) ? ssize_t(pInstSel->value()) : 0;
 
             fDry        = (dry * drywet + 1.0f - drywet) * gain;
             fWet        = (wet * drywet) * gain;
@@ -471,6 +475,7 @@ namespace lsp
 
                 // Additional parameters
                 s->sSampler.set_fadeout(pFadeout->value());
+                s->sSampler.set_envelope_edit((i == inst) && (env_ed));
                 s->sSampler.update_settings();
             }
         }
@@ -850,6 +855,7 @@ namespace lsp
             v->write("pWet", pWet);
             v->write("pDryWet", pDryWet);
             v->write("pGain", pGain);
+            v->write("pEditMode", pEditMode);
             v->write("pDOGain", pDOGain);
             v->write("pDOPan", pDOPan);
         }

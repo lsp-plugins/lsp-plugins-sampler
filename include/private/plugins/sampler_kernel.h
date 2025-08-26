@@ -140,9 +140,11 @@ namespace lsp
                     dspu::Sample       *pOriginal;                                      // Source sample (original, as from source file)
                     dspu::Sample       *pProcessed;                                     // Processed sample
                     float              *vThumbs[meta::sampler_metadata::TRACKS_MAX];    // List of thumbnails
+                    float              *vCutThumbs[meta::sampler_metadata::TRACKS_MAX]; // List of thumbnails with cut-off
 
                     uint32_t            nUpdateReq;                                     // Update request
                     uint32_t            nUpdateResp;                                    // Update response
+                    bool                bEnvEdit;                                       // Envelope editing
                     bool                bSync;                                          // Sync flag
                     float               fMinVelocity;                                   // Minimum velocity
                     float               fMaxVelocity;                                   // Maximum velocity
@@ -171,14 +173,33 @@ namespace lsp
                     uint32_t            nCompensateFadeType;                            // Compensate fade type
                     float               fPreDelay;                                      // Pre-delay
                     float               fMakeup;                                        // Makeup gain
+                    float               fEnvelopeAttackTime;                            // Attack time
+                    float               fEnvelopeHoldTime;                              // Hold time
+                    float               fEnvelopeDecayTime;                             // Decay time
+                    float               fEnvelopeSlopeTime;                             // Slope time
+                    float               fEnvelopeReleaseTime;                           // Release time
+                    float               fEnvelopeBreakLevel;                            // Break level
+                    float               fEnvelopeSustainLevel;                          // Sustain level
+                    float               fEnvelopeAttackCurve;                           // Attack curvature
+                    float               fEnvelopeDecayCurve;                            // Decay curvature
+                    float               fEnvelopeSlopeCurve;                            // Slope curvature
+                    float               fEnvelopeReleaseCurve;                          // Release curvature
+                    uint32_t            nEnvelopeAttackType;                            // Attack curve type
+                    uint32_t            nEnvelopeDecayType;                             // Decay curve type
+                    uint32_t            nEnvelopeSlopeType;                             // Slope curve type
+                    uint32_t            nEnvelopeReleaseType;                           // Release curve type
                     float               fGains[meta::sampler_metadata::TRACKS_MAX];     // List of gain values
                     float               fLength;                                        // Length of source sample in milliseconds
                     float               fActualLength;                                  // Length of processed sample in milliseconds
                     status_t            nStatus;                                        // Loading status
                     bool                bOn;                                            // On flag
+                    bool                bEnvelopeOn;                                    // Envelope is enabled
+                    bool                bEnvelopeHoldOn;                                // Enable Hold point
+                    bool                bEnvelopeBreakOn;                               // Enable Break point
 
                     plug::IPort        *pFile;                                          // Audio file port
                     plug::IPort        *pPitch;                                         // Pitch
+
                     plug::IPort        *pStretchOn;                                     // Stretch enabled
                     plug::IPort        *pStretch;                                       // Stretch amount
                     plug::IPort        *pStretchStart;                                  // Start of the stretch region
@@ -186,17 +207,39 @@ namespace lsp
                     plug::IPort        *pStretchChunk;                                  // Stretch chunk
                     plug::IPort        *pStretchFade;                                   // Stretch cross-fade length
                     plug::IPort        *pStretchFadeType;                               // Stretch cross-fade type
+
                     plug::IPort        *pLoopOn;                                        // Loop enabled
                     plug::IPort        *pLoopMode;                                      // Loop mode
                     plug::IPort        *pLoopStart;                                     // Start of the loop region
                     plug::IPort        *pLoopEnd;                                       // End of the loop region
                     plug::IPort        *pLoopFadeType;                                  // Loop cross-fade type
                     plug::IPort        *pLoopFade;                                      // Loop cross-fade length
+
                     plug::IPort        *pHeadCut;                                       // Head cut
                     plug::IPort        *pTailCut;                                       // Tail cut
                     plug::IPort        *pFadeIn;                                        // Fade in length
                     plug::IPort        *pFadeOut;                                       // Fade out length
                     plug::IPort        *pMakeup;                                        // Makup gain
+
+                    plug::IPort        *pEnvelopeOn;                                    // Enable envelope
+                    plug::IPort        *pEnvelopeHoldOn;                                // Enable Hold point
+                    plug::IPort        *pEnvelopeBreakOn;                               // Enable Break point
+                    plug::IPort        *pEnvelopeAttackTime;                            // Attack time
+                    plug::IPort        *pEnvelopeHoldTime;                              // Hold time
+                    plug::IPort        *pEnvelopeDecayTime;                             // Decay time
+                    plug::IPort        *pEnvelopeSlopeTime;                             // Slope time
+                    plug::IPort        *pEnvelopeReleaseTime;                           // Release time
+                    plug::IPort        *pEnvelopeBreakLevel;                            // Break level
+                    plug::IPort        *pEnvelopeSustainLevel;                          // Sustain level
+                    plug::IPort        *pEnvelopeAttackCurve;                           // Attack curvature
+                    plug::IPort        *pEnvelopeDecayCurve;                            // Decay curvature
+                    plug::IPort        *pEnvelopeSlopeCurve;                            // Slope curvature
+                    plug::IPort        *pEnvelopeReleaseCurve;                          // Release curvature
+                    plug::IPort        *pEnvelopeAttackType;                            // Attack curve type
+                    plug::IPort        *pEnvelopeDecayType;                             // Decay curve type
+                    plug::IPort        *pEnvelopeSlopeType;                             // Slope curve type
+                    plug::IPort        *pEnvelopeReleaseType;                           // Release curve type
+
                     plug::IPort        *pVelocity;                                      // Velocity range top
                     plug::IPort        *pPreDelay;                                      // Pre-delay
                     plug::IPort        *pOn;                                            // Sample on outputflag
@@ -239,6 +282,7 @@ namespace lsp
                 bool                bBypass;                                            // Bypass flag
                 bool                bReorder;                                           // Reorder flag
                 bool                bHandleVelocity;                                    // Velocity handling flag
+                bool                bEnvelopeEdit;                                      // Envelope edit
                 float               fFadeout;                                           // Fadeout in milliseconds
                 float               fDynamics;                                          // Dynamics
                 float               fDrift;                                             // Time drifting
@@ -247,6 +291,7 @@ namespace lsp
                 plug::IPort        *pDynamics;                                          // Dynamics port
                 plug::IPort        *pHandleVelocity;                                    // Velocity handling
                 plug::IPort        *pDrift;                                             // Time drifting port
+                plug::IPort        *pSampleSel;                                         // Sample selector
                 plug::IPort        *pActivity;                                          // Activity port
                 plug::IPort        *pListen;                                            // Listen sample preview
                 plug::IPort        *pStop;                                              // Stop listen sample preview
@@ -303,6 +348,7 @@ namespace lsp
 
             public:
                 void        set_fadeout(float length);
+                void        set_envelope_edit(bool edit);
 
             public:
                 bool        init(ipc::IExecutor *executor, size_t files, size_t channels);

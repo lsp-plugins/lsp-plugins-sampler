@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   29
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   30
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -174,11 +174,12 @@ namespace lsp
             { "Main",           "sampler.edit.main"      },
             { "Pitch",          "sampler.edit.pitch"     },
             { "Stretch",        "sampler.edit.stretch"   },
+            { "Envelope",       "sampler.edit.envelope"  },
             { "Loop",           "sampler.edit.loop"      },
             { NULL, NULL }
         };
 
-        const port_item_t sampler_midi_channels[] =
+        static const port_item_t sampler_midi_channels[] =
         {
             { "01",             "sampler.midi_channels.1" },
             { "02",             "sampler.midi_channels.2" },
@@ -197,6 +198,17 @@ namespace lsp
             { "15",             "sampler.midi_channels.15" },
             { "16",             "sampler.midi_channels.16" },
             { "All",            "sampler.midi_channels.all" },
+            { NULL,             NULL }
+        };
+
+        static const port_item_t sampler_envelope_types[] =
+        {
+            { "Off",            "adsr.type.off"             },
+            { "VLines",         "adsr.type.vline"           },
+            { "DLines",         "adsr.type.dline"           },
+            { "Cubic",          "adsr.type.cubic"           },
+            { "Quad",           "adsr.type.quad"            },
+            { "Exp",            "adsr.type.exp"             },
             { NULL,             NULL }
         };
 
@@ -249,6 +261,24 @@ namespace lsp
             CONTROL("fi", "Sample fade in", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             CONTROL("fo", "Sample fade out", NULL, U_MSEC, sampler_metadata::SAMPLE_LENGTH), \
             AMP_GAIN10("mk", "Sample makeup gain", NULL, 1.0f), \
+            SWITCH("ee", "Sample envelope enable", NULL, 0.0f), \
+            SWITCH("eh", "Sample envelope hold enable", NULL, 0.0f), \
+            SWITCH("eb", "Sample envelope break enable", NULL, 0.0f), \
+            PERCENTS("ta", "Sample attack time", NULL, 5.0f, 0.01f), \
+            PERCENTS("th", "Sample hold time", NULL, 10.0f, 0.01f), \
+            PERCENTS("td", "Sample decay time", NULL, 30.0f, 0.01f), \
+            PERCENTS("ts", "Sample slope time", NULL, 50.0f, 0.01f), \
+            PERCENTS("tr", "Sample release time", NULL, 80.0f, 0.01f), \
+            PERCENTS("bl", "Sample break level", NULL, 40.0f, 0.05f), \
+            PERCENTS("sl", "Sample sustain level", NULL, 60.0f, 0.05f), \
+            PERCENTS("ca", "Sample attack curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cd", "Sample decay curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cs", "Sample slope curvature", NULL, 50.0f, 0.01f), \
+            PERCENTS("cr", "Sample release curvature", NULL, 50.0f, 0.01f), \
+            COMBO("ea", "Sample attack envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("ed", "Sample decay envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("es", "Sample slope envelope", NULL, 5, sampler_envelope_types), \
+            COMBO("er", "Sample release envelope", NULL, 5, sampler_envelope_types), \
             LOW_CONTROL_ALL("vl", "Sample velocity max", NULL, U_PERCENT, 0.0f, 100.0f, 0.0f, 0.05), \
             CONTROL("pd", "Sample pre-delay", NULL, U_MSEC, sampler_metadata::PREDELAY), \
             SWITCH("on", "Sample enabled", NULL, 1.0f), \

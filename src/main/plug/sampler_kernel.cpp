@@ -25,6 +25,7 @@
 #include <lsp-plug.in/dsp-units/units.h>
 #include <lsp-plug.in/dsp-units/misc/fade.h>
 #include <lsp-plug.in/dsp-units/sampling/PlaySettings.h>
+#include <lsp-plug.in/dsp-units/util/ADSREnvelope.h>
 #include <lsp-plug.in/dsp/dsp.h>
 #include <lsp-plug.in/shared/debug.h>
 
@@ -120,6 +121,7 @@ namespace lsp
             bBypass         = false;
             bReorder        = false;
             bHandleVelocity = true;
+            bEnvelopeEdit   = false;
             fFadeout        = 10.0f;
             fDynamics       = meta::sampler_metadata::DYNA_DFL;
             fDrift          = meta::sampler_metadata::DRIFT_DFL;
@@ -128,6 +130,7 @@ namespace lsp
             pDynamics       = NULL;
             pHandleVelocity = NULL;
             pDrift          = NULL;
+            pSampleSel      = NULL;
             pActivity       = NULL;
             pListen         = NULL;
             pStop           = NULL;
@@ -143,6 +146,11 @@ namespace lsp
         void sampler_kernel::set_fadeout(float length)
         {
             fFadeout        = length;
+        }
+
+        void sampler_kernel::set_envelope_edit(bool edit)
+        {
+            bEnvelopeEdit       = edit;
         }
 
         bool sampler_kernel::init(ipc::IExecutor *executor, size_t files, size_t channels)
@@ -195,13 +203,17 @@ namespace lsp
                 af->pOriginal               = NULL;
                 af->pProcessed              = NULL;
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
+                {
                     af->vThumbs[j]              = NULL;
+                    af->vCutThumbs[j]           = NULL;
+                }
 
                 af->sListen.init();
                 af->sStop.init();
 
                 af->nUpdateReq              = 0;
                 af->nUpdateResp             = 0;
+                af->bEnvEdit                = false;
                 af->bSync                   = false;
                 af->fMinVelocity            = 1.0f;
                 af->fMaxVelocity            = 1.0f;
@@ -230,15 +242,35 @@ namespace lsp
                 af->nCompensateFadeType     = XFADE_DFL;
                 af->fPreDelay               = meta::sampler_metadata::PREDELAY_DFL;
                 af->fMakeup                 = 1.0f;
+                af->fEnvelopeAttackTime     = 0.0f;
+                af->fEnvelopeHoldTime       = 0.0f;
+                af->fEnvelopeDecayTime      = 0.0f;
+                af->fEnvelopeSlopeTime      = 0.0f;
+                af->fEnvelopeReleaseTime    = 0.0f;
+                af->fEnvelopeBreakLevel     = 0.0f;
+                af->fEnvelopeSustainLevel   = 0.0f;
+                af->fEnvelopeAttackCurve    = 0.0f;
+                af->fEnvelopeDecayCurve     = 0.0f;
+                af->fEnvelopeSlopeCurve     = 0.0f;
+                af->fEnvelopeReleaseCurve   = 0.0f;
+                af->nEnvelopeAttackType     = 0.0f;
+                af->nEnvelopeDecayType      = 0.0f;
+                af->nEnvelopeSlopeType      = 0.0f;
+                af->nEnvelopeReleaseType    = 0.0f;
+
                 for (size_t j=0; j<meta::sampler_metadata::TRACKS_MAX; ++j)
                     af->fGains[j]               = 0;
                 af->fLength                 = 0.0f;
                 af->fActualLength           = 0.0f;
                 af->nStatus                 = STATUS_UNSPECIFIED;
                 af->bOn                     = true;
+                af->bEnvelopeOn             = false;
+                af->bEnvelopeHoldOn         = false;
+                af->bEnvelopeBreakOn        = false;
 
                 af->pFile                   = NULL;
                 af->pPitch                  = NULL;
+
                 af->pStretchOn              = NULL;
                 af->pStretch                = NULL;
                 af->pStretchStart           = NULL;
@@ -246,18 +278,40 @@ namespace lsp
                 af->pStretchChunk           = NULL;
                 af->pStretchFade            = NULL;
                 af->pStretchFadeType        = NULL;
+
                 af->pLoopOn                 = NULL;
                 af->pLoopMode               = NULL;
                 af->pLoopStart              = NULL;
                 af->pLoopEnd                = NULL;
                 af->pLoopFade               = NULL;
                 af->pLoopFadeType           = NULL;
+
                 af->pHeadCut                = NULL;
                 af->pTailCut                = NULL;
                 af->pFadeIn                 = NULL;
                 af->pFadeOut                = NULL;
                 af->pVelocity               = NULL;
                 af->pMakeup                 = NULL;
+
+                af->pEnvelopeOn             = NULL;
+                af->pEnvelopeHoldOn         = NULL;
+                af->pEnvelopeBreakOn        = NULL;
+                af->pEnvelopeAttackTime     = NULL;
+                af->pEnvelopeHoldTime       = NULL;
+                af->pEnvelopeDecayTime      = NULL;
+                af->pEnvelopeSlopeTime      = NULL;
+                af->pEnvelopeReleaseTime    = NULL;
+                af->pEnvelopeBreakLevel     = NULL;
+                af->pEnvelopeSustainLevel   = NULL;
+                af->pEnvelopeAttackCurve    = NULL;
+                af->pEnvelopeDecayCurve     = NULL;
+                af->pEnvelopeSlopeCurve     = NULL;
+                af->pEnvelopeReleaseCurve   = NULL;
+                af->pEnvelopeAttackType     = NULL;
+                af->pEnvelopeDecayType      = NULL;
+                af->pEnvelopeSlopeType      = NULL;
+                af->pEnvelopeReleaseType    = NULL;
+
                 af->pPreDelay               = NULL;
                 af->pOn                     = NULL;
                 af->pListen                 = NULL;
@@ -344,7 +398,7 @@ namespace lsp
             }
 
             lsp_trace("Skipping sample selector port...");
-            SKIP_PORT("Sample selector");
+            BIND_PORT(pSampleSel);
 
             // Iterate each file
             for (size_t i=0; i<nFiles; ++i)
@@ -355,6 +409,7 @@ namespace lsp
                 // Allocate files
                 BIND_PORT(af->pFile);
                 BIND_PORT(af->pPitch);
+
                 BIND_PORT(af->pStretchOn);
                 BIND_PORT(af->pStretch);
                 BIND_PORT(af->pStretchStart);
@@ -362,17 +417,39 @@ namespace lsp
                 BIND_PORT(af->pStretchChunk);
                 BIND_PORT(af->pStretchFade);
                 BIND_PORT(af->pStretchFadeType);
+
                 BIND_PORT(af->pLoopOn);
                 BIND_PORT(af->pLoopMode);
                 BIND_PORT(af->pLoopStart);
                 BIND_PORT(af->pLoopEnd);
                 BIND_PORT(af->pLoopFade);
                 BIND_PORT(af->pLoopFadeType);
+
                 BIND_PORT(af->pHeadCut);
                 BIND_PORT(af->pTailCut);
                 BIND_PORT(af->pFadeIn);
                 BIND_PORT(af->pFadeOut);
                 BIND_PORT(af->pMakeup);
+
+                BIND_PORT(af->pEnvelopeOn);
+                BIND_PORT(af->pEnvelopeHoldOn);
+                BIND_PORT(af->pEnvelopeBreakOn);
+                BIND_PORT(af->pEnvelopeAttackTime);
+                BIND_PORT(af->pEnvelopeHoldTime);
+                BIND_PORT(af->pEnvelopeDecayTime);
+                BIND_PORT(af->pEnvelopeSlopeTime);
+                BIND_PORT(af->pEnvelopeReleaseTime);
+                BIND_PORT(af->pEnvelopeBreakLevel);
+                BIND_PORT(af->pEnvelopeSustainLevel);
+                BIND_PORT(af->pEnvelopeAttackCurve);
+                BIND_PORT(af->pEnvelopeDecayCurve);
+                BIND_PORT(af->pEnvelopeSlopeCurve);
+                BIND_PORT(af->pEnvelopeReleaseCurve);
+                BIND_PORT(af->pEnvelopeAttackType);
+                BIND_PORT(af->pEnvelopeDecayType);
+                BIND_PORT(af->pEnvelopeSlopeType);
+                BIND_PORT(af->pEnvelopeReleaseType);
+
                 BIND_PORT(af->pVelocity);
                 BIND_PORT(af->pPreDelay);
                 BIND_PORT(af->pOn);
@@ -515,6 +592,7 @@ namespace lsp
             pDynamics       = NULL;
             pHandleVelocity = NULL;
             pDrift          = NULL;
+            pSampleSel      = NULL;
         }
 
         void sampler_kernel::destroy()
@@ -525,7 +603,7 @@ namespace lsp
         template <class T>
         void sampler_kernel::commit_value(uint32_t & counter, T & field, plug::IPort *port)
         {
-            const T temp = port->value();
+            const T temp = T(port->value());
             if (temp != field)
             {
                 field       = temp;
@@ -573,6 +651,8 @@ namespace lsp
                 sListen.submit(pListen->value());
             if (pStop != NULL)
                 sStop.submit(pStop->value());
+
+            const size_t active_file    = pSampleSel->value();
 
             // Update note and octave
 //            lsp_trace("Initializing samples...");
@@ -662,6 +742,43 @@ namespace lsp
 
                 if ((loop_update > 0) || (upd_req != af->nUpdateReq))
                     cancel_sample(af, 0);
+
+                // Update envelope settings
+                commit_value(af->nUpdateReq, af->bEnvelopeOn, af->pEnvelopeOn);
+                if (af->bEnvelopeOn)
+                {
+                    commit_value(af->nUpdateReq, af->bEnvelopeOn, af->pEnvelopeOn);
+                    commit_value(af->nUpdateReq, af->bEnvelopeHoldOn, af->pEnvelopeHoldOn);
+                    commit_value(af->nUpdateReq, af->bEnvelopeBreakOn, af->pEnvelopeBreakOn);
+                    commit_value(af->nUpdateReq, af->fEnvelopeAttackTime, af->pEnvelopeAttackTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeDecayTime, af->pEnvelopeDecayTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeReleaseTime, af->pEnvelopeReleaseTime);
+                    commit_value(af->nUpdateReq, af->fEnvelopeSustainLevel, af->pEnvelopeSustainLevel);
+                    commit_value(af->nUpdateReq, af->fEnvelopeAttackCurve, af->pEnvelopeAttackCurve);
+                    commit_value(af->nUpdateReq, af->fEnvelopeDecayCurve, af->pEnvelopeDecayCurve);
+                    commit_value(af->nUpdateReq, af->fEnvelopeReleaseCurve, af->pEnvelopeReleaseCurve);
+                    commit_value(af->nUpdateReq, af->nEnvelopeAttackType, af->pEnvelopeAttackType);
+                    commit_value(af->nUpdateReq, af->nEnvelopeDecayType, af->pEnvelopeDecayType);
+                    commit_value(af->nUpdateReq, af->nEnvelopeReleaseType, af->pEnvelopeReleaseType);
+
+                    if (af->bEnvelopeHoldOn)
+                        commit_value(af->nUpdateReq, af->fEnvelopeHoldTime, af->pEnvelopeHoldTime);
+                    if (af->bEnvelopeBreakOn)
+                    {
+                        commit_value(af->nUpdateReq, af->fEnvelopeBreakLevel, af->pEnvelopeBreakLevel);
+                        commit_value(af->nUpdateReq, af->fEnvelopeSlopeTime, af->pEnvelopeSlopeTime);
+                        commit_value(af->nUpdateReq, af->fEnvelopeSlopeCurve, af->pEnvelopeSlopeCurve);
+                        commit_value(af->nUpdateReq, af->nEnvelopeSlopeType, af->pEnvelopeSlopeType);
+                    }
+                }
+
+                // Update envelope view
+                const bool env_edit = (i == active_file) && bEnvelopeEdit;
+                if (env_edit != af->bEnvEdit)
+                {
+                    af->bEnvEdit        = env_edit;
+                    af->bSync           = true;
+                }
             }
 
             // Get humanisation parameters
@@ -700,10 +817,12 @@ namespace lsp
 
             // Destroy pointer to thumbnails
             if (af->vThumbs[0])
-            {
                 free(af->vThumbs[0]);
-                for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
-                    af->vThumbs[i]              = NULL;
+
+            for (size_t i=0; i<meta::sampler_metadata::TRACKS_MAX; ++i)
+            {
+                af->vThumbs[i]              = NULL;
+                af->vCutThumbs[i]           = NULL;
             }
         }
 
@@ -750,14 +869,15 @@ namespace lsp
             }
 
             // Initialize thumbnails
-            float *thumbs           = static_cast<float *>(malloc(sizeof(float) * channels * meta::sampler_metadata::MESH_SIZE));
+            float *thumbs           = static_cast<float *>(malloc(
+                sizeof(float) * channels * meta::sampler_metadata::MESH_SIZE * 2));
             if (thumbs == NULL)
                 return STATUS_NO_MEM;
 
             for (size_t i=0; i<channels; ++i)
             {
-                file->vThumbs[i]        = thumbs;
-                thumbs                 += meta::sampler_metadata::MESH_SIZE;
+                file->vThumbs[i]        = advance_ptr<float>(thumbs, meta::sampler_metadata::MESH_SIZE);
+                file->vCutThumbs[i]     = advance_ptr<float>(thumbs, meta::sampler_metadata::MESH_SIZE);
             }
 
             // Commit the result
@@ -809,15 +929,6 @@ namespace lsp
                     return res;
             }
 
-            // Determine the normalizing factor
-            float abs_max           = 0.0f;
-            for (size_t i=0; i<channels; ++i)
-            {
-                // Determine the maximum amplitude
-                float a_max             = dsp::abs_max(temp.channel(i), temp.length());
-                abs_max                 = lsp_max(abs_max, a_max);
-            }
-            float norming           = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
             af->fLength             = dspu::samples_to_millis(nSampleRate, temp.length());
 
             // Allocate target sample
@@ -875,6 +986,13 @@ namespace lsp
             af->fActualLength   = dspu::samples_to_millis(nSampleRate, rp->nLength);
             rp->nHeadCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fHeadCut), 0, rp->nLength);
             rp->nTailCut        = lsp_limit(dspu::millis_to_samples(nSampleRate, af->fTailCut), 0, rp->nLength);
+            rp->nCutLength      = lsp_max(rp->nLength - rp->nTailCut - rp->nHeadCut, 0);
+
+            // Determine the normalizing factor
+            float abs_max           = 0.0f;
+            for (size_t i=0; i<channels; ++i)
+                abs_max                 = lsp_max(abs_max, dsp::abs_max(temp.channel(i), rp->nLength));
+            const float norming     = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
 
             // Apply the fade-in and fade-out
             ssize_t fade_in     = dspu::millis_to_samples(nSampleRate, af->fFadeIn);
@@ -887,33 +1005,101 @@ namespace lsp
                 dspu::fade_out(dst, dst, fade_out, rp->nLength - rp->nTailCut);
             }
 
-            // Render the thumbnails
-            for (size_t j=0; j<channels; ++j)
+            // Determine the normalizing factor for cut sample
+            abs_max                 = 0.0f;
+            for (size_t i=0; i<channels; ++i)
+                abs_max                 = lsp_max(abs_max, dsp::abs_max(temp.channel(i, rp->nHeadCut), rp->nCutLength));
+            const float cut_norming = (abs_max != 0.0f) ? 1.0f / abs_max : 1.0f;
+
+            // Apply envelope if it is enabled
+            if ((af->bEnvelopeOn) && (rp->nCutLength > 0))
             {
-                const float *src    = temp.channel(j);
-                float *dst          = af->vThumbs[j];
-                size_t len          = temp.length();
+                dspu::ADSREnvelope e;
+                e.set_attack(
+                    af->fEnvelopeAttackTime * 0.01f,
+                    af->fEnvelopeAttackCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeAttackType));
+                e.set_hold(
+                    af->fEnvelopeHoldTime * 0.01f,
+                    af->bEnvelopeHoldOn);
+                e.set_decay(
+                    af->fEnvelopeDecayTime * 0.01f,
+                    af->fEnvelopeDecayCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeDecayType));
+                e.set_break(
+                    af->fEnvelopeBreakLevel * 0.01f,
+                    af->bEnvelopeBreakOn);
+                e.set_slope(
+                    af->fEnvelopeSlopeTime * 0.01f,
+                    af->fEnvelopeSlopeCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeSlopeType));
+                e.set_sustain_level(af->fEnvelopeSustainLevel * 0.01f);
+                e.set_release(
+                    af->fEnvelopeReleaseTime * 0.01f,
+                    af->fEnvelopeReleaseCurve * 0.01f,
+                    dspu::ADSREnvelope::function_t(af->nEnvelopeReleaseType));
 
-                for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                const float step    = 1.0f / rp->nCutLength;
+                for (size_t j=0; j<channels; ++j)
                 {
-                    size_t first    = (k * len) / meta::sampler_metadata::MESH_SIZE;
-                    size_t last     = ((k + 1) * len) / meta::sampler_metadata::MESH_SIZE;
-                    if (first < last)
-                        dst[k]          = dsp::abs_max(&src[first], last - first);
-                    else if (first < len)
-                        dst[k]          = fabs(src[first]);
-                    else
-                        dst[k]          = 0.0f;
+                    float *dst          = temp.channel(j, rp->nHeadCut);
+                    e.generate_mul(dst, 0.0f, step, rp->nCutLength);
                 }
+            }
 
-                // Normalize graph if possible
-                if (norming != 1.0f)
-                    dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
+            // Render the thumbnails
+            {
+                const float scaling     = float(rp->nLength) / meta::sampler_metadata::MESH_SIZE;
+                for (size_t j=0; j<channels; ++j)
+                {
+                    const float *src    = temp.channel(j);
+                    float *dst          = af->vThumbs[j];
+
+                    for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                    {
+                        const ssize_t first = k * scaling;
+                        const ssize_t last  = (k + 1) * scaling;
+                        if (first < last)
+                            dst[k]              = dsp::abs_max(&src[first], last - first);
+                        else if (first < rp->nLength)
+                            dst[k]              = fabs(src[first]);
+                        else
+                            dst[k]              = 0.0f;
+                    }
+
+                    // Normalize graph if possible
+                    if (norming != 1.0f)
+                        dsp::mul_k2(dst, norming, meta::sampler_metadata::MESH_SIZE);
+                }
+            }
+
+            // Render the cut thumbnails
+            {
+                const float scaling     = float(rp->nCutLength) / meta::sampler_metadata::MESH_SIZE;
+                for (size_t j=0; j<channels; ++j)
+                {
+                    const float *src    = temp.channel(j, rp->nHeadCut);
+                    float *dst          = af->vCutThumbs[j];
+
+                    for (size_t k=0; k<meta::sampler_metadata::MESH_SIZE; ++k)
+                    {
+                        const ssize_t first = k * scaling;
+                        const ssize_t last  = (k + 1) * scaling;
+                        if (first < last)
+                            dst[k]              = dsp::abs_max(&src[first], last - first);
+                        else if (first < rp->nCutLength)
+                            dst[k]              = fabs(src[first]);
+                        else
+                            dst[k]              = 0.0f;
+                    }
+
+                    // Normalize graph if possible
+                    if (cut_norming != 1.0f)
+                        dsp::mul_k2(dst, cut_norming, meta::sampler_metadata::MESH_SIZE);
+                }
             }
 
             // Perform the head and tail cut operations
-            rp->nCutLength      = lsp_max(rp->nLength - rp->nTailCut - rp->nHeadCut, 0);
-
             // Initialize target sample
             if (!out->resize(channels, rp->nCutLength, rp->nCutLength))
             {
@@ -924,9 +1110,9 @@ namespace lsp
             // Apply head cut and tail cut
             for (size_t j=0; j<channels; ++j)
             {
-                const float *src    = temp.channel(j);
+                const float *src    = temp.channel(j, rp->nHeadCut);
                 float *dst          = out->channel(j);
-                dsp::copy(dst, &src[rp->nHeadCut], rp->nCutLength);
+                dsp::copy(dst, src, rp->nCutLength);
             }
 
             // Commit the new sample to the processed
@@ -1401,8 +1587,9 @@ namespace lsp
                 if ((channels > 0) && (af->vThumbs[0] != NULL))
                 {
                     // Copy thumbnails
+                    const float * const *thumbs = (af->bEnvEdit) ? af->vCutThumbs : af->vThumbs;
                     for (size_t j=0; j<channels; ++j)
-                        dsp::copy(mesh->pvData[j], af->vThumbs[j], meta::sampler_metadata::MESH_SIZE);
+                        dsp::copy(mesh->pvData[j], thumbs[j], meta::sampler_metadata::MESH_SIZE);
 
                     mesh->data(channels, meta::sampler_metadata::MESH_SIZE);
                 }
@@ -1471,6 +1658,7 @@ namespace lsp
             v->write("fMinVelocity", f->fMinVelocity);
             v->write("fMaxVelocity", f->fMaxVelocity);
             v->write("fPitch", f->fPitch);
+
             v->write("bStretchOn", f->bStretchOn);
             v->write("fStretch", f->fStretch);
             v->write("fStretchStart", f->fStretchStart);
@@ -1478,11 +1666,13 @@ namespace lsp
             v->write("fStretchChunk", f->fStretchChunk);
             v->write("fStretchFade", f->fStretchFade);
             v->write("nStretchFadeType", f->nStretchFadeType);
+
             v->write("enLoopMode", int(f->enLoopMode));
             v->write("fLoopStart", f->fLoopStart);
             v->write("fLoopEnd", f->fLoopEnd);
             v->write("fLoopFade", f->fLoopFade);
             v->write("nLoopFadeType", f->nLoopFadeType);
+
             v->write("fHeadCut", f->fHeadCut);
             v->write("fTailCut", f->fTailCut);
             v->write("fFadeIn", f->fFadeIn);
@@ -1495,14 +1685,35 @@ namespace lsp
             v->write("nCompensateFadeType", f->nCompensateFadeType);
             v->write("fPreDelay", f->fPreDelay);
             v->write("fMakeup", f->fMakeup);
+
+            v->write("fEnvelopeAttackTime", f->fEnvelopeAttackTime);
+            v->write("fEnvelopeHoldTime", f->fEnvelopeHoldTime);
+            v->write("fEnvelopeDecayTime", f->fEnvelopeDecayTime);
+            v->write("fEnvelopeSlopeTime", f->fEnvelopeSlopeTime);
+            v->write("fEnvelopeReleaseTime", f->fEnvelopeReleaseTime);
+            v->write("fEnvelopeBreakLevel", f->fEnvelopeBreakLevel);
+            v->write("fEnvelopeSustainLevel", f->fEnvelopeSustainLevel);
+            v->write("fEnvelopeAttackCurve", f->fEnvelopeAttackCurve);
+            v->write("fEnvelopeDecayCurve", f->fEnvelopeDecayCurve);
+            v->write("fEnvelopeSlopeCurve", f->fEnvelopeSlopeCurve);
+            v->write("fEnvelopeReleaseCurve", f->fEnvelopeReleaseCurve);
+            v->write("fEnvelopeAttackType", f->nEnvelopeAttackType);
+            v->write("fEnvelopeDecayType", f->nEnvelopeDecayType);
+            v->write("fEnvelopeSlopeType", f->nEnvelopeSlopeType);
+            v->write("fEnvelopeReleaseType", f->nEnvelopeReleaseType);
+
             v->writev("fGains", f->fGains, meta::sampler_metadata::TRACKS_MAX);
             v->write("fLength", f->fLength);
             v->write("fActualLength", f->fActualLength);
             v->write("nStatus", f->nStatus);
             v->write("bOn", f->bOn);
+            v->write("bEnvelopeOn", f->bEnvelopeOn);
+            v->write("bEnvelopeHoldOn", f->bEnvelopeHoldOn);
+            v->write("bEnvelopeBreakOn", f->bEnvelopeBreakOn);
 
             v->write("pFile", f->pFile);
             v->write("pPitch", f->pPitch);
+
             v->write("pStretchOn", f->pStretchOn);
             v->write("pStretch", f->pStretch);
             v->write("pStretchStart", f->pStretchStart);
@@ -1510,17 +1721,35 @@ namespace lsp
             v->write("pStretchChunk", f->pStretchChunk);
             v->write("pStretchFade", f->pStretchFade);
             v->write("pStretchFadeType", f->pStretchFadeType);
+
             v->write("pLoopOn", f->pLoopOn);
             v->write("pLoopMode", f->pLoopMode);
             v->write("pLoopStart", f->pLoopStart);
             v->write("pLoopEnd", f->pLoopEnd);
             v->write("pLoopFadeType", f->pLoopFadeType);
             v->write("pLoopFade", f->pLoopFade);
+
             v->write("pHeadCut", f->pHeadCut);
             v->write("pTailCut", f->pTailCut);
             v->write("pFadeIn", f->pFadeIn);
             v->write("pFadeOut", f->pFadeOut);
             v->write("pMakeup", f->pMakeup);
+
+            v->write("pEnvelopeOn", f->pEnvelopeOn);
+            v->write("pEnvelopeHoldOn", f->pEnvelopeHoldOn);
+            v->write("pEnvelopeBreakOn", f->pEnvelopeBreakOn);
+            v->write("pEnvelopeAttackTime", f->pEnvelopeAttackTime);
+            v->write("pEnvelopeHoldTime", f->pEnvelopeHoldTime);
+            v->write("pEnvelopeDecayTime", f->pEnvelopeDecayTime);
+            v->write("pEnvelopeSlopeTime", f->pEnvelopeSlopeTime);
+            v->write("pEnvelopeReleaseTime", f->pEnvelopeReleaseTime);
+            v->write("pEnvelopeBreakLevel", f->pEnvelopeBreakLevel);
+            v->write("pEnvelopeSustainLevel", f->pEnvelopeSustainLevel);
+            v->write("pEnvelopeAttackCurve", f->pEnvelopeAttackCurve);
+            v->write("pEnvelopeDecayCurve", f->pEnvelopeDecayCurve);
+            v->write("pEnvelopeSlopeCurve", f->pEnvelopeSlopeCurve);
+            v->write("pEnvelopeReleaseCurve", f->pEnvelopeReleaseCurve);
+
             v->write("pVelocity", f->pVelocity);
             v->write("pPreDelay", f->pPreDelay);
             v->write("pOn", f->pOn);
@@ -1583,6 +1812,7 @@ namespace lsp
             v->write("pDynamics", pDynamics);
             v->write("pHandleVelocity", pHandleVelocity);
             v->write("pDrift", pDrift);
+            v->write("pSampleSel", pSampleSel);
             v->write("pActivity", pActivity);
             v->write("pListen", pListen);
             v->write("pStop", pStop);
