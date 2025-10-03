@@ -1050,7 +1050,7 @@ namespace lsp
             kparam.type     = core::KVT_STRING;
             kparam.str      = name;
             lsp_trace("%s = %s", kvt_name, kparam.str);
-            kvt->put(kvt_name, &kparam, core::KVT_RX);
+            kvt->put(kvt_name, &kparam, core::KVT_TO_DSP);
             wrapper()->kvt_notify_write(kvt, kvt_name, &kparam);
         }
 
