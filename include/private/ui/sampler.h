@@ -133,6 +133,7 @@ namespace lsp
                 tk::MessageBox             *wMessageBox;
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
                 tk::ComboGroup             *wInstrumentsGroup;      // Instruments group
+                tk::Button                 *wResetEnvelope;         // Reset envelope
                 DragInSink                 *pDragInSink;            // Drag&drop sink
 
                 lltl::parray<tk::Widget>    vHydrogenMenus;
@@ -161,6 +162,8 @@ namespace lsp
 
                 static status_t     slot_drag_request(tk::Widget *sender, void *ptr, void *data);
 
+                static status_t     slot_reset_envelope(tk::Widget *sender, void *ptr, void *data);
+
             protected:
                 static ssize_t      cmp_drumkit_files(const h2drumkit_t *a, const h2drumkit_t *b);
                 static ssize_t      cmp_sfz_regions(const sfz_region_t *a, const sfz_region_t *b);
@@ -178,10 +181,15 @@ namespace lsp
                 status_t            import_sfz_file(const io::Path *base, const io::Path *path);
                 status_t            add_sample(const io::Path *base, int id, int jd, const hydrogen::layer_t *layer);
                 status_t            add_instrument(int id, const hydrogen::instrument_t *inst);
+                void                begin_edit(const char *fmt...);
+                void                end_edit(const char *fmt...);
+                void                notify_port(const char *fmt...);
+                void                set_default_value(const char *fmt...);
                 void                set_float_value(float value, const char *fmt...);
                 void                set_path_value(const char *path, const char *fmt...);
                 void                set_kvt_instrument_name(core::KVTStorage *kvt, int id, const char *name);
                 void                set_ui_instrument_name(inst_name_t *inst, const LSPString *name);
+                void                reset_current_envelope();
 
                 void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();

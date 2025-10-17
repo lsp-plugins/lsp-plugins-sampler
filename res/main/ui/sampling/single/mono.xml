@@ -124,6 +124,7 @@
 					<hbox pad.h="6" fill="true" bg.color="bg_schema">
 						<void hexpand="true"/>
 						<button id="ee${idx}" text="labels.adsr.envelope" width.min="50" ui:inject="Button_envelope" toggle="false" pad.r="6"/>
+						<button ui:id="trg_reset_envelope" text="actions.reset" width.min="50" ui:inject="Button_envelope" toggle="false" pad.r="6"/>
 						<vsep bg.color="bg" pad.h="2" hreduce="true"/>
 						<ui:with pad.v="4">
 							<button id="ls${idx}" text="labels.sedit.listen" width.min="50" ui:inject="Button_cyan" toggle="false" pad.h="6"/>

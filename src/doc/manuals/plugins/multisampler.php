@@ -135,6 +135,7 @@ for path substitutions. For example, the following value:</p>
 <p><b>'Samples' section:</b></p>
 <ul>
 	<li><b>Envelope</b> - the button that enables the additional AHDBSSR (Attack, Hold, Decay, Break, Slope, Sustain, Release) envelope control over the sample.</li>
+	<li><b>Reset</b> - the button that resets all AHDBSSR envelope parameters to default values.</li>
 	<li><b>Listen</b> - the button that plays the preview of the selected sample for the selected instrument.</li>
 	<li><b>Stop</b> - the button that stops the preview of the selected sample for the selected instrument.</li>
 	<li><b>Main tab</b> - the main control of the sample</li>
