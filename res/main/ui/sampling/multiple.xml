@@ -521,7 +521,7 @@
 							<label text="labels.sedit.sample" padding="6"/>
 							<label text="labels.sedit.enabled"/>
 							<label text="labels.midi.velocity"/>
-							<label text="labels.midi.code"/>
+							<label text="labels.midi.:code"/>
 							<label text="labels.signal.pan_left"/>
 							<label text="labels.units.:pc" pad.b="6"/>
 							<label text="labels.signal.pan_right"/>
