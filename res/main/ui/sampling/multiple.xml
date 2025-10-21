@@ -517,7 +517,7 @@
 				<group text="groups.sample_matrix" expand="true" ipadding="0">
 					<!-- Sample matrix -->
 					<grid rows="11" cols="17" transpose="true" hspacing="2" bg.color="bg">
-						<ui:with bg.color="bg_schema" fill="true" halign="0">
+						<ui:with bg.color="bg_schema" fill="true" halign="0" pad.h="6">
 							<label text="labels.sedit.sample" padding="6"/>
 							<label text="labels.sedit.enabled"/>
 							<label text="labels.midi.velocity"/>
