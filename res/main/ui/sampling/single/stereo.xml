@@ -125,6 +125,7 @@
 					<!-- Envelope, Listen, Stop buttons -->
 					<hbox pad.h="6" fill="true" bg.color="bg_schema">
 						<void hexpand="true"/>
+						<button ui:id="trg_reset_envelope" text="actions.reset" width.min="50" ui:inject="Button_envelope" toggle="false" pad.r="6" visibility=":sets ieq 3"/>
 						<button id="ee${idx}" text="labels.adsr.envelope" width.min="50" ui:inject="Button_envelope" toggle="false" pad.r="6"/>
 						<vsep bg.color="bg" pad.h="2" hreduce="true"/>
 						<ui:with pad.v="4">
@@ -479,11 +480,11 @@
 			<group text="groups.sample_matrix" expand="true" ipadding="0">
 				<!-- Sample matrix -->
 				<grid rows="11" cols="17" transpose="true" hspacing="2" bg.color="bg">
-					<ui:with bg.color="bg_schema">
+					<ui:with bg.color="bg_schema" pad.h="6">
 						<label text="labels.sedit.sample" fill="true" halign="0" padding="6"/>
 						<label text="labels.sedit.enabled" fill="true" halign="0"/>
 						<label text="labels.midi.velocity" fill="true" halign="0"/>
-						<label text="labels.midi.code" fill="true" halign="0"/>
+						<label text="labels.midi.:code" fill="true" halign="0"/>
 						<label text="labels.signal.pan_left" fill="true" halign="0"/>
 						<label text="labels.units.:pc" fill="true" halign="0" pad.b="6"/>
 						<label text="labels.signal.pan_right" fill="true" halign="0"/>

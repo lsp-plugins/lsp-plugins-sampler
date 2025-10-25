@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   30
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   31
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -264,7 +264,7 @@ namespace lsp
             SWITCH("ee", "Sample envelope enable", NULL, 0.0f), \
             SWITCH("eh", "Sample envelope hold enable", NULL, 0.0f), \
             SWITCH("eb", "Sample envelope break enable", NULL, 0.0f), \
-            PERCENTS("ta", "Sample attack time", NULL, 5.0f, 0.01f), \
+            PERCENTS("ta", "Sample attack time", NULL, 0.0f, 0.01f), \
             PERCENTS("th", "Sample hold time", NULL, 10.0f, 0.01f), \
             PERCENTS("td", "Sample decay time", NULL, 30.0f, 0.01f), \
             PERCENTS("ts", "Sample slope time", NULL, 50.0f, 0.01f), \

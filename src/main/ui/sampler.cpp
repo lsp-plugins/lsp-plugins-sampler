@@ -285,6 +285,7 @@ namespace lsp
             wMessageBox         = NULL;
             wCurrentInstrument  = NULL;
             wInstrumentsGroup   = NULL;
+            wResetEnvelope      = NULL;
             pDragInSink         = NULL;
         }
 
@@ -367,6 +368,13 @@ namespace lsp
             if (res != STATUS_OK)
                 return res;
 
+            // Perform basic initializstion
+            pCurrentSample      = wrapper()->port("ssel");
+
+            wResetEnvelope      = wrapper()->controller()->widgets()->get<tk::Button>("trg_reset_envelope");
+            if (wResetEnvelope != NULL)
+                wResetEnvelope->slots()->bind(tk::SLOT_SUBMIT, slot_reset_envelope, this);
+
             // Do not perform other initialization since it is a very simple single-instrument sampler
             if (!bMultiple)
                 return STATUS_OK;
@@ -388,7 +396,6 @@ namespace lsp
 
             // Find widget and port associated with the current selected instrument
             pCurrentInstrument  = wrapper()->port("inst");
-            pCurrentSample      = wrapper()->port("ssel");
             wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
             wInstrumentsGroup   = wrapper()->controller()->widgets()->get<tk::ComboGroup>("inst_cgroup");
 
@@ -697,6 +704,11 @@ namespace lsp
                 return;
 
             if (path != NULL)
+                path->begin_edit();
+            if (file_type != NULL)
+                file_type->begin_edit();
+
+            if (path != NULL)
             {
                 LSPString fpath;
                 if ((dlg->path()->format(&fpath) == STATUS_OK))
@@ -712,6 +724,11 @@ namespace lsp
                 file_type->set_value(dlg->selected_filter()->get());
                 file_type->notify_all(ui::PORT_USER_EDIT);
             }
+
+            if (path != NULL)
+                path->begin_edit();
+            if (file_type != NULL)
+                file_type->end_edit();
         }
 
         void sampler_ui::kvt_changed(core::KVTStorage *kvt, const char *id, const core::kvt_param_t *value)
@@ -1006,6 +1023,34 @@ namespace lsp
             return STATUS_OK;
         }
 
+        void sampler_ui::begin_edit(const char *fmt...)
+        {
+            char port_id[32];
+            va_list v;
+            va_start(v, fmt);
+
+            ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
+            ui::IPort *p = pWrapper->port(port_id);
+            if (p != NULL)
+                p->begin_edit();
+
+            va_end(v);
+        }
+
+        void sampler_ui::end_edit(const char *fmt...)
+        {
+            char port_id[32];
+            va_list v;
+            va_start(v, fmt);
+
+            ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
+            ui::IPort *p = pWrapper->port(port_id);
+            if (p != NULL)
+                p->end_edit();
+
+            va_end(v);
+        }
+
         void sampler_ui::set_float_value(float value, const char *fmt...)
         {
             char port_id[32];
@@ -1019,6 +1064,34 @@ namespace lsp
                 p->set_value(value);
                 p->notify_all(ui::PORT_USER_EDIT);
             }
+
+            va_end(v);
+        }
+
+        void sampler_ui::set_default_value(const char *fmt...)
+        {
+            char port_id[32];
+            va_list v;
+            va_start(v, fmt);
+
+            ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
+            ui::IPort *p = pWrapper->port(port_id);
+            if (p != NULL)
+                p->set_default();
+
+            va_end(v);
+        }
+
+        void sampler_ui::notify_port(const char *fmt...)
+        {
+            char port_id[32];
+            va_list v;
+            va_start(v, fmt);
+
+            ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
+            ui::IPort *p = pWrapper->port(port_id);
+            if (p != NULL)
+                p->notify_all(ui::PORT_USER_EDIT);
 
             va_end(v);
         }
@@ -1050,7 +1123,7 @@ namespace lsp
             kparam.type     = core::KVT_STRING;
             kparam.str      = name;
             lsp_trace("%s = %s", kvt_name, kparam.str);
-            kvt->put(kvt_name, &kparam, core::KVT_RX);
+            kvt->put(kvt_name, &kparam, core::KVT_TO_DSP);
             wrapper()->kvt_notify_write(kvt, kvt_name, &kparam);
         }
 
@@ -1238,6 +1311,18 @@ namespace lsp
         {
             io::Path path;
             status_t res;
+
+            begin_edit("sf_%d_%d", id, jd);
+            begin_edit("mk_%d_%d", id, jd);
+            begin_edit("vl_%d_%d", id, jd);
+            begin_edit("pi_%d_%d", id, jd);
+
+            lsp_finally {
+                end_edit("sf_%d_%d", id, jd);
+                end_edit("mk_%d_%d", id, jd);
+                end_edit("vl_%d_%d", id, jd);
+                end_edit("pi_%d_%d", id, jd);
+            };
 
             if (layer != NULL)
             {
@@ -2008,6 +2093,61 @@ namespace lsp
             size_t sample = pCurrentSample->value();
             lsp_trace("Current instrument=%d, sample=%d", int(inst), int(sample));
             set_path_value(path->get_utf8(), "sf_%d_%d", inst, sample);   // sample file
+        }
+
+        void sampler_ui::reset_current_envelope()
+        {
+            const int sample = (pCurrentSample != NULL) ? pCurrentSample->value() : 0;
+
+            static const char *prefixes[] = {
+                "eh", "eb",
+                "ta", "th", "td", "ts", "tr",
+                "bl", "sl",
+                "ca", "cd", "cs", "cr",
+                "ea", "ed", "es", "er",
+                NULL
+            };
+
+            if (bMultiple)
+            {
+                const int inst  = (pCurrentInstrument != NULL) ? pCurrentInstrument->value() : 0;
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit("%s_%d_%d", *prefix, inst, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value("%s_%d_%d", *prefix, inst, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port("%s_%d_%d", *prefix, inst, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit("%s_%d_%d", *prefix, inst, sample);
+            }
+            else
+            {
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit("%s_%d", *prefix, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value("%s_%d", *prefix, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port("%s_%d", *prefix, sample);
+
+                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit("%s_%d", *prefix, sample);
+            }
+        }
+
+        status_t sampler_ui::slot_reset_envelope(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui *self= static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_BAD_STATE;
+
+            self->reset_current_envelope();
+            return STATUS_OK;
         }
 
     } /* namespace plugui */
