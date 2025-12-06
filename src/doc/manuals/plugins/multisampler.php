@@ -97,6 +97,14 @@ for path substitutions. For example, the following value:</p>
 <ul>
 	<li><b>Bypass</b> - hot bypass switch, when turned on (led indicator is shining), the plugin does not affect the input signal.</li>
 	<li><b>Workspace</b> - combo box that allows to switch between instrument setup and instrument mixer.</li>
+	<?php if ($do) { ?>
+		<li><b>Direct output</b> - set of buttons that allow to control the behaviour of all direct outputs:</li>
+		<ul>
+			<li><b>Gain</b> - the loudness of the instrument is also applied to direct output signal.</li>
+			<li><b>Panning</b> - the panning of the instrument is also applied to direct output signal.</li>
+			<li><b>Listen</b> - the sound of sample preview is also fed to direct output.</li>
+		</ul>
+	<?php } ?>
 </ul>
 
 <p><b>'Instrument mixer' section:</b></p>

@@ -47,7 +47,8 @@ namespace lsp
                 enum dm_mode_t
                 {
                     DM_APPLY_GAIN   = 1 << 0,
-                    DM_APPLY_PAN    = 1 << 1
+                    DM_APPLY_PAN    = 1 << 1,
+                    DM_APPLY_LISTEN = 1 << 2
                 };
 
                 typedef struct sampler_channel_t
@@ -129,6 +130,7 @@ namespace lsp
                 plug::IPort        *pInstSel;           // Instrument selector
                 plug::IPort        *pDOGain;            // Direct output gain flag
                 plug::IPort        *pDOPan;             // Direct output panning flag
+                plug::IPort        *pDOListen;          // Direct output listen flag
 
             protected:
                 void            process_trigger_events();

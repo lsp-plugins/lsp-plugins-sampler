@@ -122,6 +122,7 @@ namespace lsp
             pInstSel        = NULL;
             pDOGain         = NULL;
             pDOPan          = NULL;
+            pDOListen       = NULL;
         }
 
         sampler::~sampler()
@@ -243,6 +244,7 @@ namespace lsp
             {
                 BIND_PORT(pDOGain);
                 BIND_PORT(pDOPan);
+                BIND_PORT(pDOListen);
             }
 
             // If number of samplers <= 2 - skip area selector
@@ -421,6 +423,8 @@ namespace lsp
                 nDOMode        |= DM_APPLY_GAIN;
             if ((pDOPan != NULL) && (pDOPan->value() >= 0.5f))
                 nDOMode        |= DM_APPLY_PAN;
+            if ((pDOListen != NULL) && (pDOListen->value() >= 0.5f))
+                nDOMode        |= DM_APPLY_LISTEN;
 
             lsp_trace("muting=%s", (bMuting) ? "true" : "false");
             lsp_trace("note_off=%s", (note_off) ? "true" : "false");
@@ -697,27 +701,33 @@ namespace lsp
                     // Now post-process all channels for sampler
                     for (size_t j=0; j<nChannels; ++j)
                     {
-                        sampler_channel_t *c    = &s->vChannels[j];
+                        sampler_channel_t * const c1   = &s->vChannels[j];
+                        sampler_channel_t * const c2   = &s->vChannels[j ^ 1];
 
                         // Copy data to direct output buffer if present
                         float gain  = (nDOMode & DM_APPLY_GAIN) ? s->fGain : 1.0f;
-                        float pan   = (nDOMode & DM_APPLY_PAN) ? c->fPan : 1.0f;
-                        if (s->vChannels[j].vDry != NULL)
-                            dsp::fmadd_k3(s->vChannels[j].vDry, tmp_outs[j], pan * gain, count);
-                        if (s->vChannels[j^1].vDry != NULL)
-                            dsp::fmadd_k3(s->vChannels[j^1].vDry, tmp_outs[j], (1.0f - pan) * gain, count);
+                        float pan   = (nDOMode & DM_APPLY_PAN) ? c1->fPan : 1.0f;
+
+                        if (c1->vDry != NULL)
+                        {
+                            dsp::fmadd_k3(c1->vDry, tmp_outs[j], pan * gain, count);
+                            if (nDOMode & DM_APPLY_LISTEN)
+                                dsp::add2(c1->vDry, tmp_listen[j], count);
+                        }
+                        if (c2->vDry != NULL)
+                            dsp::fmadd_k3(c2->vDry, tmp_outs[j], (1.0f - pan) * gain, count);
 
                         // Process output
-                        c->sBypass.process(tmp_outs[j], NULL, tmp_outs[j], count);
+                        c1->sBypass.process(tmp_outs[j], NULL, tmp_outs[j], count);
                         dsp::add2(tmp_outs[j], tmp_listen[j], count);
 
                         // Mix output to common sampler's bus
                         if (vChannels[j].vOut != NULL)
-                            dsp::fmadd_k3(vChannels[j].vOut, tmp_outs[j], c->fPan * s->fGain, count);
+                            dsp::fmadd_k3(vChannels[j].vOut, tmp_outs[j], c1->fPan * s->fGain, count);
 
                         // Apply pan to the other stereo channel (if present)
                         if (vChannels[j^1].vOut != NULL)
-                            dsp::fmadd_k3(vChannels[j^1].vOut, tmp_outs[j], (1.0f - c->fPan) * s->fGain, count);
+                            dsp::fmadd_k3(vChannels[j^1].vOut, tmp_outs[j], (1.0f - c1->fPan) * s->fGain, count);
                     }
 
                     // Post-process dry channels

@@ -15,6 +15,7 @@
 				<label text="labels.direct_output_" pad.l="12"/>
 				<button text="labels.gain" id="do_gain" ui:inject="Button_magenta"/>
 				<button text="labels.panning" id="do_pan" ui:inject="Button_yellow"/>
+				<button text="labels.listen" id="do_lstn" ui:inject="Button_green"/>
 			</ui:if>
 			<void hexpand="true"/>
 		</hbox>

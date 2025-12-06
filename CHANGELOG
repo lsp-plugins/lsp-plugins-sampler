@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.33 ===
+* Added listen button that allows to feed audio sample preview to direct outputs.
 * Offline tasks are optimized for better floating-point computing.
 
 === 1.0.32 ===
