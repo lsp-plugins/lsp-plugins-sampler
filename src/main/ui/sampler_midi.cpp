@@ -26,27 +26,21 @@
 
 namespace lsp
 {
+    namespace meta
+    {
+        static constexpr float midi_velocity_min = 0.0f;
+        static constexpr float midi_velocity_max = 127.0f;
+        static constexpr float midi_velocity_err = 0.01f;
+        static constexpr float midi_velocity_rng = midi_velocity_max - midi_velocity_min;
+
+        const meta::port_t midi_velocity_template =
+            INT_CONTROL_ALL("", "MIDI velocity", "MIDI vel", meta::U_NONE, midi_velocity_min, midi_velocity_max, 0.0f, 1.0f);
+    } /* namespace meta */
+
     namespace plugui
     {
         namespace sampler_midi
         {
-            static constexpr float midi_velocity_min = 0.0f;
-            static constexpr float midi_velocity_max = 127.0f;
-            static constexpr float midi_velocity_err = 0.01f;
-            static constexpr float midi_velocity_rng = midi_velocity_max - midi_velocity_min;
-
-            const meta::port_t midi_velocity_template =
-            {
-                "",
-                "MIDI velocity",
-                NULL,
-                meta::U_NONE,
-                meta::R_CONTROL,
-                meta::F_INT | meta::F_LOWER | meta::F_UPPER | meta::F_STEP,
-                midi_velocity_min, midi_velocity_max, 0.0f, 0.05f,
-                NULL, NULL, NULL
-            };
-
             MidiVelocityPort::MidiVelocityPort()
             {
             }
@@ -73,7 +67,7 @@ namespace lsp
                 if (!tmp.append_utf8(cptr))
                     return STATUS_NO_MEM;
 
-                return ProxyPort::init(tmp.get_utf8(), port, &midi_velocity_template);
+                return ProxyPort::init(tmp.get_utf8(), port, &meta::midi_velocity_template);
             }
 
             float MidiVelocityPort::from_value(float value)
@@ -82,7 +76,7 @@ namespace lsp
                 if (meta == NULL)
                     return value;
 
-                const float range = midi_velocity_rng / (meta->max - meta->min);
+                const float range = meta::midi_velocity_rng / (meta->max - meta->min);
                 return (value - meta->min) * range;
             }
 
@@ -92,8 +86,8 @@ namespace lsp
                 if (meta == NULL)
                     return value;
 
-                const float range = (meta->max - meta->min + midi_velocity_err) / midi_velocity_rng;
-                value = meta->min + (value - midi_velocity_min) * range;
+                const float range = (meta->max - meta->min + meta::midi_velocity_err) / meta::midi_velocity_rng;
+                value = meta->min + (value - meta::midi_velocity_min) * range;
                 return lsp_limit(value, meta->min, meta->max);
             }
 
