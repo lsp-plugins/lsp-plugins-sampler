@@ -1648,7 +1648,10 @@ namespace lsp
 
             // Obtain the parent directory
             io::Path basedir;
-            io::Path *base = (path->get_parent(&basedir) == STATUS_OK) ? &basedir : NULL;
+            size_t flags    = ui::EXPORT_FLAG_USER_FRIENDLY;
+            io::Path *base  = (path->get_parent(&basedir) == STATUS_OK) ? &basedir : NULL;
+            if (base != NULL)
+                flags          |= ui::EXPORT_FLAG_RELATIVE_PATHS;
 
             // Create LSPC file
             lspc::File fd;
@@ -1674,7 +1677,7 @@ namespace lsp
             }
 
             // Call wrapper to serialize
-            if ((res = pWrapper->export_settings(&s, base)) != STATUS_OK)
+            if ((res = pWrapper->export_settings(&s, flags, base)) != STATUS_OK)
             {
                 s.close();
                 fd.close();
