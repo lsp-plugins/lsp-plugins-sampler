@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   32
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   33
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -39,6 +39,10 @@ namespace lsp
 {
     namespace meta
     {
+        // Lisf of different revisions for adding controls
+        #define REV_0       0
+        #define REV_1       1
+
         //-------------------------------------------------------------------------
         // Sampler
         static const port_item_t sampler_sample_selectors[] =
@@ -238,7 +242,8 @@ namespace lsp
 
         #define S_DO_CONTROL \
             SWITCH("do_gain", "Apply gain to direct-out", "DOut gain on", 1.0f), \
-            SWITCH("do_pan", "Apply panning to direct-out", "DOut pan on", 1.0f)
+            SWITCH("do_pan", "Apply panning to direct-out", "DOut pan on", 1.0f), \
+            ADDON_SWITCH(REV_1, "do_lstn", "Pass listen events to direct-out", "DOut listen on", 0.0f)
 
         #define S_SAMPLE_FILE(gain)        \
             PATH("sf", "Sample file"), \
