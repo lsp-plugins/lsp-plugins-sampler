@@ -217,7 +217,7 @@ namespace lsp
                 sampler_ui & operator = (const sampler_ui &) = delete;
                 sampler_ui & operator = (sampler_ui &&) = delete;
 
-                virtual status_t    init(ui::IWrapper *wrapper, tk::Display *dpy) override;
+                virtual status_t    init(ui::IWrapper *wrapper) override;
                 virtual void        destroy() override;
 
             public:

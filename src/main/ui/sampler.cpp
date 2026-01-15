@@ -328,9 +328,9 @@ namespace lsp
             ui::Module::destroy();
         }
 
-        status_t sampler_ui::init(ui::IWrapper *wrapper, tk::Display *dpy)
+        status_t sampler_ui::init(ui::IWrapper *wrapper)
         {
-            status_t res = ui::Module::init(wrapper, dpy);
+            status_t res = ui::Module::init(wrapper);
             if (res != STATUS_OK)
                 return res;
 
@@ -410,7 +410,7 @@ namespace lsp
             if (menu != NULL)
             {
                 // Hydrogen drumkit import
-                tk::MenuItem *child = new tk::MenuItem(pDisplay);
+                tk::MenuItem *child = new tk::MenuItem(display());
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.import_sfz_file");
@@ -418,7 +418,7 @@ namespace lsp
                 menu->add(child);
 
                 // SFZ import
-                child = new tk::MenuItem(pDisplay);
+                child = new tk::MenuItem(display());
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.import_hydrogen_drumkit_file");
@@ -426,7 +426,7 @@ namespace lsp
                 menu->add(child);
 
                 // Bundle import
-                child = new tk::MenuItem(pDisplay);
+                child = new tk::MenuItem(display());
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.sampler.import_bundle");
@@ -441,7 +441,7 @@ namespace lsp
             menu                    = tk::widget_cast<tk::Menu>(widgets->find(WUID_EXPORT_MENU));
             if (menu != NULL)
             {
-                tk::MenuItem *child = new tk::MenuItem(pDisplay);
+                tk::MenuItem *child = new tk::MenuItem(display());
                 widgets->add(child);
                 child->init();
                 child->text()->set("actions.sampler.export_bundle");
@@ -579,14 +579,14 @@ namespace lsp
                 return;
 
             // Create menu item
-            tk::MenuItem *child     = new tk::MenuItem(pDisplay);
+            tk::MenuItem *child     = new tk::MenuItem(display());
             vHydrogenMenus.add(child);
             child->init();
             child->text()->set("actions.import_installed_hydrogen_drumkit");
             menu->add(child);
 
             // Create submenu
-            menu            = new tk::Menu(pDisplay);
+            menu            = new tk::Menu(display());
             vHydrogenMenus.add(menu);
             menu->init();
             child->menu()->set(menu);
@@ -598,7 +598,7 @@ namespace lsp
             {
                 h2drumkit_t *h2 = vDrumkits.uget(i);
 
-                child   = new tk::MenuItem(pDisplay);
+                child   = new tk::MenuItem(display());
                 vHydrogenMenus.add(child);
                 child->init();
                 child->text()->set(
@@ -914,7 +914,7 @@ namespace lsp
             tk::FileDialog *dlg = _this->wHydrogenImport;
             if (dlg == NULL)
             {
-                dlg = new tk::FileDialog(_this->pDisplay);
+                dlg = new tk::FileDialog(_this->display());
                 _this->pWrapper->controller()->widgets()->add(dlg);
                 _this->wHydrogenImport  = dlg;
 
@@ -1466,7 +1466,7 @@ namespace lsp
             tk::FileDialog *dlg = wBundleDialog;
             if (dlg == NULL)
             {
-                dlg             = new tk::FileDialog(pDisplay);
+                dlg             = new tk::FileDialog(display());
                 wBundleDialog   = dlg;
                 pWrapper->controller()->widgets()->add(dlg);
 
@@ -1555,7 +1555,7 @@ namespace lsp
             tk::MessageBox *dlg = wMessageBox;
             if (dlg == NULL)
             {
-                dlg             = new tk::MessageBox(pDisplay);
+                dlg             = new tk::MessageBox(display());
                 wMessageBox     = dlg;
                 pWrapper->controller()->widgets()->add(dlg);
 
@@ -1632,7 +1632,7 @@ namespace lsp
                     LSPString status_key;
                     status_key.append_ascii("statuses.std.");
                     status_key.append_ascii(lsp::get_status_lc_key(res));
-                    str.bind(_this->wBundleDialog->style(), _this->pDisplay->dictionary());
+                    str.bind(_this->wBundleDialog->style(), _this->display()->dictionary());
                     str.set(&status_key);
 
                     params.set_string("reason", str.formatted());
@@ -1762,7 +1762,7 @@ namespace lsp
             tk::FileDialog *dlg = _this->wSfzImport;
             if (dlg == NULL)
             {
-                dlg = new tk::FileDialog(_this->pDisplay);
+                dlg = new tk::FileDialog(_this->display());
                 _this->pWrapper->controller()->widgets()->add(dlg);
                 _this->wSfzImport   = dlg;
 
