@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -20,6 +20,7 @@
  */
 
 #include <lsp-plug.in/plug-fw/meta/ports.h>
+#include <lsp-plug.in/plug-fw/meta/registry.h>
 #include <lsp-plug.in/shared/meta/developers.h>
 #include <lsp-plug.in/common/status.h>
 #include <private/meta/sampler.h>
@@ -836,6 +837,7 @@ namespace lsp
             mono_plugin_port_groups,
             &sampler_bundle
         };
+        LSP_REGISTER_METADATA(sampler_mono);
 
         const plugin_t sampler_stereo =
         {
@@ -866,6 +868,7 @@ namespace lsp
             stereo_plugin_port_groups,
             &sampler_bundle
         };
+        LSP_REGISTER_METADATA(sampler_stereo);
 
         const plugin_t multisampler_x12 =
         {
@@ -896,6 +899,7 @@ namespace lsp
             stereo_plugin_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x12);
 
         const plugin_t multisampler_x24 =
         {
@@ -926,6 +930,7 @@ namespace lsp
             stereo_plugin_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x24);
 
         const plugin_t multisampler_x48 =
         {
@@ -956,6 +961,7 @@ namespace lsp
             stereo_plugin_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x48);
 
         const plugin_t multisampler_x12_do =
         {
@@ -986,6 +992,7 @@ namespace lsp
             sampler_x12_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x12_do);
 
         const plugin_t multisampler_x24_do =
         {
@@ -1016,6 +1023,7 @@ namespace lsp
             sampler_x24_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x24_do);
 
         const plugin_t multisampler_x48_do =
         {
@@ -1046,6 +1054,7 @@ namespace lsp
             sampler_x48_port_groups,
             &multisampler_bundle
         };
+        LSP_REGISTER_METADATA(multisampler_x48_do);
 
     } /* namespace meta */
 } /* namespace lsp */
