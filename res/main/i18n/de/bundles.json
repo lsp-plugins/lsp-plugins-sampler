@@ -1,11 +1,21 @@
 {
 	"multisampler": {
-		"name": "Multisampler",
-		"description": "Dieses Plugin ist ein Multi-Instrument-MIDI-Sampler mit Stereoinput und \n-output. Für jedes Instrument sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich. Jedes Instrument hat seinen eigenen \nStereooutput, dass es möglich macht, jedes Instrument in einzelnen Spuren \nauf zu nehmen."
+		"description": "Dieses Plugin ist ein Multi-Instrument-MIDI-Sampler mit Stereoinput und \n-output. Für jedes Instrument sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich. Jedes Instrument hat seinen eigenen \nStereooutput, dass es möglich macht, jedes Instrument in einzelnen Spuren \nauf zu nehmen.",
+		"name": "Multisampler"
 	},
 	"sampler": {
-		"name": "Sampler",
-		"description": "Dieses Plugin ist ein Single-Note-MIDI-Sample-Player mit Input und Output.\nEs sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich."
-	}
+		"description": "Dieses Plugin ist ein Single-Note-MIDI-Sample-Player mit Input und Output.\nEs sind bis zu acht Samples mit unterschiedlichen \nAnschlagsdynamiken möglich.",
+		"name": "Sampler"
+	},
+    "launcher": {
+    	"multisampler_x12": "x12",
+    	"multisampler_x12_do": "x12 DO",
+    	"multisampler_x24": "x24",
+    	"multisampler_x24_do": "x24 DO",
+    	"multisampler_x48": "x48",
+    	"multisampler_x48_do": "x48 DO",
+        "sampler_mono": "Mono",
+        "sampler_stereo": "Stereo"
+    }
 }
 
