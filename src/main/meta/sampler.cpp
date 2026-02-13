@@ -832,7 +832,7 @@ namespace lsp
             clap_features_mono,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_mono_ports,
-            "sampling/single/mono.xml",
+            "plugins/sampling/single/mono.xml",
             NULL,
             mono_plugin_port_groups,
             &sampler_bundle
@@ -863,7 +863,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_stereo_ports,
-            "sampling/single/stereo.xml",
+            "plugins/sampling/single/stereo.xml",
             NULL,
             stereo_plugin_port_groups,
             &sampler_bundle
@@ -894,7 +894,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
             &multisampler_bundle
@@ -925,7 +925,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
             &multisampler_bundle
@@ -956,7 +956,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
             &multisampler_bundle
@@ -987,7 +987,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x12_port_groups,
             &multisampler_bundle
@@ -1018,7 +1018,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x24_port_groups,
             &multisampler_bundle
@@ -1049,7 +1049,7 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x48_port_groups,
             &multisampler_bundle
