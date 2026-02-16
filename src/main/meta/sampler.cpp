@@ -835,7 +835,8 @@ namespace lsp
             "plugins/sampling/single/mono.xml",
             NULL,
             mono_plugin_port_groups,
-            &sampler_bundle
+            &sampler_bundle,
+            2
         };
         LSP_REGISTER_METADATA(sampler_mono);
 
@@ -866,7 +867,8 @@ namespace lsp
             "plugins/sampling/single/stereo.xml",
             NULL,
             stereo_plugin_port_groups,
-            &sampler_bundle
+            &sampler_bundle,
+            1
         };
         LSP_REGISTER_METADATA(sampler_stereo);
 
@@ -897,7 +899,8 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            3
         };
         LSP_REGISTER_METADATA(multisampler_x12);
 
@@ -928,7 +931,8 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            4
         };
         LSP_REGISTER_METADATA(multisampler_x24);
 
@@ -959,7 +963,8 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            5
         };
         LSP_REGISTER_METADATA(multisampler_x48);
 
@@ -990,7 +995,8 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             sampler_x12_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            6
         };
         LSP_REGISTER_METADATA(multisampler_x12_do);
 
@@ -1021,7 +1027,8 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             sampler_x24_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            7
         };
         LSP_REGISTER_METADATA(multisampler_x24_do);
 
@@ -1052,11 +1059,10 @@ namespace lsp
             "plugins/sampling/multiple.xml",
             NULL,
             sampler_x48_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            8
         };
         LSP_REGISTER_METADATA(multisampler_x48_do);
 
     } /* namespace meta */
 } /* namespace lsp */
-
-
