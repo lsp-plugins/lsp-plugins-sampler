@@ -117,9 +117,9 @@
 							hold.enabled=":eh${idx}"
 							break.enabled=":eb${idx}"
 							visibility=":ee${idx}"
-							editable=":ee${idx} and (:sets eq 3)"
-							pointer="(:ee${idx} and (:sets eq 3)) ? 'drag' : 'arrow'"
-							wire=":sets eq 3"/>
+							editable=":ee${idx} and (:sets ieq 3)"
+							pointer="(:ee${idx} and (:sets ieq 3)) ? 'drag' : 'arrow'"
+							wire=":sets ieq 3"/>
 					</asample>
 
 					<!-- Envelope, Listen, Stop buttons -->
