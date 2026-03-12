@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -20,13 +20,14 @@
  */
 
 #include <lsp-plug.in/plug-fw/meta/ports.h>
+#include <lsp-plug.in/plug-fw/meta/registry.h>
 #include <lsp-plug.in/shared/meta/developers.h>
 #include <lsp-plug.in/common/status.h>
 #include <private/meta/sampler.h>
 
 #define LSP_PLUGINS_SAMPLER_VERSION_MAJOR                   1
 #define LSP_PLUGINS_SAMPLER_VERSION_MINOR                   0
-#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   33
+#define LSP_PLUGINS_SAMPLER_VERSION_MICRO                   34
 
 #define LSP_PLUGINS_SAMPLER_VERSION  \
     LSP_MODULE_VERSION( \
@@ -831,11 +832,13 @@ namespace lsp
             clap_features_mono,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_mono_ports,
-            "sampling/single/mono.xml",
+            "plugins/sampling/single/mono.xml",
             NULL,
             mono_plugin_port_groups,
-            &sampler_bundle
+            &sampler_bundle,
+            2
         };
+        LSP_REGISTER_METADATA(sampler_mono);
 
         const plugin_t sampler_stereo =
         {
@@ -861,11 +864,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_FILE_PREVIEW,
             sampler_stereo_ports,
-            "sampling/single/stereo.xml",
+            "plugins/sampling/single/stereo.xml",
             NULL,
             stereo_plugin_port_groups,
-            &sampler_bundle
+            &sampler_bundle,
+            1
         };
+        LSP_REGISTER_METADATA(sampler_stereo);
 
         const plugin_t multisampler_x12 =
         {
@@ -891,11 +896,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            3
         };
+        LSP_REGISTER_METADATA(multisampler_x12);
 
         const plugin_t multisampler_x24 =
         {
@@ -921,11 +928,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            4
         };
+        LSP_REGISTER_METADATA(multisampler_x24);
 
         const plugin_t multisampler_x48 =
         {
@@ -951,11 +960,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             stereo_plugin_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            5
         };
+        LSP_REGISTER_METADATA(multisampler_x48);
 
         const plugin_t multisampler_x12_do =
         {
@@ -981,11 +992,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x12_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x12_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            6
         };
+        LSP_REGISTER_METADATA(multisampler_x12_do);
 
         const plugin_t multisampler_x24_do =
         {
@@ -1011,11 +1024,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x24_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x24_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            7
         };
+        LSP_REGISTER_METADATA(multisampler_x24_do);
 
         const plugin_t multisampler_x48_do =
         {
@@ -1041,13 +1056,13 @@ namespace lsp
             clap_features_stereo,
             E_DUMP_STATE | E_KVT_SYNC | E_FILE_PREVIEW,
             sampler_x48_do_ports,
-            "sampling/multiple.xml",
+            "plugins/sampling/multiple.xml",
             NULL,
             sampler_x48_port_groups,
-            &multisampler_bundle
+            &multisampler_bundle,
+            8
         };
+        LSP_REGISTER_METADATA(multisampler_x48_do);
 
     } /* namespace meta */
 } /* namespace lsp */
-
-
