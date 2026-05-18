@@ -1077,7 +1077,10 @@ namespace lsp
             ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
             ui::IPort *p = pWrapper->port(port_id);
             if (p != NULL)
+            {
                 p->set_default();
+                lsp_trace("%s = %f", p->id(), p->value());
+            }
 
             va_end(v);
         }
@@ -2102,7 +2105,7 @@ namespace lsp
         {
             const int sample = (pCurrentSample != NULL) ? pCurrentSample->value() : 0;
 
-            static const char *prefixes[] = {
+            static const char * const prefixes[] = {
                 "eh", "eb",
                 "ta", "th", "td", "ts", "tr",
                 "bl", "sl",
@@ -2114,32 +2117,35 @@ namespace lsp
             if (bMultiple)
             {
                 const int inst  = (pCurrentInstrument != NULL) ? pCurrentInstrument->value() : 0;
+                const char * const fmt_str = "%s_%d_%d";
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    begin_edit("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    set_default_value("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    notify_port("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    end_edit("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit(fmt_str, *prefix, inst, sample);
             }
             else
             {
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    begin_edit("%s_%d", *prefix, sample);
+                const char * const fmt_str = "%s_%d";
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    set_default_value("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit(fmt_str, *prefix, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    notify_port("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value(fmt_str, *prefix, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    end_edit("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port(fmt_str, *prefix, sample);
+
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit(fmt_str, *prefix, sample);
             }
         }
 
