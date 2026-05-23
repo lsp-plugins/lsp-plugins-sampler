@@ -1109,6 +1109,8 @@ namespace lsp
             sampler_ui * const self = static_cast<sampler_ui *>(ptr);
             if (self == NULL)
                 return STATUS_OK;
+            if (self->pCurrentSample == NULL)
+                return STATUS_OK;
             if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
                 return STATUS_OK;
 
@@ -1137,6 +1139,8 @@ namespace lsp
         {
             sampler_ui * const self = static_cast<sampler_ui *>(ptr);
             if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentInstrument == NULL)
                 return STATUS_OK;
             if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
                 return STATUS_OK;
