@@ -553,7 +553,15 @@
 								<value id="pl${idx}" detailed="false" pad.b="6"/>
 								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r"/>
 								<value id="pr${idx}" detailed="false" pad.b="6"/>
-								<button id="ls${idx}" font.name="lsp-icons" font.size="10" text="icons.playback_big.play" size="32" ui:inject="Button_cyan" toggle="false"/>
+								<button
+									ui:id="trg_listen_sample_${i}"
+									id="ls${idx}"
+									font.name="lsp-icons"
+									font.size="10"
+									text="icons.playback_big.play"
+									size="32"
+									ui:inject="Button_cyan"
+									toggle="false"/>
 								<button id="lc${idx}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 								<led id="no${idx}" pad.b="6"/>
 							</ui:with>
@@ -602,7 +610,15 @@
 						<combo id="mgrp_${i}" pad.b="6" pad.h="6"/>
 						<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
 						<led id="iact_${i}" pad.b="6"/>
-						<button id="trg_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.play" size="32" ui:inject="Button_cyan" toggle="false"/>
+						<button
+							ui:id="trg_listen_inst_${i}"
+							id="trg_${i}"
+							font.name="lsp-icons"
+							font.size="10"
+							text="icons.playback_big.play"
+							size="32"
+							ui:inject="Button_cyan"
+							toggle="false" />
 						<button id="stop_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false"/>
 					</ui:for>
 				</grid>

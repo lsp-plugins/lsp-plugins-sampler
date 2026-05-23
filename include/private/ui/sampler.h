@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 16 июл. 2021 г.
@@ -36,33 +36,42 @@ namespace lsp
             protected:
                 enum h2drumkit_type_t
                 {
-                    H2DRUMKIT_SYSTEM,       // Installed in system paths
-                    H2DRUMKIT_USER,         // Installed in user directory
-                    H2DRUMKIT_CUSTOM,       // Custom defined path
+                    H2DRUMKIT_SYSTEM,                   // Installed in system paths
+                    H2DRUMKIT_USER,                     // Installed in user directory
+                    H2DRUMKIT_CUSTOM,                   // Custom defined path
                 };
 
                 typedef struct h2drumkit_t
                 {
-                    LSPString           sName;      // Name of the drumkit
-                    io::Path            sBase;      // Base path
-                    io::Path            sPath;      // Path to the drumkit, contains base path
-                    h2drumkit_type_t    enType;     // System directory
-                    tk::MenuItem       *pMenu;      // Corresponding menu item
+                    LSPString           sName;          // Name of the drumkit
+                    io::Path            sBase;          // Base path
+                    io::Path            sPath;          // Path to the drumkit, contains base path
+                    h2drumkit_type_t    enType;         // System directory
+                    tk::MenuItem       *pMenu;          // Corresponding menu item
                 } h2drumkit_t;
 
                 typedef struct inst_name_t
                 {
-                    tk::Edit           *wEdit;      // Pointer to the widget
-                    tk::ListBoxItem    *wListItem;  // Instrument name in the list
-                    size_t              nIndex;     // Instrument number
-                    bool                bChanged;   // Change flag
+                    ui::IPort          *pSampleSel;     // Sample selector port
+                    tk::Button         *wListen;        // Listen button in Mix area
+                    tk::Edit           *wEdit;          // Pointer to the widget
+                    tk::ListBoxItem    *wListItem;      // Instrument name in the list
+                    uint32_t            nIndex;         // Instrument number
+                    bool                bChanged;       // Change flag
                 } inst_name_t;
 
                 typedef struct inst_file_t
                 {
-                    LSPString           sPrevName;  // Previous name
-                    ui::IPort          *pPort;      // Related port
-                    inst_name_t        *pInst;      // Related instrument
+                    inst_name_t        *pInst;          // Related instrument
+                    ui::IPort          *pFilePort;      // Related file port
+                    ui::IPort          *pEnabled;       // Enabled flag
+                    ui::IPort          *pActivity;      // Activity flag
+                    ui::IPort          *pVelocity;      // Velocity value
+                    LSPString           sPrevName;      // Previous name
+                    uint32_t            nIndex;         // Sample number
+                    float               fVelocity;      // Velocity value
+                    bool                bEnabled;       // Enabled flag
+                    bool                bActive;        // Activity flag
                 } inst_file_t;
 
                 class BundleSerializer: public config::Serializer
@@ -115,6 +124,7 @@ namespace lsp
 
             protected:
                 bool                        bMultiple;              // Multiple instruments
+                ui::IPort                  *pWorkArea;              // Work area
                 ui::IPort                  *pHydrogenPath;
                 ui::IPort                  *pHydrogenFileType;
                 ui::IPort                  *pBundlePath;
@@ -126,6 +136,7 @@ namespace lsp
                 ui::IPort                  *pCurrentSample;         // Current sample
                 ui::IPort                  *pOverrideHydrogen;      // Override hydrogen path
                 ui::IPort                  *pTakeNameFromFile;      // Take instrument name from file
+                ui::IPort                  *pRevealSampleOnListen;  // Reveal sample on listen option
 
                 tk::FileDialog             *wHydrogenImport;        // Hyrdogen file import dialog
                 tk::FileDialog             *wSfzImport;             // SFZ file import dialog
@@ -134,6 +145,7 @@ namespace lsp
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
                 tk::ComboGroup             *wInstrumentsGroup;      // Instruments group
                 tk::Button                 *wResetEnvelope;         // Reset envelope
+                tk::Button                 *wSampleListen[meta::sampler_metadata::SAMPLE_FILES];  // Listen buttons for files
                 DragInSink                 *pDragInSink;            // Drag&drop sink
 
                 lltl::parray<tk::Widget>    vHydrogenMenus;
@@ -148,6 +160,9 @@ namespace lsp
                 static status_t     slot_fetch_hydrogen_path(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_commit_hydrogen_path(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data);
+
+                static status_t     slot_submit_listen_sample(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_submit_listen_instrument(tk::Widget *sender, void *ptr, void *data);
 
                 static status_t     slot_start_import_sfz_file(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_call_import_sfz_file(tk::Widget *sender, void *ptr, void *data);
@@ -170,8 +185,11 @@ namespace lsp
 
                 static status_t     allocate_temp_file(io::Path *dst, const io::Path *src);
                 static status_t     slot_close_message_box(tk::Widget *sender, void *ptr, void *data);
+                static ssize_t      compare_files(const inst_file_t *a, const inst_file_t *b);
 
                 static bool         extract_name(LSPString *dst, ui::IPort *src);
+
+                static inst_file_t *select_active_sample(lltl::parray<inst_file_t> & files, float velocity);
 
             protected:
                 status_t            read_path(io::Path *dst, const char *port_id);
@@ -185,6 +203,7 @@ namespace lsp
                 void                end_edit(const char *fmt...);
                 void                notify_port(const char *fmt...);
                 void                set_default_value(const char *fmt...);
+                float               get_float_value(float dfl, const char *fmt...);
                 void                set_float_value(float value, const char *fmt...);
                 void                set_path_value(const char *path, const char *fmt...);
                 void                set_kvt_instrument_name(core::KVTStorage *kvt, int id, const char *name);
@@ -203,6 +222,9 @@ namespace lsp
                 status_t            export_sampler_bundle(const io::Path *path);
                 status_t            import_sampler_bundle(const io::Path *path);
                 tk::FileDialog     *get_bundle_dialog(bool import);
+
+                status_t            post_init_single();
+                status_t            post_init_multiple();
 
                 void                handle_file_drop(const LSPString *path);
 
