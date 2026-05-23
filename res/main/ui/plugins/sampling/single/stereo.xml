@@ -512,7 +512,15 @@
 							<value id="pl_${i}" detailed="false" pad.b="6"/>
 							<knob id="pr_${i}" size="20" balance="0.5" scolor="balance_r"/>
 							<value id="pr_${i}" detailed="false" pad.b="6"/>
-							<button id="ls_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.play" size="32" ui:inject="Button_cyan" toggle="false"/>
+							<button
+								ui:id="trg_listen_sample_${i}"
+								id="ls_${i}"
+								font.name="lsp-icons"
+								font.size="10"
+								text="icons.playback_big.play"
+								size="32"
+								ui:inject="Button_cyan"
+								toggle="false" />
 							<button id="lc_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 							<led id="no_${i}" pad.b="6" width="32" height="6"/>
 						</ui:with>
