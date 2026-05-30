@@ -48,7 +48,6 @@ namespace lsp
         // Sampler
         static const port_item_t sampler_sample_selectors[] =
         {
-            { "0", "sampler.samp.0" },
             { "1", "sampler.samp.1" },
             { "2", "sampler.samp.2" },
             { "3", "sampler.samp.3" },
@@ -56,6 +55,7 @@ namespace lsp
             { "5", "sampler.samp.5" },
             { "6", "sampler.samp.6" },
             { "7", "sampler.samp.7" },
+            { "8", "sampler.samp.8" },
             { NULL, NULL }
         };
 
