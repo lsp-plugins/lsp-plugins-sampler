@@ -3,6 +3,8 @@
 *******************************************************************************
 
 === 1.0.36 ===
+* Changed all labels in metadata starting parameter numbering with 1
+  instead of 0.
 * Added possibility to reveal played sample on 'Listen' button press.
 * Updated build scripts and dependencies.
 
