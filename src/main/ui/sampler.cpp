@@ -291,6 +291,8 @@ namespace lsp
             wResetEnvelope          = NULL;
             for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
                 wSampleListen[i]        = NULL;
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+                wSampleStop[i]          = NULL;
             pDragInSink             = NULL;
         }
 
@@ -388,8 +390,12 @@ namespace lsp
                 tk::Button * const listen   = w->get_widgetf<tk::Button>("trg_listen_sample_%d", int(i));
                 if (listen != NULL)
                     listen->slots()->bind(tk::SLOT_CHANGE, slot_submit_listen_sample, this);
+                tk::Button * const stop     = w->get_widgetf<tk::Button>("trg_stop_sample_%d", int(i));
+                if (stop != NULL)
+                    stop->slots()->bind(tk::SLOT_CHANGE, slot_submit_stop_sample, this);
 
                 wSampleListen[i]            = listen;
+                wSampleStop[i]              = stop;
             }
 
             return (bMultiple) ? post_init_multiple() : post_init_single();
@@ -406,6 +412,7 @@ namespace lsp
 
             inst->pSampleSel    = wrapper()->port("ssel");
             inst->wListen       = NULL;
+            inst->wStop         = NULL;
             inst->wEdit         = NULL;
             inst->wListItem     = NULL;
             inst->nIndex        = 0;
@@ -529,6 +536,9 @@ namespace lsp
                 tk::Button * const listen   = w->get_widgetf<tk::Button>("trg_listen_inst_%d", int(i));
                 if (listen != NULL)
                     listen->slots()->bind(tk::SLOT_CHANGE, slot_submit_listen_instrument, this);
+                tk::Button * const stop     = w->get_widgetf<tk::Button>("trg_stop_inst_%d", int(i));
+                if (stop != NULL)
+                    stop->slots()->bind(tk::SLOT_CHANGE, slot_submit_stop_instrument, this);
 
                 // Obtain the widget and bind slot
                 tk::Edit * const ed         = w->get_widgetf<tk::Edit>("iname_%d", int(i));
@@ -542,6 +552,7 @@ namespace lsp
 
                 inst->pSampleSel            = ssel;
                 inst->wListen               = listen;
+                inst->wStop                 = stop;
                 inst->wEdit                 = ed;
                 inst->wListItem             = (wInstrumentsGroup != NULL) ? wInstrumentsGroup->items()->get(i) : NULL;
                 inst->nIndex                = i;
@@ -1104,70 +1115,24 @@ namespace lsp
                    (a->fVelocity > b->fVelocity) ? 1 : 0;
         }
 
-        status_t sampler_ui::slot_submit_listen_sample(tk::Widget *sender, void *ptr, void *data)
+        status_t sampler_ui::show_sample(size_t index)
         {
-            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
-            if (self == NULL)
-                return STATUS_OK;
-            if (self->pCurrentSample == NULL)
-                return STATUS_OK;
-            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+            if (pCurrentSample == NULL)
                 return STATUS_OK;
 
-            // Ensure that button has been pushed down
-            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
-            if ((btn == NULL) || (!btn->down()->get()))
-                return STATUS_OK;
-
-            // Find the related sample and activate it
-            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
-            {
-                if (sender == self->wSampleListen[i])
-                {
-                    self->pCurrentSample->begin_edit();
-                    self->pCurrentSample->set_value(i);
-                    self->pCurrentSample->notify_all(ui::PORT_USER_EDIT);
-                    self->pCurrentSample->end_edit();
-                    return STATUS_OK;
-                }
-            }
-
+            pCurrentSample->begin_edit();
+            pCurrentSample->set_value(index);
+            pCurrentSample->notify_all(ui::PORT_USER_EDIT);
+            pCurrentSample->end_edit();
             return STATUS_OK;
         }
 
-        status_t sampler_ui::slot_submit_listen_instrument(tk::Widget *sender, void *ptr, void *data)
+        status_t sampler_ui::show_instrument(inst_name_t *inst)
         {
-            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
-            if (self == NULL)
-                return STATUS_OK;
-            if (self->pCurrentInstrument == NULL)
-                return STATUS_OK;
-            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
-                return STATUS_OK;
-
-            // Ensure that button has been pushed down
-            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
-            if ((btn == NULL) || (!btn->down()->get()))
-                return STATUS_OK;
-
-            // Find the related instrument
-            inst_name_t * inst = NULL;
-            for (lltl::iterator<inst_name_t> it = self->vInstNames.values(); it; ++it)
-            {
-                inst_name_t * const curr = it.get();
-                if ((curr != NULL) && (curr->wListen == sender))
-                {
-                    inst = curr;
-                    break;
-                }
-            }
-            if (inst == NULL)
-                return STATUS_OK;
-
             // Build list of enabled samples for this instrument
             lltl::parray<inst_file_t> files;
 
-            for (lltl::iterator<inst_file_t> it = self->vInstFiles.values(); it; ++it)
+            for (lltl::iterator<inst_file_t> it = vInstFiles.values(); it; ++it)
             {
                 inst_file_t * const curr = it.get();
                 if ((curr == NULL) || (curr->pInst != inst))
@@ -1190,30 +1155,130 @@ namespace lsp
             ui::IPort * const ssel = (file != NULL) ? inst->pSampleSel : NULL;
 
             // Apply changes
-            if (self->pWorkArea != NULL)
-                self->pWorkArea->begin_edit();
-            self->pCurrentInstrument->begin_edit();
+            if (pWorkArea != NULL)
+                pWorkArea->begin_edit();
+            pCurrentInstrument->begin_edit();
             if (ssel != NULL)
                 ssel->begin_edit();
 
-            if (self->pWorkArea != NULL)
-                self->pWorkArea->set_value(0.0f);
-            self->pCurrentInstrument->set_value(inst->nIndex);
+            if (pWorkArea != NULL)
+                pWorkArea->set_value(0.0f);
+            pCurrentInstrument->set_value(inst->nIndex);
             if (ssel != NULL)
                 ssel->set_value(file->nIndex);
 
-            if (self->pWorkArea != NULL)
-                self->pWorkArea->notify_all(ui::PORT_USER_EDIT);
-            self->pCurrentInstrument->notify_all(ui::PORT_USER_EDIT);
+            if (pWorkArea != NULL)
+                pWorkArea->notify_all(ui::PORT_USER_EDIT);
+            pCurrentInstrument->notify_all(ui::PORT_USER_EDIT);
             if (ssel != NULL)
                 ssel->notify_all(ui::PORT_USER_EDIT);
 
             if (ssel != NULL)
                 ssel->end_edit();
-            self->pCurrentInstrument->end_edit();
-            if (self->pWorkArea != NULL)
-                self->pWorkArea->end_edit();
+            pCurrentInstrument->end_edit();
+            if (pWorkArea != NULL)
+                pWorkArea->end_edit();
 
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_listen_sample(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentSample == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related sample and activate it
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                if (sender == self->wSampleListen[i])
+                    return self->show_sample(i);
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_stop_sample(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentSample == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related sample and activate it
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                if (sender == self->wSampleStop[i])
+                    return self->show_sample(i);
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_listen_instrument(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentInstrument == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related instrument
+            for (lltl::iterator<inst_name_t> it = self->vInstNames.values(); it; ++it)
+            {
+                inst_name_t * const curr = it.get();
+                if ((curr != NULL) && (curr->wListen == sender))
+                    return self->show_instrument(curr);
+            }
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_stop_instrument(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentInstrument == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related instrument
+            for (lltl::iterator<inst_name_t> it = self->vInstNames.values(); it; ++it)
+            {
+                inst_name_t * const curr = it.get();
+                if ((curr != NULL) && (curr->wStop == sender))
+                    return self->show_instrument(curr);
+            }
             return STATUS_OK;
         }
 

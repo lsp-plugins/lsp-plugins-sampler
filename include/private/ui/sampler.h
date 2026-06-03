@@ -54,6 +54,7 @@ namespace lsp
                 {
                     ui::IPort          *pSampleSel;     // Sample selector port
                     tk::Button         *wListen;        // Listen button in Mix area
+                    tk::Button         *wStop;          // Stop button in Mix area
                     tk::Edit           *wEdit;          // Pointer to the widget
                     tk::ListBoxItem    *wListItem;      // Instrument name in the list
                     uint32_t            nIndex;         // Instrument number
@@ -145,7 +146,8 @@ namespace lsp
                 tk::Edit                   *wCurrentInstrument;     // Name of the current instrument
                 tk::ComboGroup             *wInstrumentsGroup;      // Instruments group
                 tk::Button                 *wResetEnvelope;         // Reset envelope
-                tk::Button                 *wSampleListen[meta::sampler_metadata::SAMPLE_FILES];  // Listen buttons for files
+                tk::Button                 *wSampleListen[meta::sampler_metadata::SAMPLE_FILES];    // Listen buttons for files
+                tk::Button                 *wSampleStop[meta::sampler_metadata::SAMPLE_FILES];      // Stop buttons for files
                 DragInSink                 *pDragInSink;            // Drag&drop sink
 
                 lltl::parray<tk::Widget>    vHydrogenMenus;
@@ -162,7 +164,9 @@ namespace lsp
                 static status_t     slot_instrument_name_updated(tk::Widget *sender, void *ptr, void *data);
 
                 static status_t     slot_submit_listen_sample(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_submit_stop_sample(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_submit_listen_instrument(tk::Widget *sender, void *ptr, void *data);
+                static status_t     slot_submit_stop_instrument(tk::Widget *sender, void *ptr, void *data);
 
                 static status_t     slot_start_import_sfz_file(tk::Widget *sender, void *ptr, void *data);
                 static status_t     slot_call_import_sfz_file(tk::Widget *sender, void *ptr, void *data);
@@ -209,6 +213,8 @@ namespace lsp
                 void                set_kvt_instrument_name(core::KVTStorage *kvt, int id, const char *name);
                 void                set_ui_instrument_name(inst_name_t *inst, const LSPString *name);
                 void                reset_current_envelope();
+                status_t            show_instrument(inst_name_t * inst);
+                status_t            show_sample(size_t index);
 
                 void                sync_hydrogen_files();
                 void                lookup_hydrogen_files();

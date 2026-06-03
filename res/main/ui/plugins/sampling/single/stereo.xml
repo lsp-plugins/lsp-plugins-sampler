@@ -521,7 +521,12 @@
 								size="32"
 								ui:inject="Button_cyan"
 								toggle="false" />
-							<button id="lc_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+							<button
+								ui:id="trg_stop_sample_${i}"
+								id="lc_${i}"
+								font.name="lsp-icons" font.size="10"
+								text="icons.playback_big.stop" size="32"
+								ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 							<led id="no_${i}" pad.b="6" width="32" height="6"/>
 						</ui:with>
 					</ui:for>

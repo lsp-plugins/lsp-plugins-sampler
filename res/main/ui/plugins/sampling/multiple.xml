@@ -562,7 +562,12 @@
 									size="32"
 									ui:inject="Button_cyan"
 									toggle="false"/>
-								<button id="lc${idx}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+								<button
+									ui:id="trg_stop_sample_${i}"
+									id="lc${idx}"
+									font.name="lsp-icons" font.size="10"
+									text="icons.playback_big.stop" size="32"
+									ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 								<led id="no${idx}" pad.b="6"/>
 							</ui:with>
 						</ui:for>
@@ -619,7 +624,12 @@
 							size="32"
 							ui:inject="Button_cyan"
 							toggle="false" />
-						<button id="stop_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false"/>
+						<button
+							ui:id="trg_stop_inst_${i}"
+							id="stop_${i}"
+							font.name="lsp-icons" font.size="10"
+							text="icons.playback_big.stop" size="32"
+							ui:inject="Button_cyan" toggle="false"/>
 					</ui:for>
 				</grid>
 			</group>
