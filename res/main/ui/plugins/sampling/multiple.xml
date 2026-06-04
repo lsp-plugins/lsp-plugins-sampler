@@ -584,7 +584,7 @@
 						<label text="labels.instrument" padding="6"/>
 						<label text="labels.name" padding="6"/>
 						<label text="labels.sedit.enabled" padding="6"/>
-						<label text="labels.mix_gain"/>
+						<label text="labels.gain"/>
 						<label text="labels.units.:db" pad.b="6"/>
 						<label text="labels.direct_out" visibility="ex :don_0" padding="6"/>
 						<label text="labels.signal.pan_left"/>
