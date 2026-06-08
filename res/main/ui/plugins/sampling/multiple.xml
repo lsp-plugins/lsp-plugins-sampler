@@ -27,7 +27,7 @@
 				<grid rows="1" cols="5" hspacing="2">
 					<!-- first block -->
 					<vbox spacing="2">
-						<hbox bg.color="bg_schema" pad.v="4">
+						<hbox bg.color="bg_schema" pad.t="6" pad.b="4">
 							<label text="labels.name" pad.h="6"/>
 							<edit ui:id="iname" hfill="true" hexpand="true" pad.r="6"/>
 						</hbox>
@@ -553,21 +553,8 @@
 								<value id="pl${idx}" detailed="false" pad.b="6"/>
 								<knob id="pr${idx}" size="20" balance="0.5" scolor="balance_r"/>
 								<value id="pr${idx}" detailed="false" pad.b="6"/>
-								<button
-									ui:id="trg_listen_sample_${i}"
-									id="ls${idx}"
-									font.name="lsp-icons"
-									font.size="10"
-									text="icons.playback_big.play"
-									size="32"
-									ui:inject="Button_cyan"
-									toggle="false"/>
-								<button
-									ui:id="trg_stop_sample_${i}"
-									id="lc${idx}"
-									font.name="lsp-icons" font.size="10"
-									text="icons.playback_big.stop" size="32"
-									ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+								<button ui:id="trg_listen_sample_${i}" id="ls${idx}" font.name="lsp-icons" font.size="10" text="icons.playback_big.play" size="32" ui:inject="Button_cyan" toggle="false"/>
+								<button ui:id="trg_stop_sample_${i}" id="lc${idx}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
 								<led id="no${idx}" pad.b="6"/>
 							</ui:with>
 						</ui:for>
@@ -579,7 +566,7 @@
 		<!-- Mixer -->
 		<ui:for id="m" first="0" count=":num_blocks">
 			<group text="groups.instrument_mixer" ipadding="0" visibility=":msel ieq ${:m+1}" expand="true">
-				<grid rows="15" cols="25" transpose="true" hspacing="0" vspacing="2">
+				<grid rows="15" cols="25" transpose="true" spacing="0">
 					<ui:with fill="true" halign="0">
 						<label text="labels.instrument" padding="6"/>
 						<label text="labels.name" padding="6"/>
@@ -595,41 +582,31 @@
 						<label text="labels.midi.midi_number" pad.b="6"/>
 						<label text="labels.midi.note_on" pad.b="6"/>
 						<label text="labels.listen"/>
-						<label text="labels.stop"/>
+						<label text="labels.stop" pad.b="6"/>
 					</ui:with>
 
 					<ui:for id="i" first=":m*12" count="12">
 						<cell rows="15">
 							<vsep pad.l="4"/>
 						</cell>
-						<label text="${:i+1}" padding="6"/>
-						<edit ui:id="iname_${i}" bg.inherit="true" pad.h="6"/>
-						<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
-						<knob id="imix_${i}" size="20"/>
-						<value id="imix_${i}" detailed="false" pad.b="6"/>
-						<button id="don_${i}" size="16" width="32" height="12" ui:inject="Button_cyan" led="true" padding="6" visibility="ex :don_${i}"/>
-						<knob id="panl_${i}" size="20" balance="0.5" scolor="balance_l"/>
-						<value id="panl_${i}" detailed="false" pad.b="6"/>
-						<knob id="panr_${i}" size="20" balance="0.5" scolor="balance_r"/>
-						<value id="panr_${i}" detailed="false" pad.b="6"/>
-						<combo id="mgrp_${i}" pad.b="6" pad.h="6"/>
-						<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
-						<led id="iact_${i}" pad.b="6"/>
-						<button
-							ui:id="trg_listen_inst_${i}"
-							id="trg_${i}"
-							font.name="lsp-icons"
-							font.size="10"
-							text="icons.playback_big.play"
-							size="32"
-							ui:inject="Button_cyan"
-							toggle="false" />
-						<button
-							ui:id="trg_stop_inst_${i}"
-							id="stop_${i}"
-							font.name="lsp-icons" font.size="10"
-							text="icons.playback_big.stop" size="32"
-							ui:inject="Button_cyan" toggle="false"/>
+
+						<ui:with activity="((:fs_${i}_0 ieq 0) or (:fs_${i}_1 ieq 0) or (:fs_${i}_2 ieq 0) or (:fs_${i}_3 ieq 0) or (:fs_${i}_4 ieq 0) or (:fs_${i}_5 ieq 0) or (:fs_${i}_6 ieq 0) or (:fs_${i}_7 ieq 0))">
+							<label text="${:i+1}" padding="6"/>
+							<edit ui:id="iname_${i}" bg.inherit="true" pad.h="6"/>
+							<button id="ion_${i}" size="16" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
+							<knob id="imix_${i}" size="20"/>
+							<value id="imix_${i}" detailed="false" pad.b="6"/>
+							<button id="don_${i}" size="16" width="32" height="12" ui:inject="Button_cyan" led="true" padding="6" visibility="ex :don_${i}"/>
+							<knob id="panl_${i}" size="20" balance="0.5" scolor="balance_l"/>
+							<value id="panl_${i}" detailed="false" pad.b="6"/>
+							<knob id="panr_${i}" size="20" balance="0.5" scolor="balance_r"/>
+							<value id="panr_${i}" detailed="false" pad.b="6"/>
+							<combo id="mgrp_${i}" pad.b="6" pad.h="6"/>
+							<midinote id="mn_${i}" note_id="note_${i}" octave_id="oct_${i}" pad.b="6" pointer="hand"/>
+							<led id="iact_${i}" pad.b="6"/>
+							<button ui:id="trg_listen_inst_${i}" id="trg_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.play" size="32" ui:inject="Button_cyan" toggle="false"/>
+							<button ui:id="trg_stop_inst_${i}" id="stop_${i}" font.name="lsp-icons" font.size="10" text="icons.playback_big.stop" size="32" ui:inject="Button_cyan" toggle="false" pad.b="6"/>
+						</ui:with>
 					</ui:for>
 				</grid>
 			</group>
