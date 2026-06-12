@@ -110,7 +110,7 @@ for path substitutions. For example, the following value:</p>
 <p><b>'Instrument mixer' section:</b></p>
 <ul>
 	<li><b>Enabled</b> - enables the corresponding instrument.</li>
-	<li><b>Mix gain</b> - the volume of the instrument in the output mix.</li>
+	<li><b>Gain</b> - the volume of the instrument in the output mix.</li>
 	<?php if ($do) { ?>
 	<li><b>Direct Out</b> - enables the output of the instrument to the separate track.</li>
 	<?php } ?>
@@ -118,7 +118,8 @@ for path substitutions. For example, the following value:</p>
 	<li><b>Pan Right</b> - the panorama of the right channel of the corresponding instrument.</li>
 	<li><b>MIDI Number</b> - the MIDI number of the note associated with the corresponding instrument. Allows to change the number with mouse scroll or mouse double click.</li>
 	<li><b>Note on</b> - indicates that the corresponding instrument has triggered the MIDI Note On event.</li>
-	<li><b>Listen</b> - forces the corresponding instrument to trigger the Note On event.</li>
+	<li><b>Listen</b> - triggers the listening of the audio preview of the instrument.</li>
+	<li><b>Stop</b> - stops the listening of the audio preview of the instrument.</li>
 </ul>
 
 <p><b>'Instrument' section:</b></p>

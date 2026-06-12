@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-sampler
  * Created on: 11 июл. 2021 г.
@@ -266,38 +266,45 @@ namespace lsp
         sampler_ui::sampler_ui(const meta::plugin_t *meta, bool multiple):
             ui::Module(meta)
         {
-            bMultiple           = multiple;
-            pHydrogenPath       = NULL;
-            pHydrogenFileType   = NULL;
-            pBundlePath         = NULL;
-            pBundleFileType     = NULL;
-            pSfzPath            = NULL;
-            pSfzFileType        = NULL;
-            pHydrogenCustomPath = NULL;
-            pCurrentInstrument  = NULL;
-            pCurrentSample      = NULL;
-            pOverrideHydrogen   = NULL;
-            pTakeNameFromFile   = NULL;
+            bMultiple               = multiple;
 
-            wHydrogenImport     = NULL;
-            wSfzImport          = NULL;
-            wBundleDialog       = NULL;
-            wMessageBox         = NULL;
-            wCurrentInstrument  = NULL;
-            wInstrumentsGroup   = NULL;
-            wResetEnvelope      = NULL;
-            pDragInSink         = NULL;
+            pWorkArea               = NULL;
+            pHydrogenPath           = NULL;
+            pHydrogenFileType       = NULL;
+            pBundlePath             = NULL;
+            pBundleFileType         = NULL;
+            pSfzPath                = NULL;
+            pSfzFileType            = NULL;
+            pHydrogenCustomPath     = NULL;
+            pCurrentInstrument      = NULL;
+            pCurrentSample          = NULL;
+            pOverrideHydrogen       = NULL;
+            pTakeNameFromFile       = NULL;
+            pRevealSampleOnListen   = NULL;
+
+            wHydrogenImport         = NULL;
+            wSfzImport              = NULL;
+            wBundleDialog           = NULL;
+            wMessageBox             = NULL;
+            wCurrentInstrument      = NULL;
+            wInstrumentsGroup       = NULL;
+            wResetEnvelope          = NULL;
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+                wSampleListen[i]        = NULL;
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+                wSampleStop[i]          = NULL;
+            pDragInSink             = NULL;
         }
 
         sampler_ui::~sampler_ui()
         {
             // Will be automatically destroyed from list of widgets
-            wHydrogenImport     = NULL;
-            wSfzImport          = NULL;
-            wBundleDialog       = NULL;
-            wMessageBox         = NULL;
-            wCurrentInstrument  = NULL;
-            wInstrumentsGroup   = NULL;
+            wHydrogenImport         = NULL;
+            wSfzImport              = NULL;
+            wBundleDialog           = NULL;
+            wMessageBox             = NULL;
+            wCurrentInstrument      = NULL;
+            wInstrumentsGroup       = NULL;
 
             // Destroy instrument descriptors
             vInstNames.flush();
@@ -368,36 +375,103 @@ namespace lsp
             if (res != STATUS_OK)
                 return res;
 
-            // Perform basic initializstion
-            pCurrentSample      = wrapper()->port("ssel");
+            ui::IWrapper *const w   = wrapper();
 
-            wResetEnvelope      = wrapper()->controller()->widgets()->get<tk::Button>("trg_reset_envelope");
+            // Perform basic initializstion
+            pCurrentSample          = w->port("ssel");
+            pRevealSampleOnListen   = w->port(UI_REVEAL_SAMPLE_ON_LISTEN_PORT);
+
+            wResetEnvelope          = w->get_widget<tk::Button>("trg_reset_envelope");
             if (wResetEnvelope != NULL)
                 wResetEnvelope->slots()->bind(tk::SLOT_SUBMIT, slot_reset_envelope, this);
 
-            // Do not perform other initialization since it is a very simple single-instrument sampler
-            if (!bMultiple)
-                return STATUS_OK;
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                tk::Button * const listen   = w->get_widgetf<tk::Button>("trg_listen_sample_%d", int(i));
+                if (listen != NULL)
+                    listen->slots()->bind(tk::SLOT_CHANGE, slot_submit_listen_sample, this);
+                tk::Button * const stop     = w->get_widgetf<tk::Button>("trg_stop_sample_%d", int(i));
+                if (stop != NULL)
+                    stop->slots()->bind(tk::SLOT_CHANGE, slot_submit_stop_sample, this);
+
+                wSampleListen[i]            = listen;
+                wSampleStop[i]              = stop;
+            }
+
+            return (bMultiple) ? post_init_multiple() : post_init_single();
+        }
+
+        status_t sampler_ui::post_init_single()
+        {
+            ui::IWrapper *const w   = wrapper();
+
+            // Append the only one instrument
+            inst_name_t * const inst    = vInstNames.add();
+            if (inst == NULL)
+                return STATUS_NO_MEM;
+
+            inst->pSampleSel    = wrapper()->port("ssel");
+            inst->wListen       = NULL;
+            inst->wStop         = NULL;
+            inst->wEdit         = NULL;
+            inst->wListItem     = NULL;
+            inst->nIndex        = 0;
+            inst->bChanged      = false;
+
+            for (size_t i=0; i < meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                // Create instrument file
+                inst_file_t *file   = new inst_file_t();
+                if (file == NULL)
+                    return STATUS_NO_MEM;
+                lsp_finally {
+                    if (file != NULL)
+                        delete file;
+                };
+
+                // Find port
+                file->pInst         = inst;
+                file->pFilePort     = w->portf("sf_%d", int(i));
+                file->pEnabled      = w->portf("on_%d", int(i));
+                file->pActivity     = w->portf("ac_%d", int(i));
+                file->pVelocity     = w->portf("vl_%d", int(i));
+                file->nIndex        = uint32_t(i);
+                file->fVelocity     = 0.0f;
+                file->bEnabled      = false;
+                file->bActive       = false;
+
+                if (!vInstFiles.add(file))
+                    return STATUS_NO_MEM;
+                file    = NULL;
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::post_init_multiple()
+        {
+            ui::IWrapper *const w   = wrapper();
 
             // Find different paths
-            pHydrogenPath           =  pWrapper->port(HYDROGEN_PATH_PORT);
-            pHydrogenFileType       =  pWrapper->port(HYDROGEN_FTYPE_PORT);
-            pBundlePath             =  pWrapper->port(LSPC_BUNDLE_PATH_PORT);
-            pBundleFileType         =  pWrapper->port(LSPC_BUNDLE_FTYPE_PORT);
-            pSfzPath                =  pWrapper->port(SFZ_PATH_PORT);
-            pSfzFileType            =  pWrapper->port(SFZ_FTYPE_PORT);
-            pHydrogenCustomPath     =  pWrapper->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
-            pOverrideHydrogen       =  pWrapper->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
-            pTakeNameFromFile       =  pWrapper->port(UI_TAKE_INST_NAME_FROM_FILE_PORT);
+            pWorkArea               = w->port("msel");
+            pHydrogenPath           = w->port(HYDROGEN_PATH_PORT);
+            pHydrogenFileType       = w->port(HYDROGEN_FTYPE_PORT);
+            pBundlePath             = w->port(LSPC_BUNDLE_PATH_PORT);
+            pBundleFileType         = w->port(LSPC_BUNDLE_FTYPE_PORT);
+            pSfzPath                = w->port(SFZ_PATH_PORT);
+            pSfzFileType            = w->port(SFZ_FTYPE_PORT);
+            pHydrogenCustomPath     = w->port(UI_USER_HYDROGEN_KIT_PATH_PORT);
+            pOverrideHydrogen       = w->port(UI_OVERRIDE_HYDROGEN_KITS_PORT);
+            pTakeNameFromFile       = w->port(UI_TAKE_INST_NAME_FROM_FILE_PORT);
 
             // Bind ports
             if (pHydrogenCustomPath != NULL)
                 pHydrogenCustomPath->bind(this);
 
             // Find widget and port associated with the current selected instrument
-            pCurrentInstrument  = wrapper()->port("inst");
-            wCurrentInstrument  = wrapper()->controller()->widgets()->get<tk::Edit>("iname");
-            wInstrumentsGroup   = wrapper()->controller()->widgets()->get<tk::ComboGroup>("inst_cgroup");
+            pCurrentInstrument  = w->port("inst");
+            wCurrentInstrument  = w->get_widget<tk::Edit>("iname");
+            wInstrumentsGroup   = w->get_widget<tk::ComboGroup>("inst_cgroup");
 
             if (pCurrentInstrument != NULL)
                 pCurrentInstrument->bind(this);
@@ -405,7 +479,7 @@ namespace lsp
                 wCurrentInstrument->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
 
             // Add subwidgets
-            tk::Registry *widgets   = pWrapper->controller()->widgets();
+            tk::Registry *widgets   = w->controller()->widgets();
             tk::Menu *menu          = tk::widget_cast<tk::Menu>(widgets->find(WUID_IMPORT_MENU));
             if (menu != NULL)
             {
@@ -450,31 +524,39 @@ namespace lsp
             }
 
             // Find port names
-            char name[0x40];
             for (size_t i=0; i < meta::sampler_metadata::INSTRUMENTS_MAX; ++i)
             {
-                // Verify that the corresponding instrument exists
-                snprintf(name, sizeof(name), "chan_%d", int(i));
-                ui::IPort *port = wrapper()->port(name);
+                // Ensure that instrument exists
+                ui::IPort * const port      = w->portf("chan_%d", int(i));
                 if (port == NULL)
                     continue;
 
+                // Obtain objects
+                ui::IPort * const ssel      = w->portf("ssel_%d", int(i));
+                tk::Button * const listen   = w->get_widgetf<tk::Button>("trg_listen_inst_%d", int(i));
+                if (listen != NULL)
+                    listen->slots()->bind(tk::SLOT_CHANGE, slot_submit_listen_instrument, this);
+                tk::Button * const stop     = w->get_widgetf<tk::Button>("trg_stop_inst_%d", int(i));
+                if (stop != NULL)
+                    stop->slots()->bind(tk::SLOT_CHANGE, slot_submit_stop_instrument, this);
+
                 // Obtain the widget and bind slot
-                snprintf(name, sizeof(name), "iname_%d", int(i));
-                tk::Edit *ed = wrapper()->controller()->widgets()->get<tk::Edit>(name);
-                if (ed == NULL)
-                    continue;
-                ed->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
+                tk::Edit * const ed         = w->get_widgetf<tk::Edit>("iname_%d", int(i));
+                if (ed != NULL)
+                    ed->slots()->bind(tk::SLOT_CHANGE, slot_instrument_name_updated, this);
 
                 // Append widget binding
-                inst_name_t *inst = vInstNames.add();
+                inst_name_t *inst           = vInstNames.add();
                 if (inst == NULL)
                     return STATUS_NO_MEM;
 
-                inst->wEdit     = ed;
-                inst->wListItem = (wInstrumentsGroup != NULL) ? wInstrumentsGroup->items()->get(i) : NULL;
-                inst->nIndex    = i;
-                inst->bChanged  = false;
+                inst->pSampleSel            = ssel;
+                inst->wListen               = listen;
+                inst->wStop                 = stop;
+                inst->wEdit                 = ed;
+                inst->wListItem             = (wInstrumentsGroup != NULL) ? wInstrumentsGroup->items()->get(i) : NULL;
+                inst->nIndex                = i;
+                inst->bChanged              = false;
             }
 
             // Bind instrument files
@@ -493,18 +575,22 @@ namespace lsp
                             delete file;
                     };
 
-                    // Find port
-                    snprintf(name, sizeof(name), "sf_%d_%d", int(i), int(j));
-                    file->pPort         = wrapper()->port(name);
-                    if (file->pPort == NULL)
-                        continue;
-
+                    // Initialize instrument
                     file->pInst         = inst;
-                    if (!extract_name(&file->sPrevName, file->pPort))
-                        continue;
+                    file->pFilePort     = w->portf("sf_%d_%d", int(i), int(j));
+                    file->pEnabled      = w->portf("on_%d_%d", int(i), int(j));
+                    file->pActivity     = w->portf("ac_%d_%d", int(i), int(j));
+                    file->pVelocity     = w->portf("vl_%d_%d", int(i), int(j));
+                    file->nIndex        = uint32_t(j);
+                    file->fVelocity     = 0.0f;
+                    file->bEnabled      = false;
+                    file->bActive       = false;
 
-                    if (file->pPort != NULL)
-                        file->pPort->bind(this);
+                    if (file->pFilePort != NULL)
+                    {
+                        extract_name(&file->sPrevName, file->pFilePort);
+                        file->pFilePort->bind(this);
+                    }
 
                     if (!vInstFiles.add(file))
                         return STATUS_NO_MEM;
@@ -518,14 +604,14 @@ namespace lsp
                 return STATUS_NO_MEM;
             pDragInSink->acquire();
 
-            pWrapper->window()->slots()->bind(tk::SLOT_DRAG_REQUEST, slot_drag_request, this);
+            w->window()->slots()->bind(tk::SLOT_DRAG_REQUEST, slot_drag_request, this);
 
             return STATUS_OK;
         }
 
         bool sampler_ui::extract_name(LSPString *dst, ui::IPort *src)
         {
-            const meta::port_t *meta = src->metadata();
+            const meta::port_t *meta = (src != NULL) ? src->metadata() : NULL;
             if ((meta == NULL) || (!meta::is_path_port(meta)))
                 return false;
 
@@ -1023,6 +1109,200 @@ namespace lsp
             return STATUS_OK;
         }
 
+        ssize_t sampler_ui::compare_files(const inst_file_t *a, const inst_file_t *b)
+        {
+            return (a->fVelocity < b->fVelocity) ? -1 :
+                   (a->fVelocity > b->fVelocity) ? 1 : 0;
+        }
+
+        status_t sampler_ui::show_sample(size_t index)
+        {
+            if (pCurrentSample == NULL)
+                return STATUS_OK;
+
+            pCurrentSample->begin_edit();
+            pCurrentSample->set_value(index);
+            pCurrentSample->notify_all(ui::PORT_USER_EDIT);
+            pCurrentSample->end_edit();
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::show_instrument(inst_name_t *inst)
+        {
+            // Build list of enabled samples for this instrument
+            lltl::parray<inst_file_t> files;
+
+            for (lltl::iterator<inst_file_t> it = vInstFiles.values(); it; ++it)
+            {
+                inst_file_t * const curr = it.get();
+                if ((curr == NULL) || (curr->pInst != inst))
+                    continue;
+                if ((curr->pVelocity == NULL) || (curr->pEnabled == NULL) || (curr->pActivity == NULL))
+                    continue;
+
+                curr->bEnabled      = curr->pEnabled->value() >= 0.5f;
+                curr->bActive       = curr->pActivity->value() >= 0.5f;
+                curr->fVelocity     = curr->pVelocity->value() * 0.01f;
+                if ((curr->bEnabled) && (curr->bActive))
+                {
+                    if (!files.add(curr))
+                        return STATUS_OK;
+                }
+            }
+            files.qsort(compare_files);
+
+            sampler_ui::inst_file_t * const file = select_active_sample(files, 0.5f);
+            ui::IPort * const ssel = (file != NULL) ? inst->pSampleSel : NULL;
+
+            // Apply changes
+            if (pWorkArea != NULL)
+                pWorkArea->begin_edit();
+            pCurrentInstrument->begin_edit();
+            if (ssel != NULL)
+                ssel->begin_edit();
+
+            if (pWorkArea != NULL)
+                pWorkArea->set_value(0.0f);
+            pCurrentInstrument->set_value(inst->nIndex);
+            if (ssel != NULL)
+                ssel->set_value(file->nIndex);
+
+            if (pWorkArea != NULL)
+                pWorkArea->notify_all(ui::PORT_USER_EDIT);
+            pCurrentInstrument->notify_all(ui::PORT_USER_EDIT);
+            if (ssel != NULL)
+                ssel->notify_all(ui::PORT_USER_EDIT);
+
+            if (ssel != NULL)
+                ssel->end_edit();
+            pCurrentInstrument->end_edit();
+            if (pWorkArea != NULL)
+                pWorkArea->end_edit();
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_listen_sample(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentSample == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related sample and activate it
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                if (sender == self->wSampleListen[i])
+                    return self->show_sample(i);
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_stop_sample(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentSample == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related sample and activate it
+            for (size_t i=0; i<meta::sampler_metadata::SAMPLE_FILES; ++i)
+            {
+                if (sender == self->wSampleStop[i])
+                    return self->show_sample(i);
+            }
+
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_listen_instrument(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentInstrument == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related instrument
+            for (lltl::iterator<inst_name_t> it = self->vInstNames.values(); it; ++it)
+            {
+                inst_name_t * const curr = it.get();
+                if ((curr != NULL) && (curr->wListen == sender))
+                    return self->show_instrument(curr);
+            }
+            return STATUS_OK;
+        }
+
+        status_t sampler_ui::slot_submit_stop_instrument(tk::Widget *sender, void *ptr, void *data)
+        {
+            sampler_ui * const self = static_cast<sampler_ui *>(ptr);
+            if (self == NULL)
+                return STATUS_OK;
+            if (self->pCurrentInstrument == NULL)
+                return STATUS_OK;
+            if ((self->pRevealSampleOnListen == NULL) || (self->pRevealSampleOnListen->value() < 0.5f))
+                return STATUS_OK;
+
+            // Ensure that button has been pushed down
+            tk::Button * const btn = tk::widget_cast<tk::Button>(sender);
+            if ((btn == NULL) || (!btn->down()->get()))
+                return STATUS_OK;
+
+            // Find the related instrument
+            for (lltl::iterator<inst_name_t> it = self->vInstNames.values(); it; ++it)
+            {
+                inst_name_t * const curr = it.get();
+                if ((curr != NULL) && (curr->wStop == sender))
+                    return self->show_instrument(curr);
+            }
+            return STATUS_OK;
+        }
+
+        sampler_ui::inst_file_t *sampler_ui::select_active_sample(lltl::parray<inst_file_t> & files, float velocity)
+        {
+            const size_t nactive = files.size();
+            if (nactive <= 0)
+                return NULL;
+
+            // Binary search of sample
+            ssize_t f_first = 0, f_last = nactive-1;
+            while (f_last > f_first)
+            {
+                ssize_t f_mid = (f_last + f_first) >> 1;
+                if (velocity <= files[f_mid]->fVelocity)
+                    f_last  = f_mid;
+                else
+                    f_first = f_mid + 1;
+            }
+
+            f_last      = lsp_limit(f_last, 0, ssize_t(nactive) - 1);
+            return files.get(f_last);
+        }
+
         void sampler_ui::begin_edit(const char *fmt...)
         {
             char port_id[32];
@@ -1068,6 +1348,20 @@ namespace lsp
             va_end(v);
         }
 
+        float sampler_ui::get_float_value(float dfl, const char *fmt...)
+        {
+            char port_id[32];
+            va_list v;
+            va_start(v, fmt);
+
+            ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
+            ui::IPort *p = pWrapper->port(port_id);
+            const float result = (p != NULL) ? p->value() : dfl;
+            va_end(v);
+
+            return result;
+        }
+
         void sampler_ui::set_default_value(const char *fmt...)
         {
             char port_id[32];
@@ -1077,7 +1371,10 @@ namespace lsp
             ::vsnprintf(port_id, sizeof(port_id)/sizeof(char), fmt, v);
             ui::IPort *p = pWrapper->port(port_id);
             if (p != NULL)
+            {
                 p->set_default();
+                lsp_trace("%s = %f", p->id(), p->value());
+            }
 
             va_end(v);
         }
@@ -1440,7 +1737,7 @@ namespace lsp
             for (size_t i=0, n=vInstFiles.size(); i<n; ++i)
             {
                 inst_file_t *ifile = vInstFiles.uget(i);
-                if (ifile->pPort != port)
+                if (ifile->pFilePort != port)
                     continue;
 
                 // Check that previous name matches instument name
@@ -2102,7 +2399,7 @@ namespace lsp
         {
             const int sample = (pCurrentSample != NULL) ? pCurrentSample->value() : 0;
 
-            static const char *prefixes[] = {
+            static const char * const prefixes[] = {
                 "eh", "eb",
                 "ta", "th", "td", "ts", "tr",
                 "bl", "sl",
@@ -2114,32 +2411,35 @@ namespace lsp
             if (bMultiple)
             {
                 const int inst  = (pCurrentInstrument != NULL) ? pCurrentInstrument->value() : 0;
+                const char * const fmt_str = "%s_%d_%d";
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    begin_edit("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    set_default_value("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    notify_port("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port(fmt_str, *prefix, inst, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    end_edit("%s_%d_%d", *prefix, inst, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit(fmt_str, *prefix, inst, sample);
             }
             else
             {
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    begin_edit("%s_%d", *prefix, sample);
+                const char * const fmt_str = "%s_%d";
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    set_default_value("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    begin_edit(fmt_str, *prefix, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    notify_port("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    set_default_value(fmt_str, *prefix, sample);
 
-                for (const char ** prefix = prefixes; *prefix != NULL; ++prefix)
-                    end_edit("%s_%d", *prefix, sample);
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    notify_port(fmt_str, *prefix, sample);
+
+                for (const char * const * prefix = prefixes; *prefix != NULL; ++prefix)
+                    end_edit(fmt_str, *prefix, sample);
             }
         }
 
