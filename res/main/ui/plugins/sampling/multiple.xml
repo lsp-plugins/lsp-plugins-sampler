@@ -545,7 +545,7 @@
 								</cell>
 	
 								<ui:set id="idx" value="[inst]_${i}"/>
-								<ui:with bg.color="bg_schema" activity=":sample_state_${i} ieq 0">
+								<ui:with bg.color="bg_schema" activity="(:sample_state_${i} ieq 0) or (:sample_state_${i} ieq 2)">
 									<label text="${:i+1}"/>
 	
 									<button id="on${idx}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>

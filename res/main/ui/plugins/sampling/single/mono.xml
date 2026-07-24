@@ -499,7 +499,7 @@
 						<cell rows="9">
 							<vsep/>
 						</cell>
-						<ui:with bg.color="bg_schema" activity=":fs_${i} ieq 0">
+						<ui:with bg.color="bg_schema" activity="(:fs_${i} ieq 0) or (:fs_${i} ieq 2)">
 							<label text="${:i+1}"/>
 							<button id="on_${i}" width="32" height="12" ui:inject="Button_yellow" led="true" padding="6"/>
 							<knob id="vl_${i}" size="20" scolor="velocity"/>
