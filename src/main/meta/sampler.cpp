@@ -224,7 +224,7 @@ namespace lsp
             { "direct_out_" #id, "Direct Output " sid,    GRP_STEREO,     PGF_OUT,    dout_ ## id ##_ports      }
 
         #define S_FILE_GAIN_MONO \
-            AMP_GAIN10("mx", "Sample mix gain", NULL, 1.0f)
+            AMP_GAIN10("mx", "Sample gain", NULL, 1.0f)
         #define S_FILE_GAIN_STEREO \
             PAN_CTL("pl", "Sample left channel panorama", NULL, -100.0f), \
             PAN_CTL("pr", "Sample right channel panorama", NULL, 100.0f)
@@ -340,7 +340,7 @@ namespace lsp
 
         #define S_MIXER(id, sid)                      \
             SWITCH("ion_" #id, "Instrument " sid " on", "Inst " sid " on", 1.0f), \
-            AMP_GAIN10("imix_" #id, "Instrument " sid " mix gain", "Inst " sid " gain", 1.0f), \
+            AMP_GAIN10("imix_" #id, "Instrument " sid " gain", "Inst " sid " gain", 1.0f), \
             PAN_CTL("panl_" #id, "Instrument " sid " pan left", "Inst " sid " pan L", -100.0f), \
             PAN_CTL("panr_" #id, "Instrument " sid " pan right", "Inst " sid " pan R", 100.0f), \
             BLINK("iact_" #id, "Instrument " sid " activity")
